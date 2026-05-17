@@ -1,0 +1,6 @@
+@MusicMarketplace_HostAddress = http://localhost:5189
+
+GET {{MusicMarketplace_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
