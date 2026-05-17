@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MusicMarketplace.Models;
 
@@ -11,5 +12,6 @@ public partial class Genre
 
     public string? description { get; set; }
 
+    [NotMapped]
     public virtual ICollection<Product> products { get; set; } = new List<Product>();
 }

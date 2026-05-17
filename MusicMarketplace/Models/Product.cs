@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MusicMarketplace.Models;
 
@@ -30,6 +31,7 @@ public partial class Product
     public virtual ICollection<Wishlist> Wishlists { get; set; } = new List<Wishlist>();
 
     public virtual Manufacturer? manufacturer { get; set; }
-
+    
+    [NotMapped]
     public virtual ICollection<Genre> genres { get; set; } = new List<Genre>();
 }

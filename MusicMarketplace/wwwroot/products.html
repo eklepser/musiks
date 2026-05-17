@@ -10,6 +10,7 @@
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
 
         .tab-btn {
@@ -37,11 +38,16 @@
             gap: 10px;
             flex-wrap: wrap;
             align-items: flex-end;
+            margin-top: 10px;
         }
 
         textarea {
             width: 100%;
             min-height: 60px;
+        }
+
+        .form-card select, .form-card input {
+            padding: 6px;
         }
     </style>
 </head>
@@ -60,64 +66,115 @@
         </ul>
     </div>
     <div class="container">
-        <h1>Управление товарами, билетами и мерчем</h1>
+        <h1>Управление товарами</h1>
         <div class="tab-buttons">
-            <button class="tab-btn active" data-tab="regular">Обычные товары</button>
+            <button class="tab-btn active" data-tab="all">Все товары</button>
             <button class="tab-btn" data-tab="ticket">Билеты</button>
-            <button class="tab-btn" data-tab="merch">Мерч</button>
+            <button class="tab-btn" data-tab="clothing">Одежда</button>
+            <button class="tab-btn" data-tab="accessory">Аксессуары</button>
         </div>
 
-        <!-- Обычные товары -->
-        <div id="regular-tab" class="tab-content active">
+        <!-- Вкладка "Все товары" -->
+        <div id="all-tab" class="tab-content active">
             <div class="form-card">
-                <h2 id="regular-form-title">Добавить товар</h2>
-                <input type="hidden" id="regular-edit-id">
+                <h2 id="all-form-title">Добавить товар</h2>
+                <input type="hidden" id="all-edit-id">
                 <div class="form-group-row">
-                    <input type="text" id="regular-name" placeholder="Название" required>
-                    <input type="number" id="regular-price" placeholder="Цена" step="0.01" required>
-                    <textarea id="regular-description" placeholder="Описание"></textarea>
-                    <input type="number" id="regular-stock" placeholder="Остаток">
-                    <select id="regular-manufacturer-id"><option value="">Производитель</option></select>
-                    <button id="regular-submit">Добавить</button>
-                    <button id="regular-cancel" style="display:none;">Отмена</button>
+                    <input type="text" id="all-name" placeholder="Название" required>
+                    <input type="number" id="all-price" placeholder="Цена" step="0.01" required>
+                    <textarea id="all-description" placeholder="Описание"></textarea>
+                    <input type="number" id="all-stock" placeholder="Остаток">
+                    <input type="number" id="all-manufacturer-id" placeholder="ID производителя">
+                    <button id="all-submit">Добавить</button>
+                    <button id="all-cancel" style="display:none;">Отмена</button>
                 </div>
-                <div id="regular-error" class="error"></div>
-                <div id="regular-success" class="success"></div>
-            </div>
-            <div class="stats-card">
-                <p>Всего товаров: <span id="total-products">0</span> | Средняя цена: <span id="avg-price">0</span> руб.</p>
+                <div id="all-error" class="error"></div>
+                <div id="all-success" class="success"></div>
             </div>
             <table>
-                <thead><tr><th>ID</th><th>Название</th><th>Цена</th><th>Остаток</th><th>Производитель</th><th>Действия</th></tr></thead>
-                <tbody id="regular-tbody">
-                <td>
-                <td colspan="6">Загрузка...</td></tr>}</tbody>
+                <thead><tr><th>ID</th><th>Название</th><th>Цена</th><th>Остаток</th><th>Производитель ID</th><th>Действия</th></tr></thead>
+                <tbody id="all-tbody"><tr><td colspan="6">Загрузка...</td></tr></tbody>
             </table>
         </div>
 
-        <!-- Билеты -->
+        <!-- Вкладка "Билеты" -->
         <div id="ticket-tab" class="tab-content">
             <div class="form-card">
-                <h2>Билеты (только просмотр)</h2>
+                <h2 id="ticket-form-title">Добавить билет</h2>
+                <input type="hidden" id="ticket-edit-id">
+                <div class="form-group-row">
+                    <input type="text" id="ticket-name" placeholder="Название билета" required>
+                    <input type="number" id="ticket-price" placeholder="Цена" step="0.01" required>
+                    <textarea id="ticket-description" placeholder="Описание"></textarea>
+                    <input type="number" id="ticket-stock" placeholder="Остаток">
+                    <input type="number" id="ticket-manufacturer-id" placeholder="ID производителя">
+                    <select id="ticket-concert-id" required><option value="">Концерт</option></select>
+                    <input type="text" id="ticket-seat-row" placeholder="Ряд">
+                    <input type="text" id="ticket-seat-number" placeholder="Место">
+                    <input type="text" id="ticket-price-category" placeholder="Категория">
+                    <button id="ticket-submit">Добавить</button>
+                    <button id="ticket-cancel" style="display:none;">Отмена</button>
+                </div>
                 <div id="ticket-error" class="error"></div>
                 <div id="ticket-success" class="success"></div>
             </div>
             <table>
-                <thead><tr><th>ID билета</th><th>Концерт</th><th>Ряд</th><th>Место</th><th>Категория</th><th>Название товара</th><th>Цена</th><th>Действия</th></tr></thead>
-                <tbody id="ticket-tbody"><tr><td colspan="8">Загрузка...</td></tr></tbody>
+                <thead><tr><th>ID билета</th><th>Товар</th><th>Концерт</th><th>Ряд/Место</th><th>Категория</th><th>Действия</th></tr></thead>
+                <tbody id="ticket-tbody"><tr><td colspan="6">Загрузка...</td></tr></tbody>
             </table>
         </div>
 
-        <!-- Мерч -->
-        <div id="merch-tab" class="tab-content">
+        <!-- Вкладка "Одежда" -->
+        <div id="clothing-tab" class="tab-content">
             <div class="form-card">
-                <h2>Мерч (только просмотр)</h2>
-                <div id="merch-error" class="error"></div>
-                <div id="merch-success" class="success"></div>
+                <h2 id="clothing-form-title">Добавить одежду</h2>
+                <input type="hidden" id="clothing-edit-id">
+                <div class="form-group-row">
+                    <input type="text" id="clothing-name" placeholder="Название товара" required>
+                    <input type="number" id="clothing-price" placeholder="Цена" step="0.01" required>
+                    <textarea id="clothing-description" placeholder="Описание"></textarea>
+                    <input type="number" id="clothing-stock" placeholder="Остаток">
+                    <input type="number" id="clothing-manufacturer-id" placeholder="ID производителя">
+                    <input type="text" id="clothing-material" placeholder="Материал">
+                    <input type="text" id="clothing-color" placeholder="Цвет">
+                    <input type="text" id="clothing-size" placeholder="Размер">
+                    <select id="clothing-gender"><option value="">Пол</option><option value="male">Мужской</option><option value="female">Женский</option><option value="unisex">Унисекс</option></select>
+                    <button id="clothing-submit">Добавить</button>
+                    <button id="clothing-cancel" style="display:none;">Отмена</button>
+                </div>
+                <div id="clothing-error" class="error"></div>
+                <div id="clothing-success" class="success"></div>
             </div>
             <table>
-                <thead><tr><th>ID мерча</th><th>Название товара</th><th>Цена</th><th>Материал</th><th>Цвет</th><th>Действия</th></tr></thead>
-                <tbody id="merch-tbody"><tr><td colspan="6">Загрузка...</td></tr></tbody>
+                <thead><tr><th>ID одежды</th><th>Мерч ID</th><th>Товар</th><th>Размер</th><th>Пол</th><th>Действия</th></tr></thead>
+                <tbody id="clothing-tbody"><tr><td colspan="6">Загрузка...</td></tr></tbody>
+            </table>
+        </div>
+
+        <!-- Вкладка "Аксессуары" -->
+        <div id="accessory-tab" class="tab-content">
+            <div class="form-card">
+                <h2 id="accessory-form-title">Добавить аксессуар</h2>
+                <input type="hidden" id="accessory-edit-id">
+                <div class="form-group-row">
+                    <input type="text" id="accessory-name" placeholder="Название товара" required>
+                    <input type="number" id="accessory-price" placeholder="Цена" step="0.01" required>
+                    <textarea id="accessory-description" placeholder="Описание"></textarea>
+                    <input type="number" id="accessory-stock" placeholder="Остаток">
+                    <input type="number" id="accessory-manufacturer-id" placeholder="ID производителя">
+                    <input type="text" id="accessory-material" placeholder="Материал">
+                    <input type="text" id="accessory-color" placeholder="Цвет">
+                    <input type="text" id="accessory-type" placeholder="Тип аксессуара">
+                    <input type="number" id="accessory-weight" placeholder="Вес (г)" step="0.01">
+                    <button id="accessory-submit">Добавить</button>
+                    <button id="accessory-cancel" style="display:none;">Отмена</button>
+                </div>
+                <div id="accessory-error" class="error"></div>
+                <div id="accessory-success" class="success"></div>
+            </div>
+            <table>
+                <thead><tr><th>ID аксессуара</th><th>Мерч ID</th><th>Товар</th><th>Тип</th><th>Вес (г)</th><th>Действия</th></tr></thead>
+                <tbody id="accessory-tbody"><tr><td colspan="6">Загрузка...</td></tr></tbody>
             </table>
         </div>
     </div>

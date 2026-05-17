@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MusicMarketplace.Models;
 
@@ -19,5 +20,6 @@ public partial class Merch
 
     public virtual Product product { get; set; } = null!;
 
+    [NotMapped]
     public virtual ICollection<Artist> artists { get; set; } = new List<Artist>();
 }

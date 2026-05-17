@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MusicMarketplace.Models;
@@ -20,88 +18,92 @@ namespace MusicMarketplace.Controllers
             _context = context;
         }
 
-        // GET: api/Clothings
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Clothing>>> GetClothings()
         {
             return await _context.Clothings.ToListAsync();
         }
 
-        // GET: api/Clothings/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Clothing>> GetClothing(int id)
         {
             var clothing = await _context.Clothings.FindAsync(id);
-
-            if (clothing == null)
-            {
-                return NotFound();
-            }
-
+            if (clothing == null) return NotFound();
             return clothing;
         }
 
-        // PUT: api/Clothings/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutClothing(int id, Clothing clothing)
+        public async Task<IActionResult> PutClothing(int id, ClothingUpdateDto dto)
         {
-            if (id != clothing.clothing_id)
-            {
-                return BadRequest();
-            }
+            if (id != dto.clothing_id) return BadRequest();
+
+            var clothing = await _context.Clothings.FindAsync(id);
+            if (clothing == null) return NotFound();
+
+            clothing.merch_id = dto.merch_id;
+            clothing.size = dto.size;
+            clothing.gender = dto.gender;
 
             _context.Entry(clothing).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ClothingExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
+            await _context.SaveChangesAsync();
             return NoContent();
         }
 
-        // POST: api/Clothings
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Clothing>> PostClothing(Clothing clothing)
+        public async Task<ActionResult<Clothing>> PostClothing(ClothingCreateWithProductDto dto)
         {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            var product = new Product
+            {
+                name = dto.name,
+                price = dto.price,
+                description = dto.description,
+                stock = dto.stock,
+                manufacturer_id = dto.manufacturer_id
+            };
+            _context.Products.Add(product);
+            await _context.SaveChangesAsync();
+
+            var merch = new Merch
+            {
+                product_id = product.product_id,
+                material = dto.material,
+                color = dto.color
+            };
+            _context.Merches.Add(merch);
+            await _context.SaveChangesAsync();
+
+            var clothing = new Clothing
+            {
+                merch_id = merch.merch_id,
+                size = dto.size,
+                gender = dto.gender
+            };
             _context.Clothings.Add(clothing);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetClothing", new { id = clothing.clothing_id }, clothing);
+            await transaction.CommitAsync();
+
+            return CreatedAtAction(nameof(GetClothing), new { id = clothing.clothing_id }, clothing);
         }
 
-        // DELETE: api/Clothings/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteClothing(int id)
         {
             var clothing = await _context.Clothings.FindAsync(id);
-            if (clothing == null)
-            {
-                return NotFound();
-            }
+            if (clothing == null) return NotFound();
+
+            var merch = await _context.Merches.FindAsync(clothing.merch_id);
+            Product product = null;
+            if (merch != null) product = await _context.Products.FindAsync(merch.product_id);
 
             _context.Clothings.Remove(clothing);
+            if (merch != null) _context.Merches.Remove(merch);
+            if (product != null) _context.Products.Remove(product);
+
             await _context.SaveChangesAsync();
-
             return NoContent();
-        }
-
-        private bool ClothingExists(int id)
-        {
-            return _context.Clothings.Any(e => e.clothing_id == id);
         }
     }
 }
