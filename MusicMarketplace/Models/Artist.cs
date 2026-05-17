@@ -13,6 +13,8 @@ public partial class Artist
 
     public int? debut_year { get; set; }
 
+    public string? language { get; set; }
+
     public virtual ICollection<Concert> concerts { get; set; } = new List<Concert>();
 
     public virtual ICollection<Merch> merches { get; set; } = new List<Merch>();

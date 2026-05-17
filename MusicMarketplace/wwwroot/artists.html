@@ -1,0 +1,50 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Исполнители</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="nav-menu">
+        <ul>
+            <li><a href="index.html">Главная</a></li>
+            <li><a href="products.html">Товары</a></li>
+            <li><a href="artists.html" class="active">Исполнители</a></li>
+            <li><a href="concerts.html">Концерты</a></li>
+            <li><a href="orders.html">Заказы</a></li>
+            <li><a href="users.html">Пользователи</a></li>
+            <li><a href="genres.html">Жанры</a></li>
+            <li><a href="manufacturers.html">Производители</a></li>
+            <li><a href="relations.html">Связи</a></li>
+        </ul>
+    </div>
+    <div class="container">
+        <h1>Управление исполнителями</h1>
+        <div class="form-card">
+            <h2 id="form-title">Добавить исполнителя</h2>
+            <input type="hidden" id="edit-id">
+            <div class="form-group">
+                <input type="text" id="name" placeholder="Имя" required>
+                <input type="text" id="country" placeholder="Страна">
+                <input type="number" id="debut-year" placeholder="Год дебюта">
+                <input type="text" id="language" placeholder="Язык песен">
+                <button id="submit-btn">Добавить</button>
+                <button id="cancel-btn" style="display:none;">Отмена</button>
+            </div>
+            <div id="error-message" class="error"></div>
+            <div id="success-message" class="success"></div>
+        </div>
+        <table>
+            <thead>
+                <tr><th>ID</th><th>Имя</th><th>Страна</th><th>Год дебюта</th><th>Язык</th><th>Действия</th></tr>
+            </thead>
+            <tbody id="artist-tbody">
+                <tr><td colspan="6">Загрузка...</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <script src="js/artists.js"></script>
+</body>
+</html>

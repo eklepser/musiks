@@ -74,6 +74,7 @@ public partial class MusicMarketplaceContext : DbContext
             entity.ToTable("Artist");
 
             entity.Property(e => e.country).HasMaxLength(50);
+            entity.Property(e => e.language).HasMaxLength(50);
             entity.Property(e => e.name).HasMaxLength(100);
 
             entity.HasMany(d => d.concerts).WithMany(p => p.artists)
@@ -312,6 +313,9 @@ public partial class MusicMarketplaceContext : DbContext
             entity.Property(e => e.email).HasMaxLength(100);
             entity.Property(e => e.full_name).HasMaxLength(100);
             entity.Property(e => e.login).HasMaxLength(50);
+            entity.Property(e => e.password_hash)
+                .HasMaxLength(255)
+                .HasDefaultValueSql("''::character varying");
             entity.Property(e => e.registration_date).HasDefaultValueSql("CURRENT_DATE");
         });
 

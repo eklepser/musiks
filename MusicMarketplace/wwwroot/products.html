@@ -1,0 +1,126 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Товары</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            background: #e0e0e0;
+            border: none;
+            cursor: pointer;
+        }
+
+            .tab-btn.active {
+                background: #007bff;
+                color: white;
+            }
+
+        .tab-content {
+            display: none;
+        }
+
+            .tab-content.active {
+                display: block;
+            }
+
+        .form-group-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 60px;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav-menu">
+        <ul>
+            <li><a href="index.html">Главная</a></li>
+            <li><a href="products.html" class="active">Товары</a></li>
+            <li><a href="artists.html">Исполнители</a></li>
+            <li><a href="concerts.html">Концерты</a></li>
+            <li><a href="orders.html">Заказы</a></li>
+            <li><a href="users.html">Пользователи</a></li>
+            <li><a href="genres.html">Жанры</a></li>
+            <li><a href="manufacturers.html">Производители</a></li>
+            <li><a href="relations.html">Связи</a></li>
+        </ul>
+    </div>
+    <div class="container">
+        <h1>Управление товарами, билетами и мерчем</h1>
+        <div class="tab-buttons">
+            <button class="tab-btn active" data-tab="regular">Обычные товары</button>
+            <button class="tab-btn" data-tab="ticket">Билеты</button>
+            <button class="tab-btn" data-tab="merch">Мерч</button>
+        </div>
+
+        <!-- Обычные товары -->
+        <div id="regular-tab" class="tab-content active">
+            <div class="form-card">
+                <h2 id="regular-form-title">Добавить товар</h2>
+                <input type="hidden" id="regular-edit-id">
+                <div class="form-group-row">
+                    <input type="text" id="regular-name" placeholder="Название" required>
+                    <input type="number" id="regular-price" placeholder="Цена" step="0.01" required>
+                    <textarea id="regular-description" placeholder="Описание"></textarea>
+                    <input type="number" id="regular-stock" placeholder="Остаток">
+                    <select id="regular-manufacturer-id"><option value="">Производитель</option></select>
+                    <button id="regular-submit">Добавить</button>
+                    <button id="regular-cancel" style="display:none;">Отмена</button>
+                </div>
+                <div id="regular-error" class="error"></div>
+                <div id="regular-success" class="success"></div>
+            </div>
+            <div class="stats-card">
+                <p>Всего товаров: <span id="total-products">0</span> | Средняя цена: <span id="avg-price">0</span> руб.</p>
+            </div>
+            <table>
+                <thead><tr><th>ID</th><th>Название</th><th>Цена</th><th>Остаток</th><th>Производитель</th><th>Действия</th></tr></thead>
+                <tbody id="regular-tbody">
+                <td>
+                <td colspan="6">Загрузка...</td></tr>}</tbody>
+            </table>
+        </div>
+
+        <!-- Билеты -->
+        <div id="ticket-tab" class="tab-content">
+            <div class="form-card">
+                <h2>Билеты (только просмотр)</h2>
+                <div id="ticket-error" class="error"></div>
+                <div id="ticket-success" class="success"></div>
+            </div>
+            <table>
+                <thead><tr><th>ID билета</th><th>Концерт</th><th>Ряд</th><th>Место</th><th>Категория</th><th>Название товара</th><th>Цена</th><th>Действия</th></tr></thead>
+                <tbody id="ticket-tbody"><tr><td colspan="8">Загрузка...</td></tr></tbody>
+            </table>
+        </div>
+
+        <!-- Мерч -->
+        <div id="merch-tab" class="tab-content">
+            <div class="form-card">
+                <h2>Мерч (только просмотр)</h2>
+                <div id="merch-error" class="error"></div>
+                <div id="merch-success" class="success"></div>
+            </div>
+            <table>
+                <thead><tr><th>ID мерча</th><th>Название товара</th><th>Цена</th><th>Материал</th><th>Цвет</th><th>Действия</th></tr></thead>
+                <tbody id="merch-tbody"><tr><td colspan="6">Загрузка...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+    <script src="js/products.js"></script>
+</body>
+</html>

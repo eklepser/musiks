@@ -15,6 +15,8 @@ public partial class User
 
     public string full_name { get; set; } = null!;
 
+    public string password_hash { get; set; } = null!;
+
     public virtual ICollection<Cart> Carts { get; set; } = new List<Cart>();
 
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();

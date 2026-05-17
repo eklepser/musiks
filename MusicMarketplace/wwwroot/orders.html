@@ -1,0 +1,50 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Заказы</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="nav-menu">
+        <ul>
+            <li><a href="index.html">Главная</a></li>
+            <li><a href="products.html">Товары</a></li>
+            <li><a href="artists.html">Исполнители</a></li>
+            <li><a href="concerts.html">Концерты</a></li>
+            <li><a href="orders.html" class="active">Заказы</a></li>
+            <li><a href="users.html">Пользователи</a></li>
+            <li><a href="genres.html">Жанры</a></li>
+            <li><a href="manufacturers.html">Производители</a></li>
+            <li><a href="relations.html">Связи</a></li>
+        </ul>
+    </div>
+    <div class="container">
+        <h1>Управление заказами</h1>
+        <div class="form-card">
+            <h2 id="form-title">Добавить заказ</h2>
+            <input type="hidden" id="edit-id">
+            <div class="form-group">
+                <select id="user-id" required><option value="">Выберите пользователя</option></select>
+                <input type="datetime-local" id="order-date" required>
+                <select id="status">
+                    <option value="pending">Ожидает</option>
+                    <option value="completed">Завершён</option>
+                    <option value="cancelled">Отменён</option>
+                </select>
+                <input type="number" id="total-amount" placeholder="Сумма" step="0.01" required>
+                <button id="submit-btn">Добавить</button>
+                <button id="cancel-btn" style="display:none;">Отмена</button>
+            </div>
+            <div id="error-message" class="error"></div>
+            <div id="success-message" class="success"></div>
+        </div>
+        <table>
+            <thead><tr><th>ID</th><th>Пользователь</th><th>Дата</th><th>Статус</th><th>Сумма</th><th>Действия</th></tr></thead>
+            <tbody id="order-tbody"><tr><td colspan="6">Загрузка...</td></tr></tbody>
+        </table>
+    </div>
+    <script src="js/orders.js"></script>
+</body>
+</html>
