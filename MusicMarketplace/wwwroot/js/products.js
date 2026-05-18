@@ -1,11 +1,9 @@
-﻿const PRODUCTS_URL = 'https://localhost:7062/api/Products';
-const TICKETS_URL = 'https://localhost:7062/api/Tickets';
+﻿const TICKETS_URL = 'https://localhost:7062/api/Tickets';
 const CLOTHINGS_URL = 'https://localhost:7062/api/Clothings';
 const ACCESSORIES_URL = 'https://localhost:7062/api/Accessories';
 const CONCERTS_URL = 'https://localhost:7062/api/Concerts';
-const MERCH_URL = 'https://localhost:7062/api/Merch';
 
-let allEditId = null, ticketEditId = null, clothingEditId = null, accessoryEditId = null;
+let ticketEditId = null, clothingEditId = null, accessoryEditId = null;
 
 function showMessage(prefix, text, isError) {
     const errDiv = document.getElementById(`${prefix}-error`);
@@ -36,84 +34,7 @@ async function loadConcertsSelect(selectId) {
     }
 }
 
-async function loadAllProducts() {
-    try {
-        const resp = await fetch(PRODUCTS_URL);
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        let products = await resp.json();
-        products.sort((a, b) => a.product_id - b.product_id);
-        const tbody = document.getElementById('all-tbody');
-        tbody.innerHTML = '';
-        if (products.length === 0) { tbody.innerHTML = '<tr><td colspan="6">Нет данных</td></tr>'; return; }
-        for (const p of products) {
-            const row = tbody.insertRow();
-            row.insertCell(0).textContent = p.product_id;
-            row.insertCell(1).textContent = p.name;
-            row.insertCell(2).textContent = p.price;
-            row.insertCell(3).textContent = p.stock;
-            row.insertCell(4).textContent = p.manufacturer_id || '';
-            const actions = row.insertCell(5);
-            const editBtn = document.createElement('button'); editBtn.textContent = 'Ред.'; editBtn.className = 'edit-btn';
-            editBtn.onclick = () => fillAllForm(p);
-            const delBtn = document.createElement('button'); delBtn.textContent = 'Удалить'; delBtn.className = 'delete-btn';
-            delBtn.onclick = () => deleteProduct(p.product_id);
-            actions.append(editBtn, delBtn);
-        }
-    } catch (err) {
-        document.getElementById('all-tbody').innerHTML = `<tr><td colspan="6">Ошибка: ${err.message}</td></tr>`;
-    }
-}
-
-function fillAllForm(p) {
-    document.getElementById('all-name').value = p.name;
-    document.getElementById('all-price').value = p.price;
-    document.getElementById('all-description').value = p.description || '';
-    document.getElementById('all-stock').value = p.stock;
-    document.getElementById('all-manufacturer-id').value = p.manufacturer_id || '';
-    document.getElementById('all-edit-id').value = p.product_id;
-    allEditId = p.product_id;
-    document.getElementById('all-form-title').innerText = 'Редактировать товар';
-    document.getElementById('all-submit').innerText = 'Сохранить';
-    document.getElementById('all-cancel').style.display = 'inline-block';
-}
-
-function clearAllForm() {
-    document.getElementById('all-name').value = '';
-    document.getElementById('all-price').value = '';
-    document.getElementById('all-description').value = '';
-    document.getElementById('all-stock').value = '';
-    document.getElementById('all-manufacturer-id').value = '';
-    document.getElementById('all-edit-id').value = '';
-    allEditId = null;
-    document.getElementById('all-form-title').innerText = 'Добавить товар';
-    document.getElementById('all-submit').innerText = 'Добавить';
-    document.getElementById('all-cancel').style.display = 'none';
-}
-
-async function saveAllProduct() {
-    const id = document.getElementById('all-edit-id').value;
-    const data = {
-        name: document.getElementById('all-name').value.trim(),
-        price: parseFloat(document.getElementById('all-price').value),
-        description: document.getElementById('all-description').value.trim(),
-        stock: parseInt(document.getElementById('all-stock').value) || 0,
-        manufacturer_id: parseInt(document.getElementById('all-manufacturer-id').value) || null
-    };
-    if (!data.name || isNaN(data.price)) { showMessage('all', 'Заполните название и цену', true); return; }
-    let url = PRODUCTS_URL, method = 'POST';
-    if (id) { data.product_id = parseInt(id); url += `/${id}`; method = 'PUT'; }
-    const resp = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-    if (resp.ok) { clearAllForm(); loadAllProducts(); showMessage('all', 'Сохранено', false); }
-    else showMessage('all', 'Ошибка сохранения', true);
-}
-
-async function deleteProduct(id) {
-    if (!confirm('Удалить товар?')) return;
-    const resp = await fetch(`${PRODUCTS_URL}/${id}`, { method: 'DELETE' });
-    if (resp.ok) { loadAllProducts(); showMessage('all', 'Удалено', false); }
-    else showMessage('all', 'Ошибка удаления', true);
-}
-
+// ========== БИЛЕТЫ ==========
 async function loadTickets() {
     try {
         const resp = await fetch(TICKETS_URL);
@@ -122,32 +43,32 @@ async function loadTickets() {
         tickets.sort((a, b) => a.ticket_id - b.ticket_id);
         const tbody = document.getElementById('ticket-tbody');
         tbody.innerHTML = '';
-        if (tickets.length === 0) { tbody.innerHTML = '<tr><td colspan="6">Нет данных</td></tr>'; return; }
+        if (tickets.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7">Нет данных</td></tr>';
+            return;
+        }
         for (const t of tickets) {
-            let productName = '', concertTitle = '';
-            if (t.product_id) {
-                const prodResp = await fetch(`${PRODUCTS_URL}/${t.product_id}`);
-                if (prodResp.ok) productName = (await prodResp.json()).name;
-            }
-            if (t.concert_id) {
-                const concResp = await fetch(`${CONCERTS_URL}/${t.concert_id}`);
-                if (concResp.ok) concertTitle = (await concResp.json()).title;
-            }
             const row = tbody.insertRow();
             row.insertCell(0).textContent = t.ticket_id;
-            row.insertCell(1).textContent = productName;
-            row.insertCell(2).textContent = concertTitle;
-            row.insertCell(3).textContent = `${t.seat_row || ''} ${t.seat_number || ''}`;
-            row.insertCell(4).textContent = t.price_category || '';
-            const actions = row.insertCell(5);
-            const editBtn = document.createElement('button'); editBtn.textContent = 'Ред.'; editBtn.className = 'edit-btn';
+            row.insertCell(1).textContent = t.name;
+            row.insertCell(2).textContent = t.price;
+            row.insertCell(3).textContent = t.stock;
+            row.insertCell(4).textContent = t.concert_id; // можно позже заменить на название концерта
+            row.insertCell(5).textContent = `${t.seat_row || ''} ${t.seat_number || ''}`;
+            const actions = row.insertCell(6);
+            const editBtn = document.createElement('button');
+            editBtn.textContent = 'Ред.';
+            editBtn.className = 'edit-btn';
             editBtn.onclick = () => fillTicketForm(t);
-            const delBtn = document.createElement('button'); delBtn.textContent = 'Удалить'; delBtn.className = 'delete-btn';
+            const delBtn = document.createElement('button');
+            delBtn.textContent = 'Удалить';
+            delBtn.className = 'delete-btn';
             delBtn.onclick = () => deleteTicket(t.ticket_id);
             actions.append(editBtn, delBtn);
         }
     } catch (err) {
-        document.getElementById('ticket-tbody').innerHTML = `<tr><td colspan="6">Ошибка: ${err.message}</td></tr>`;
+        document.getElementById('ticket-tbody').innerHTML = '<tr><td colspan="7">Ошибка загрузки</td></tr>';
+        showMessage('ticket', 'Ошибка: ' + err.message, true);
     }
 }
 
@@ -169,22 +90,20 @@ function clearTicketForm() {
 }
 
 function fillTicketForm(t) {
-    fetch(`${PRODUCTS_URL}/${t.product_id}`).then(resp => resp.json()).then(prod => {
-        document.getElementById('ticket-name').value = prod.name;
-        document.getElementById('ticket-price').value = prod.price;
-        document.getElementById('ticket-description').value = prod.description || '';
-        document.getElementById('ticket-stock').value = prod.stock;
-        document.getElementById('ticket-manufacturer-id').value = prod.manufacturer_id || '';
-        document.getElementById('ticket-concert-id').value = t.concert_id;
-        document.getElementById('ticket-seat-row').value = t.seat_row || '';
-        document.getElementById('ticket-seat-number').value = t.seat_number || '';
-        document.getElementById('ticket-price-category').value = t.price_category || '';
-        document.getElementById('ticket-edit-id').value = t.ticket_id;
-        ticketEditId = t.ticket_id;
-        document.getElementById('ticket-form-title').innerText = 'Редактировать билет';
-        document.getElementById('ticket-submit').innerText = 'Сохранить';
-        document.getElementById('ticket-cancel').style.display = 'inline-block';
-    });
+    document.getElementById('ticket-name').value = t.name;
+    document.getElementById('ticket-price').value = t.price;
+    document.getElementById('ticket-description').value = t.description || '';
+    document.getElementById('ticket-stock').value = t.stock;
+    document.getElementById('ticket-manufacturer-id').value = t.manufacturer_id || '';
+    document.getElementById('ticket-concert-id').value = t.concert_id;
+    document.getElementById('ticket-seat-row').value = t.seat_row || '';
+    document.getElementById('ticket-seat-number').value = t.seat_number || '';
+    document.getElementById('ticket-price-category').value = t.price_category || '';
+    document.getElementById('ticket-edit-id').value = t.ticket_id;
+    ticketEditId = t.ticket_id;
+    document.getElementById('ticket-form-title').innerText = 'Редактировать билет';
+    document.getElementById('ticket-submit').innerText = 'Сохранить';
+    document.getElementById('ticket-cancel').style.display = 'inline-block';
 }
 
 async function saveTicket() {
@@ -204,26 +123,44 @@ async function saveTicket() {
         showMessage('ticket', 'Заполните обязательные поля', true);
         return;
     }
+    let url = TICKETS_URL, method = 'POST';
     if (id) {
-        showMessage('ticket', 'Редактирование билета не поддерживается', true);
-        return;
+        data.ticket_id = parseInt(id);
+        url += `/${id}`;
+        method = 'PUT';
     }
-    const resp = await fetch(TICKETS_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-    if (resp.ok) {
-        clearTicketForm(); loadTickets(); showMessage('ticket', 'Билет добавлен', false);
-    } else {
-        const err = await resp.json();
-        showMessage('ticket', 'Ошибка: ' + (err.title || resp.status), true);
+    try {
+        const resp = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        if (resp.ok) {
+            clearTicketForm();
+            loadTickets();
+            showMessage('ticket', 'Сохранено', false);
+        } else {
+            let errText = `Ошибка ${resp.status}`;
+            try { const err = await resp.json(); errText = err.title || errText; } catch(e) {}
+            showMessage('ticket', errText, true);
+        }
+    } catch (err) {
+        showMessage('ticket', 'Ошибка сети: ' + err.message, true);
     }
 }
 
 async function deleteTicket(id) {
     if (!confirm('Удалить билет?')) return;
-    const resp = await fetch(`${TICKETS_URL}/${id}`, { method: 'DELETE' });
-    if (resp.ok) { loadTickets(); showMessage('ticket', 'Удалено', false); }
-    else showMessage('ticket', 'Ошибка удаления', true);
+    try {
+        const resp = await fetch(`${TICKETS_URL}/${id}`, { method: 'DELETE' });
+        if (resp.ok) {
+            loadTickets();
+            showMessage('ticket', 'Удалено', false);
+        } else {
+            showMessage('ticket', 'Ошибка удаления', true);
+        }
+    } catch (err) {
+        showMessage('ticket', 'Ошибка сети: ' + err.message, true);
+    }
 }
 
+// ========== ОДЕЖДА ==========
 async function loadClothings() {
     try {
         const resp = await fetch(CLOTHINGS_URL);
@@ -232,32 +169,33 @@ async function loadClothings() {
         clothings.sort((a, b) => a.clothing_id - b.clothing_id);
         const tbody = document.getElementById('clothing-tbody');
         tbody.innerHTML = '';
-        if (clothings.length === 0) { tbody.innerHTML = '<tr><td colspan="6">Нет данных</td></tr>'; return; }
+        if (clothings.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8">Нет данных</td></tr>';
+            return;
+        }
         for (const c of clothings) {
-            let productName = '';
-            if (c.merch_id) {
-                const merchResp = await fetch(`${MERCH_URL}/${c.merch_id}`);
-                if (merchResp.ok) {
-                    const merch = await merchResp.json();
-                    const prodResp = await fetch(`${PRODUCTS_URL}/${merch.product_id}`);
-                    if (prodResp.ok) productName = (await prodResp.json()).name;
-                }
-            }
             const row = tbody.insertRow();
             row.insertCell(0).textContent = c.clothing_id;
-            row.insertCell(1).textContent = c.merch_id;
-            row.insertCell(2).textContent = productName;
-            row.insertCell(3).textContent = c.size || '';
-            row.insertCell(4).textContent = c.gender || '';
-            const actions = row.insertCell(5);
-            const editBtn = document.createElement('button'); editBtn.textContent = 'Ред.'; editBtn.className = 'edit-btn';
+            row.insertCell(1).textContent = c.name;
+            row.insertCell(2).textContent = c.price;
+            row.insertCell(3).textContent = c.stock;
+            row.insertCell(4).textContent = c.material || '';
+            row.insertCell(5).textContent = c.color || '';
+            row.insertCell(6).textContent = `${c.size || ''} ${c.gender || ''}`;
+            const actions = row.insertCell(7);
+            const editBtn = document.createElement('button');
+            editBtn.textContent = 'Ред.';
+            editBtn.className = 'edit-btn';
             editBtn.onclick = () => fillClothingForm(c);
-            const delBtn = document.createElement('button'); delBtn.textContent = 'Удалить'; delBtn.className = 'delete-btn';
+            const delBtn = document.createElement('button');
+            delBtn.textContent = 'Удалить';
+            delBtn.className = 'delete-btn';
             delBtn.onclick = () => deleteClothing(c.clothing_id);
             actions.append(editBtn, delBtn);
         }
     } catch (err) {
-        document.getElementById('clothing-tbody').innerHTML = `<tr><td colspan="6">Ошибка: ${err.message}</td></tr>`;
+        document.getElementById('clothing-tbody').innerHTML = '<tr><td colspan="8">Ошибка загрузки</td></tr>';
+        showMessage('clothing', 'Ошибка: ' + err.message, true);
     }
 }
 
@@ -279,24 +217,20 @@ function clearClothingForm() {
 }
 
 function fillClothingForm(c) {
-    fetch(`${MERCH_URL}/${c.merch_id}`).then(resp => resp.json()).then(merch => {
-        fetch(`${PRODUCTS_URL}/${merch.product_id}`).then(resp => resp.json()).then(prod => {
-            document.getElementById('clothing-name').value = prod.name;
-            document.getElementById('clothing-price').value = prod.price;
-            document.getElementById('clothing-description').value = prod.description || '';
-            document.getElementById('clothing-stock').value = prod.stock;
-            document.getElementById('clothing-manufacturer-id').value = prod.manufacturer_id || '';
-            document.getElementById('clothing-material').value = merch.material || '';
-            document.getElementById('clothing-color').value = merch.color || '';
-            document.getElementById('clothing-size').value = c.size || '';
-            document.getElementById('clothing-gender').value = c.gender || '';
-            document.getElementById('clothing-edit-id').value = c.clothing_id;
-            clothingEditId = c.clothing_id;
-            document.getElementById('clothing-form-title').innerText = 'Редактировать одежду';
-            document.getElementById('clothing-submit').innerText = 'Сохранить';
-            document.getElementById('clothing-cancel').style.display = 'inline-block';
-        });
-    });
+    document.getElementById('clothing-name').value = c.name;
+    document.getElementById('clothing-price').value = c.price;
+    document.getElementById('clothing-description').value = c.description || '';
+    document.getElementById('clothing-stock').value = c.stock;
+    document.getElementById('clothing-manufacturer-id').value = c.manufacturer_id || '';
+    document.getElementById('clothing-material').value = c.material || '';
+    document.getElementById('clothing-color').value = c.color || '';
+    document.getElementById('clothing-size').value = c.size || '';
+    document.getElementById('clothing-gender').value = c.gender || '';
+    document.getElementById('clothing-edit-id').value = c.clothing_id;
+    clothingEditId = c.clothing_id;
+    document.getElementById('clothing-form-title').innerText = 'Редактировать одежду';
+    document.getElementById('clothing-submit').innerText = 'Сохранить';
+    document.getElementById('clothing-cancel').style.display = 'inline-block';
 }
 
 async function saveClothing() {
@@ -312,27 +246,48 @@ async function saveClothing() {
         size: document.getElementById('clothing-size').value.trim(),
         gender: document.getElementById('clothing-gender').value
     };
-    if (!data.name || isNaN(data.price)) { showMessage('clothing', 'Заполните название и цену', true); return; }
-    if (id) {
-        showMessage('clothing', 'Редактирование одежды не поддерживается', true);
+    if (!data.name || isNaN(data.price)) {
+        showMessage('clothing', 'Заполните название и цену', true);
         return;
     }
-    const resp = await fetch(CLOTHINGS_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-    if (resp.ok) {
-        clearClothingForm(); loadClothings(); showMessage('clothing', 'Одежда добавлена', false);
-    } else {
-        const err = await resp.json();
-        showMessage('clothing', 'Ошибка: ' + (err.title || resp.status), true);
+    let url = CLOTHINGS_URL, method = 'POST';
+    if (id) {
+        data.clothing_id = parseInt(id);
+        url += `/${id}`;
+        method = 'PUT';
+    }
+    try {
+        const resp = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        if (resp.ok) {
+            clearClothingForm();
+            loadClothings();
+            showMessage('clothing', 'Сохранено', false);
+        } else {
+            let errText = `Ошибка ${resp.status}`;
+            try { const err = await resp.json(); errText = err.title || errText; } catch(e) {}
+            showMessage('clothing', errText, true);
+        }
+    } catch (err) {
+        showMessage('clothing', 'Ошибка сети: ' + err.message, true);
     }
 }
 
 async function deleteClothing(id) {
     if (!confirm('Удалить одежду?')) return;
-    const resp = await fetch(`${CLOTHINGS_URL}/${id}`, { method: 'DELETE' });
-    if (resp.ok) { loadClothings(); showMessage('clothing', 'Удалено', false); }
-    else showMessage('clothing', 'Ошибка удаления', true);
+    try {
+        const resp = await fetch(`${CLOTHINGS_URL}/${id}`, { method: 'DELETE' });
+        if (resp.ok) {
+            loadClothings();
+            showMessage('clothing', 'Удалено', false);
+        } else {
+            showMessage('clothing', 'Ошибка удаления', true);
+        }
+    } catch (err) {
+        showMessage('clothing', 'Ошибка сети: ' + err.message, true);
+    }
 }
 
+// ========== АКСЕССУАРЫ ==========
 async function loadAccessories() {
     try {
         const resp = await fetch(ACCESSORIES_URL);
@@ -341,32 +296,33 @@ async function loadAccessories() {
         accessories.sort((a, b) => a.accessory_id - b.accessory_id);
         const tbody = document.getElementById('accessory-tbody');
         tbody.innerHTML = '';
-        if (accessories.length === 0) { tbody.innerHTML = '<tr><td colspan="6">Нет данных</td></tr>'; return; }
+        if (accessories.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8">Нет данных</td></tr>';
+            return;
+        }
         for (const a of accessories) {
-            let productName = '';
-            if (a.merch_id) {
-                const merchResp = await fetch(`${MERCH_URL}/${a.merch_id}`);
-                if (merchResp.ok) {
-                    const merch = await merchResp.json();
-                    const prodResp = await fetch(`${PRODUCTS_URL}/${merch.product_id}`);
-                    if (prodResp.ok) productName = (await prodResp.json()).name;
-                }
-            }
             const row = tbody.insertRow();
             row.insertCell(0).textContent = a.accessory_id;
-            row.insertCell(1).textContent = a.merch_id;
-            row.insertCell(2).textContent = productName;
-            row.insertCell(3).textContent = a.accessory_type || '';
-            row.insertCell(4).textContent = a.weight || '';
-            const actions = row.insertCell(5);
-            const editBtn = document.createElement('button'); editBtn.textContent = 'Ред.'; editBtn.className = 'edit-btn';
+            row.insertCell(1).textContent = a.name;
+            row.insertCell(2).textContent = a.price;
+            row.insertCell(3).textContent = a.stock;
+            row.insertCell(4).textContent = a.material || '';
+            row.insertCell(5).textContent = a.color || '';
+            row.insertCell(6).textContent = `${a.accessory_type || ''} ${a.weight || ''}`;
+            const actions = row.insertCell(7);
+            const editBtn = document.createElement('button');
+            editBtn.textContent = 'Ред.';
+            editBtn.className = 'edit-btn';
             editBtn.onclick = () => fillAccessoryForm(a);
-            const delBtn = document.createElement('button'); delBtn.textContent = 'Удалить'; delBtn.className = 'delete-btn';
+            const delBtn = document.createElement('button');
+            delBtn.textContent = 'Удалить';
+            delBtn.className = 'delete-btn';
             delBtn.onclick = () => deleteAccessory(a.accessory_id);
             actions.append(editBtn, delBtn);
         }
     } catch (err) {
-        document.getElementById('accessory-tbody').innerHTML = `<tr><td colspan="6">Ошибка: ${err.message}</td></tr>`;
+        document.getElementById('accessory-tbody').innerHTML = '<tr><td colspan="8">Ошибка загрузки</td></tr>';
+        showMessage('accessory', 'Ошибка: ' + err.message, true);
     }
 }
 
@@ -388,24 +344,20 @@ function clearAccessoryForm() {
 }
 
 function fillAccessoryForm(a) {
-    fetch(`${MERCH_URL}/${a.merch_id}`).then(resp => resp.json()).then(merch => {
-        fetch(`${PRODUCTS_URL}/${merch.product_id}`).then(resp => resp.json()).then(prod => {
-            document.getElementById('accessory-name').value = prod.name;
-            document.getElementById('accessory-price').value = prod.price;
-            document.getElementById('accessory-description').value = prod.description || '';
-            document.getElementById('accessory-stock').value = prod.stock;
-            document.getElementById('accessory-manufacturer-id').value = prod.manufacturer_id || '';
-            document.getElementById('accessory-material').value = merch.material || '';
-            document.getElementById('accessory-color').value = merch.color || '';
-            document.getElementById('accessory-type').value = a.accessory_type || '';
-            document.getElementById('accessory-weight').value = a.weight || '';
-            document.getElementById('accessory-edit-id').value = a.accessory_id;
-            accessoryEditId = a.accessory_id;
-            document.getElementById('accessory-form-title').innerText = 'Редактировать аксессуар';
-            document.getElementById('accessory-submit').innerText = 'Сохранить';
-            document.getElementById('accessory-cancel').style.display = 'inline-block';
-        });
-    });
+    document.getElementById('accessory-name').value = a.name;
+    document.getElementById('accessory-price').value = a.price;
+    document.getElementById('accessory-description').value = a.description || '';
+    document.getElementById('accessory-stock').value = a.stock;
+    document.getElementById('accessory-manufacturer-id').value = a.manufacturer_id || '';
+    document.getElementById('accessory-material').value = a.material || '';
+    document.getElementById('accessory-color').value = a.color || '';
+    document.getElementById('accessory-type').value = a.accessory_type || '';
+    document.getElementById('accessory-weight').value = a.weight || '';
+    document.getElementById('accessory-edit-id').value = a.accessory_id;
+    accessoryEditId = a.accessory_id;
+    document.getElementById('accessory-form-title').innerText = 'Редактировать аксессуар';
+    document.getElementById('accessory-submit').innerText = 'Сохранить';
+    document.getElementById('accessory-cancel').style.display = 'inline-block';
 }
 
 async function saveAccessory() {
@@ -421,29 +373,47 @@ async function saveAccessory() {
         accessory_type: document.getElementById('accessory-type').value.trim(),
         weight: parseFloat(document.getElementById('accessory-weight').value) || null
     };
-    if (!data.name || isNaN(data.price)) { showMessage('accessory', 'Заполните название и цену', true); return; }
-    if (id) {
-        showMessage('accessory', 'Редактирование аксессуара не поддерживается', true);
+    if (!data.name || isNaN(data.price)) {
+        showMessage('accessory', 'Заполните название и цену', true);
         return;
     }
-    const resp = await fetch(ACCESSORIES_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-    if (resp.ok) {
-        clearAccessoryForm(); loadAccessories(); showMessage('accessory', 'Аксессуар добавлен', false);
-    } else {
-        const err = await resp.json();
-        showMessage('accessory', 'Ошибка: ' + (err.title || resp.status), true);
+    let url = ACCESSORIES_URL, method = 'POST';
+    if (id) {
+        data.accessory_id = parseInt(id);
+        url += `/${id}`;
+        method = 'PUT';
+    }
+    try {
+        const resp = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        if (resp.ok) {
+            clearAccessoryForm();
+            loadAccessories();
+            showMessage('accessory', 'Сохранено', false);
+        } else {
+            let errText = `Ошибка ${resp.status}`;
+            try { const err = await resp.json(); errText = err.title || errText; } catch(e) {}
+            showMessage('accessory', errText, true);
+        }
+    } catch (err) {
+        showMessage('accessory', 'Ошибка сети: ' + err.message, true);
     }
 }
 
 async function deleteAccessory(id) {
     if (!confirm('Удалить аксессуар?')) return;
-    const resp = await fetch(`${ACCESSORIES_URL}/${id}`, { method: 'DELETE' });
-    if (resp.ok) { loadAccessories(); showMessage('accessory', 'Удалено', false); }
-    else showMessage('accessory', 'Ошибка удаления', true);
+    try {
+        const resp = await fetch(`${ACCESSORIES_URL}/${id}`, { method: 'DELETE' });
+        if (resp.ok) {
+            loadAccessories();
+            showMessage('accessory', 'Удалено', false);
+        } else {
+            showMessage('accessory', 'Ошибка удаления', true);
+        }
+    } catch (err) {
+        showMessage('accessory', 'Ошибка сети: ' + err.message, true);
+    }
 }
 
-document.getElementById('all-submit').addEventListener('click', saveAllProduct);
-document.getElementById('all-cancel').addEventListener('click', clearAllForm);
 document.getElementById('ticket-submit').addEventListener('click', saveTicket);
 document.getElementById('ticket-cancel').addEventListener('click', clearTicketForm);
 document.getElementById('clothing-submit').addEventListener('click', saveClothing);
@@ -458,14 +428,17 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.add('active');
         const tabId = `${btn.dataset.tab}-tab`;
         document.getElementById(tabId).classList.add('active');
-        if (btn.dataset.tab === 'all') loadAllProducts();
-        else if (btn.dataset.tab === 'ticket') { loadTickets(); loadConcertsSelect('ticket-concert-id'); }
-        else if (btn.dataset.tab === 'clothing') loadClothings();
-        else if (btn.dataset.tab === 'accessory') loadAccessories();
+        if (btn.dataset.tab === 'ticket') {
+            loadTickets();
+            loadConcertsSelect('ticket-concert-id');
+        } else if (btn.dataset.tab === 'clothing') {
+            loadClothings();
+        } else if (btn.dataset.tab === 'accessory') {
+            loadAccessories();
+        }
     });
 });
 
-loadAllProducts();
 loadConcertsSelect('ticket-concert-id');
 loadTickets();
 loadClothings();

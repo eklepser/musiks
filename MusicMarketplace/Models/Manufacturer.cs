@@ -1,15 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace MusicMarketplace.Models;
-
-public partial class Manufacturer
+namespace MusicMarketplace.Models
 {
-    public int manufacturer_id { get; set; }
+    [Table("Manufacturer")]
+    public class Manufacturer
+    {
+        public int manufacturer_id { get; set; }
+        public string name { get; set; }
+        public string contact_info { get; set; }
 
-    public string name { get; set; } = null!;
-
-    public string? contact_info { get; set; }
-
-    public virtual ICollection<Product> Products { get; set; } = new List<Product>();
+        public virtual ICollection<Product> Products { get; set; }
+    }
 }

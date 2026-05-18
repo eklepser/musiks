@@ -26,7 +26,6 @@ public partial class MusicMarketplaceContext : DbContext
     public virtual DbSet<User> Users { get; set; }
     public virtual DbSet<Wishlist> Wishlists { get; set; }
 
-    // 🔹 Явные сущности для таблиц-связей
     public virtual DbSet<ArtistConcert> ArtistConcerts { get; set; }
     public virtual DbSet<ArtistMerch> ArtistMerches { get; set; }
     public virtual DbSet<ProductGenre> ProductGenres { get; set; }
@@ -36,16 +35,31 @@ public partial class MusicMarketplaceContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Clothing>(entity =>
+        {
+            entity.ToTable("Clothing");
+            entity.HasKey(e => e.clothing_id);
+            entity.HasOne(e => e.Merch)
+                  .WithMany(e => e.Clothings)
+                  .HasForeignKey(e => e.merch_id);
+        });
+
         modelBuilder.Entity<Accessory>(entity =>
         {
-            entity.HasKey(e => e.accessory_id).HasName("Accessory_pkey");
             entity.ToTable("Accessory");
-            entity.HasIndex(e => e.merch_id, "Accessory_merch_id_key").IsUnique();
-            entity.Property(e => e.accessory_type).HasMaxLength(50);
-            entity.Property(e => e.weight).HasPrecision(6, 2);
-            entity.HasOne(d => d.merch).WithOne(p => p.Accessory)
-                .HasForeignKey<Accessory>(d => d.merch_id)
-                .HasConstraintName("Accessory_merch_id_fkey");
+            entity.HasKey(e => e.accessory_id);
+            entity.HasOne(e => e.Merch)
+                  .WithMany(e => e.Accessories)
+                  .HasForeignKey(e => e.merch_id);
+        });
+
+        modelBuilder.Entity<Merch>(entity =>
+        {
+            entity.ToTable("Merch");
+            entity.HasKey(e => e.merch_id);
+            entity.HasOne(e => e.Product)
+                  .WithMany(e => e.Merches)
+                  .HasForeignKey(e => e.product_id);
         });
 
         modelBuilder.Entity<Artist>(entity =>
@@ -55,7 +69,6 @@ public partial class MusicMarketplaceContext : DbContext
             entity.Property(e => e.country).HasMaxLength(50);
             entity.Property(e => e.language).HasMaxLength(50);
             entity.Property(e => e.name).HasMaxLength(100);
-            // ⚠️ Блоки .UsingEntity<Dictionary...> УДАЛЕНЫ — связи через явные таблицы ниже
         });
 
         modelBuilder.Entity<Cart>(entity =>
@@ -65,16 +78,6 @@ public partial class MusicMarketplaceContext : DbContext
             entity.Property(e => e.added_date).HasDefaultValueSql("CURRENT_TIMESTAMP").HasColumnType("timestamp without time zone");
             entity.HasOne(d => d.product).WithMany(p => p.Carts).HasForeignKey(d => d.product_id).HasConstraintName("Cart_product_id_fkey");
             entity.HasOne(d => d.user).WithMany(p => p.Carts).HasForeignKey(d => d.user_id).HasConstraintName("Cart_user_id_fkey");
-        });
-
-        modelBuilder.Entity<Clothing>(entity =>
-        {
-            entity.HasKey(e => e.clothing_id).HasName("Clothing_pkey");
-            entity.ToTable("Clothing");
-            entity.HasIndex(e => e.merch_id, "Clothing_merch_id_key").IsUnique();
-            entity.Property(e => e.gender).HasMaxLength(10);
-            entity.Property(e => e.size).HasMaxLength(10);
-            entity.HasOne(d => d.merch).WithOne(p => p.Clothing).HasForeignKey<Clothing>(d => d.merch_id).HasConstraintName("Clothing_merch_id_fkey");
         });
 
         modelBuilder.Entity<Concert>(entity =>
@@ -100,16 +103,6 @@ public partial class MusicMarketplaceContext : DbContext
             entity.ToTable("Manufacturer");
             entity.Property(e => e.contact_info).HasMaxLength(200);
             entity.Property(e => e.name).HasMaxLength(100);
-        });
-
-        modelBuilder.Entity<Merch>(entity =>
-        {
-            entity.HasKey(e => e.merch_id).HasName("Merch_pkey");
-            entity.ToTable("Merch");
-            entity.HasIndex(e => e.product_id, "Merch_product_id_key").IsUnique();
-            entity.Property(e => e.color).HasMaxLength(30);
-            entity.Property(e => e.material).HasMaxLength(50);
-            entity.HasOne(d => d.product).WithOne(p => p.Merch).HasForeignKey<Merch>(d => d.product_id).HasConstraintName("Merch_product_id_fkey");
         });
 
         modelBuilder.Entity<Order>(entity =>
@@ -139,7 +132,6 @@ public partial class MusicMarketplaceContext : DbContext
             entity.Property(e => e.price).HasPrecision(10, 2);
             entity.Property(e => e.stock).HasDefaultValue(0);
             entity.HasOne(d => d.manufacturer).WithMany(p => p.Products).HasForeignKey(d => d.manufacturer_id).OnDelete(DeleteBehavior.SetNull).HasConstraintName("Product_manufacturer_id_fkey");
-            // ⚠️ Блок .UsingEntity<Dictionary...> УДАЛЁН
         });
 
         modelBuilder.Entity<Review>(entity =>
@@ -185,7 +177,6 @@ public partial class MusicMarketplaceContext : DbContext
             entity.HasOne(d => d.user).WithMany(p => p.Wishlists).HasForeignKey(d => d.user_id).HasConstraintName("Wishlist_user_id_fkey");
         });
 
-        // 🔹 Явные конфигурации таблиц-связей с внешними ключами
         modelBuilder.Entity<ArtistConcert>(entity =>
         {
             entity.ToTable("ArtistConcert");

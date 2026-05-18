@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MusicMarketplace.DTOs;
 using MusicMarketplace.Models;
@@ -13,11 +10,7 @@ namespace MusicMarketplace.Controllers
     public class ArtistMerchesController : ControllerBase
     {
         private readonly MusicMarketplaceContext _context;
-
-        public ArtistMerchesController(MusicMarketplaceContext context)
-        {
-            _context = context;
-        }
+        public ArtistMerchesController(MusicMarketplaceContext context) => _context = context;
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ArtistMerchDto>>> GetArtistMerches()
@@ -33,34 +26,23 @@ namespace MusicMarketplace.Controllers
                     product_name = p.name
                 })
                 .ToListAsync();
-
             return data;
         }
 
         [HttpPost]
-        public async Task<ActionResult<ArtistMerch>> PostArtistMerch(ArtistMerch relation)
+        public async Task<ActionResult<ArtistMerch>> PostArtistMerch(ArtistMerch dto)
         {
-            _context.ArtistMerches.Add(relation);
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
-            {
-                if (await _context.ArtistMerches.AnyAsync(am => am.artist_id == relation.artist_id && am.merch_id == relation.merch_id))
-                    return Conflict();
-                else throw;
-            }
-            return CreatedAtAction(nameof(GetArtistMerches), new { artistId = relation.artist_id, merchId = relation.merch_id }, relation);
+            _context.ArtistMerches.Add(dto);
+            await _context.SaveChangesAsync();
+            return CreatedAtAction(nameof(GetArtistMerches), new { }, dto);
         }
 
-        [HttpDelete("{artistId}/{merchId}")]
-        public async Task<IActionResult> DeleteArtistMerch(int artistId, int merchId)
+        [HttpDelete("{artist_id}/{merch_id}")]
+        public async Task<IActionResult> DeleteArtistMerch(int artist_id, int merch_id)
         {
-            var relation = await _context.ArtistMerches
-                .FirstOrDefaultAsync(am => am.artist_id == artistId && am.merch_id == merchId);
-            if (relation == null) return NotFound();
-            _context.ArtistMerches.Remove(relation);
+            var entity = await _context.ArtistMerches.FindAsync(artist_id, merch_id);
+            if (entity == null) return NotFound();
+            _context.ArtistMerches.Remove(entity);
             await _context.SaveChangesAsync();
             return NoContent();
         }

@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MusicMarketplace.Models;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace MusicMarketplace.Controllers
 {
@@ -19,40 +19,29 @@ namespace MusicMarketplace.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Ticket>>> GetTickets()
+        public async Task<ActionResult<IEnumerable<TicketDto>>> GetTickets()
         {
-            return await _context.Tickets.ToListAsync();
-        }
-
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Ticket>> GetTicket(int id)
-        {
-            var ticket = await _context.Tickets.FindAsync(id);
-            if (ticket == null) return NotFound();
-            return ticket;
-        }
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutTicket(int id, TicketUpdateDto dto)
-        {
-            if (id != dto.ticket_id) return BadRequest();
-
-            var ticket = await _context.Tickets.FindAsync(id);
-            if (ticket == null) return NotFound();
-
-            ticket.product_id = dto.product_id;
-            ticket.concert_id = dto.concert_id;
-            ticket.seat_row = dto.seat_row;
-            ticket.seat_number = dto.seat_number;
-            ticket.price_category = dto.price_category;
-
-            _context.Entry(ticket).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
-            return NoContent();
+            var tickets = await (from t in _context.Tickets
+                                 join p in _context.Products on t.product_id equals p.product_id
+                                 select new TicketDto
+                                 {
+                                     ticket_id = t.ticket_id,
+                                     product_id = t.product_id,
+                                     name = p.name,
+                                     price = p.price,
+                                     description = p.description,
+                                     stock = p.stock,
+                                     manufacturer_id = p.manufacturer_id,
+                                     concert_id = t.concert_id,
+                                     seat_row = t.seat_row,
+                                     seat_number = t.seat_number,
+                                     price_category = t.price_category
+                                 }).ToListAsync();
+            return Ok(tickets);
         }
 
         [HttpPost]
-        public async Task<ActionResult<Ticket>> PostTicket(TicketCreateWithProductDto dto)
+        public async Task<ActionResult<TicketDto>> CreateTicket(TicketDto dto)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
 
@@ -80,7 +69,39 @@ namespace MusicMarketplace.Controllers
 
             await transaction.CommitAsync();
 
-            return CreatedAtAction(nameof(GetTicket), new { id = ticket.ticket_id }, ticket);
+            dto.ticket_id = ticket.ticket_id;
+            dto.product_id = product.product_id;
+            return CreatedAtAction(nameof(GetTickets), new { id = ticket.ticket_id }, dto);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateTicket(int id, TicketDto dto)
+        {
+            if (id != dto.ticket_id) return BadRequest();
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            var ticket = await _context.Tickets.FindAsync(id);
+            if (ticket == null) return NotFound();
+
+            var product = await _context.Products.FindAsync(ticket.product_id);
+            if (product == null) return NotFound();
+
+            product.name = dto.name;
+            product.price = dto.price;
+            product.description = dto.description;
+            product.stock = dto.stock;
+            product.manufacturer_id = dto.manufacturer_id;
+
+            ticket.concert_id = dto.concert_id;
+            ticket.seat_row = dto.seat_row;
+            ticket.seat_number = dto.seat_number;
+            ticket.price_category = dto.price_category;
+
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            return NoContent();
         }
 
         [HttpDelete("{id}")]
@@ -93,6 +114,7 @@ namespace MusicMarketplace.Controllers
             _context.Tickets.Remove(ticket);
             if (product != null) _context.Products.Remove(product);
             await _context.SaveChangesAsync();
+
             return NoContent();
         }
     }

@@ -1,19 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
-namespace MusicMarketplace.Models;
-
-public partial class OrderItem
+namespace MusicMarketplace.Models
 {
-    public int order_id { get; set; }
+    [Table("OrderItem")]
+    public class OrderItem
+    {
+        public int order_id { get; set; }
+        public int product_id { get; set; }
+        public int quantity { get; set; }
+        public decimal unit_price { get; set; }
 
-    public int product_id { get; set; }
-
-    public int quantity { get; set; }
-
-    public decimal unit_price { get; set; }
-
-    public virtual Order order { get; set; } = null!;
-
-    public virtual Product product { get; set; } = null!;
+        public virtual Order order { get; set; }
+        public virtual Product product { get; set; }
+    }
 }

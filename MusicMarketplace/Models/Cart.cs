@@ -1,19 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace MusicMarketplace.Models;
-
-public partial class Cart
+namespace MusicMarketplace.Models
 {
-    public int user_id { get; set; }
+    [Table("Cart")]
+    public class Cart
+    {
+        public int user_id { get; set; }
+        public int product_id { get; set; }
+        public int quantity { get; set; }
+        public DateTime added_date { get; set; }
 
-    public int product_id { get; set; }
-
-    public int quantity { get; set; }
-
-    public DateTime added_date { get; set; }
-
-    public virtual Product product { get; set; } = null!;
-
-    public virtual User user { get; set; } = null!;
+        public virtual User user { get; set; }
+        public virtual Product product { get; set; }
+    }
 }

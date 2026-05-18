@@ -1,27 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace MusicMarketplace.Models;
-
-public partial class User
+namespace MusicMarketplace.Models
 {
-    public int user_id { get; set; }
+    [Table("User")]
+    public class User
+    {
+        public int user_id { get; set; }
+        public string login { get; set; }
+        public string email { get; set; }
+        public string full_name { get; set; }
+        public DateTime registration_date { get; set; }
+        public string password_hash { get; set; }
 
-    public string login { get; set; } = null!;
-
-    public string email { get; set; } = null!;
-
-    public DateOnly registration_date { get; set; }
-
-    public string full_name { get; set; } = null!;
-
-    public string password_hash { get; set; } = null!;
-
-    public virtual ICollection<Cart> Carts { get; set; } = new List<Cart>();
-
-    public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
-
-    public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
-
-    public virtual ICollection<Wishlist> Wishlists { get; set; } = new List<Wishlist>();
+        public virtual ICollection<Cart> Carts { get; set; }
+        public virtual ICollection<Order> Orders { get; set; }
+        public virtual ICollection<Review> Reviews { get; set; }
+        public virtual ICollection<Wishlist> Wishlists { get; set; }
+    }
 }
