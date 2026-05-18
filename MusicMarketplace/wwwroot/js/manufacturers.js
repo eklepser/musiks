@@ -33,6 +33,8 @@ function clearForm() {
     formTitle.textContent = 'Добавить производителя';
     submitBtn.textContent = 'Добавить';
     cancelBtn.style.display = 'none';
+    nameInput.required = true;
+    contactInput.required = false;
 }
 
 function validateForm() {
@@ -49,7 +51,10 @@ async function renderTable() {
         let items = await response.json();
         items.sort((a, b) => a.manufacturer_id - b.manufacturer_id);
         tbody.innerHTML = '';
-        if (items.length === 0) { tbody.innerHTML = '<tr><td colspan="4">Нет данных</td></td>'; return; }
+        if (items.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4">Нет данных</td></td>';
+            return;
+        }
         items.forEach(item => {
             const row = tbody.insertRow();
             row.insertCell(0).textContent = item.manufacturer_id;
@@ -81,6 +86,8 @@ function fillFormForEdit(item) {
     formTitle.textContent = 'Редактировать производителя';
     submitBtn.textContent = 'Сохранить';
     cancelBtn.style.display = 'inline-block';
+    nameInput.required = true;
+    contactInput.required = false;
 }
 
 async function createItem() {
@@ -92,6 +99,29 @@ async function createItem() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
+        if (response.status === 409) {
+            const text = await response.text();
+            let msg = text;
+            try { const json = JSON.parse(text); msg = json.title || json.message || text; } catch (e) { }
+            showError(msg);
+            return false;
+        }
+        if (response.status === 400) {
+            const text = await response.text();
+            let errors = '';
+            try {
+                const json = JSON.parse(text);
+                if (json.errors) {
+                    for (const field in json.errors) {
+                        errors += `${field}: ${json.errors[field].join(', ')}\n`;
+                    }
+                }
+                showError(errors || json.title || 'Некорректные данные');
+            } catch (e) {
+                showError(text || 'Ошибка валидации');
+            }
+            return false;
+        }
         if (!response.ok) throw new Error('Ошибка ' + response.status);
         clearForm();
         await renderTable();
@@ -112,6 +142,29 @@ async function updateItem(id) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
+        if (response.status === 409) {
+            const text = await response.text();
+            let msg = text;
+            try { const json = JSON.parse(text); msg = json.title || json.message || text; } catch (e) { }
+            showError(msg);
+            return false;
+        }
+        if (response.status === 400) {
+            const text = await response.text();
+            let errors = '';
+            try {
+                const json = JSON.parse(text);
+                if (json.errors) {
+                    for (const field in json.errors) {
+                        errors += `${field}: ${json.errors[field].join(', ')}\n`;
+                    }
+                }
+                showError(errors || json.title || 'Некорректные данные');
+            } catch (e) {
+                showError(text || 'Ошибка валидации');
+            }
+            return false;
+        }
         if (!response.ok) throw new Error('HTTP ' + response.status);
         clearForm();
         await renderTable();

@@ -1,11 +1,9 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using MusicMarketplace.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using MusicMarketplace.Models;
 
 namespace MusicMarketplace.Controllers
 {
@@ -14,94 +12,65 @@ namespace MusicMarketplace.Controllers
     public class ArtistsController : ControllerBase
     {
         private readonly MusicMarketplaceContext _context;
+        public ArtistsController(MusicMarketplaceContext context) => _context = context;
 
-        public ArtistsController(MusicMarketplaceContext context)
-        {
-            _context = context;
-        }
-
-        // GET: api/Artists
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Artist>>> GetArtists()
-        {
-            return await _context.Artists.ToListAsync();
-        }
+        public async Task<ActionResult<IEnumerable<Artist>>> GetArtists() =>
+            await _context.Artists.ToListAsync();
 
-        // GET: api/Artists/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Artist>> GetArtist(int id)
         {
             var artist = await _context.Artists.FindAsync(id);
-
-            if (artist == null)
-            {
-                return NotFound();
-            }
-
-            return artist;
+            return artist == null ? NotFound() : artist;
         }
 
-        // PUT: api/Artists/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutArtist(int id, Artist artist)
+        [HttpPost]
+        public async Task<ActionResult<Artist>> PostArtist(ArtistDto dto)
         {
-            if (id != artist.artist_id)
-            {
-                return BadRequest();
-            }
+            if (await _context.Artists.AnyAsync(a => a.name == dto.name))
+                return Conflict("Исполнитель с таким именем уже существует");
 
-            _context.Entry(artist).State = EntityState.Modified;
-
-            try
+            var artist = new Artist
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ArtistExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+                name = dto.name,
+                country = dto.country,
+                debut_year = dto.debut_year,
+                language = dto.language
+            };
+            _context.Artists.Add(artist);
+            await _context.SaveChangesAsync();
+            return CreatedAtAction(nameof(GetArtist), new { id = artist.artist_id }, artist);
+        }
 
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutArtist(int id, ArtistDto dto)
+        {
+            if (id != dto.artist_id) return BadRequest();
+
+            var artist = await _context.Artists.FindAsync(id);
+            if (artist == null) return NotFound();
+
+            if (await _context.Artists.AnyAsync(a => a.name == dto.name && a.artist_id != id))
+                return Conflict("Исполнитель с таким именем уже существует");
+
+            artist.name = dto.name;
+            artist.country = dto.country;
+            artist.debut_year = dto.debut_year;
+            artist.language = dto.language;
+
+            await _context.SaveChangesAsync();
             return NoContent();
         }
 
-        // POST: api/Artists
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<Artist>> PostArtist(Artist artist)
-        {
-            _context.Artists.Add(artist);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetArtist", new { id = artist.artist_id }, artist);
-        }
-
-        // DELETE: api/Artists/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteArtist(int id)
         {
             var artist = await _context.Artists.FindAsync(id);
-            if (artist == null)
-            {
-                return NotFound();
-            }
-
+            if (artist == null) return NotFound();
             _context.Artists.Remove(artist);
             await _context.SaveChangesAsync();
-
             return NoContent();
-        }
-
-        private bool ArtistExists(int id)
-        {
-            return _context.Artists.Any(e => e.artist_id == id);
         }
     }
 }

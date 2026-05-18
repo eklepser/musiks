@@ -1,11 +1,9 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using MusicMarketplace.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using MusicMarketplace.Models;
 
 namespace MusicMarketplace.Controllers
 {
@@ -20,88 +18,80 @@ namespace MusicMarketplace.Controllers
             _context = context;
         }
 
-        // GET: api/Products
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
         {
             return await _context.Products.ToListAsync();
         }
 
-        // GET: api/Products/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Product>> GetProduct(int id)
         {
             var product = await _context.Products.FindAsync(id);
-
-            if (product == null)
-            {
-                return NotFound();
-            }
-
+            if (product == null) return NotFound();
             return product;
         }
 
-        // PUT: api/Products/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutProduct(int id, Product product)
+        [HttpPost]
+        public async Task<ActionResult<Product>> PostProduct(ProductDto dto)
         {
-            if (id != product.product_id)
-            {
-                return BadRequest();
-            }
+            if (string.IsNullOrWhiteSpace(dto.name))
+                return BadRequest("Название товара обязательно");
 
-            _context.Entry(product).State = EntityState.Modified;
+            if (dto.manufacturer_id == 0)
+                return BadRequest("Производитель обязателен");
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ProductExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            if (await _context.Products.AnyAsync(p => p.name == dto.name))
+                return Conflict("Товар с таким названием уже существует");
 
+            var product = new Product
+            {
+                name = dto.name,
+                price = dto.price,
+                description = dto.description,
+                stock = dto.stock,
+                manufacturer_id = dto.manufacturer_id
+            };
+            _context.Products.Add(product);
+            await _context.SaveChangesAsync();
+            return CreatedAtAction(nameof(GetProduct), new { id = product.product_id }, product);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutProduct(int id, ProductDto dto)
+        {
+            if (id != dto.product_id) return BadRequest();
+
+            if (string.IsNullOrWhiteSpace(dto.name))
+                return BadRequest("Название товара обязательно");
+
+            if (dto.manufacturer_id == 0)
+                return BadRequest("Производитель обязателен");
+
+            var product = await _context.Products.FindAsync(id);
+            if (product == null) return NotFound();
+
+            if (await _context.Products.AnyAsync(p => p.name == dto.name && p.product_id != id))
+                return Conflict("Товар с таким названием уже существует");
+
+            product.name = dto.name;
+            product.price = dto.price;
+            product.description = dto.description;
+            product.stock = dto.stock;
+            product.manufacturer_id = dto.manufacturer_id;
+
+            await _context.SaveChangesAsync();
             return NoContent();
         }
 
-        // POST: api/Products
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<Product>> PostProduct(Product product)
-        {
-            _context.Products.Add(product);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetProduct", new { id = product.product_id }, product);
-        }
-
-        // DELETE: api/Products/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProduct(int id)
         {
             var product = await _context.Products.FindAsync(id);
-            if (product == null)
-            {
-                return NotFound();
-            }
-
+            if (product == null) return NotFound();
             _context.Products.Remove(product);
             await _context.SaveChangesAsync();
-
             return NoContent();
-        }
-
-        private bool ProductExists(int id)
-        {
-            return _context.Products.Any(e => e.product_id == id);
         }
     }
 }

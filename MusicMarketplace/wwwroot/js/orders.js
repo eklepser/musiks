@@ -59,7 +59,7 @@ async function renderTable() {
         let orders = await resp.json();
         orders.sort((a, b) => a.order_id - b.order_id);
         tbody.innerHTML = '';
-        if (orders.length === 0) { tbody.innerHTML = '<tr><td colspan="6">Нет данных</td></tr>'; return; }
+        if (orders.length === 0) { tbody.innerHTML = '<tr><td colspan="6">Нет данных</td></td>'; return; }
         for (const order of orders) {
             const userResp = await fetch(`${USERS_URL}/${order.user_id}`);
             const userName = userResp.ok ? (await userResp.json()).full_name : `ID ${order.user_id}`;
@@ -97,6 +97,11 @@ async function createOrder() {
     const data = { user_id: parseInt(userIdSelect.value), order_date: orderDateInput.value, status: statusSelect.value, total_amount: parseFloat(totalAmountInput.value) };
     try {
         const resp = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        if (resp.status === 409) {
+            const conflict = await resp.json();
+            showError(conflict.title || 'Заказ с таким номером уже существует');
+            return false;
+        }
         if (!resp.ok) throw new Error('Ошибка ' + resp.status);
         clearForm(); await renderTable(); showSuccess('Заказ добавлен'); return true;
     } catch (err) { showError('Ошибка добавления: ' + err.message); return false; }
@@ -106,6 +111,11 @@ async function updateOrder(id) {
     const data = { order_id: id, user_id: parseInt(userIdSelect.value), order_date: orderDateInput.value, status: statusSelect.value, total_amount: parseFloat(totalAmountInput.value) };
     try {
         const resp = await fetch(`${API_URL}/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        if (resp.status === 409) {
+            const conflict = await resp.json();
+            showError(conflict.title || 'Заказ с таким номером уже существует');
+            return false;
+        }
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         clearForm(); await renderTable(); showSuccess('Заказ обновлён'); return true;
     } catch (err) { showError('Ошибка обновления: ' + err.message); return false; }

@@ -181,7 +181,8 @@ async function saveTicket() {
         concert_id: parseInt(document.getElementById('ticket-concert-id').value),
         seat_row: document.getElementById('ticket-seat-row').value.trim(),
         seat_number: document.getElementById('ticket-seat-number').value.trim(),
-        price_category: document.getElementById('ticket-price-category').value.trim()
+        price_category: document.getElementById('ticket-price-category').value.trim(),
+        manufacturer_id: parseInt(document.getElementById('ticket-manufacturer-id').value) || null
     };
     let url = TICKETS_URL, method = 'POST';
     if (id) {
@@ -473,6 +474,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 
 loadManufacturers('clothing-manufacturer-id');
+loadManufacturers('ticket-manufacturer-id');
 loadManufacturers('accessory-manufacturer-id');
 loadConcertsSelect('ticket-concert-id');
 loadTickets();

@@ -62,7 +62,10 @@ async function renderTable() {
         let concerts = await response.json();
         concerts.sort((a, b) => a.concert_id - b.concert_id);
         tbody.innerHTML = '';
-        if (concerts.length === 0) { tbody.innerHTML = '<tr><td colspan="5">Нет данных</td></tr>'; return; }
+        if (concerts.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5">Нет данных</td></td>';
+            return;
+        }
         concerts.forEach(concert => {
             const row = tbody.insertRow();
             row.insertCell(0).textContent = concert.concert_id;
@@ -101,13 +104,36 @@ function fillFormForEdit(concert) {
 
 async function createConcert() {
     if (!validateForm()) return false;
-    const concert = { title: titleInput.value.trim(), venue: venueInput.value.trim(), datetime: datetimeInput.value };
+    const data = { title: titleInput.value.trim(), venue: venueInput.value.trim(), datetime: datetimeInput.value };
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(concert)
+            body: JSON.stringify(data)
         });
+        if (response.status === 409) {
+            const text = await response.text();
+            let msg = text;
+            try { const json = JSON.parse(text); msg = json.title || json.message || text; } catch (e) { }
+            showError(msg);
+            return false;
+        }
+        if (response.status === 400) {
+            const text = await response.text();
+            let errors = '';
+            try {
+                const json = JSON.parse(text);
+                if (json.errors) {
+                    for (const field in json.errors) {
+                        errors += `${field}: ${json.errors[field].join(', ')}\n`;
+                    }
+                }
+                showError(errors || json.title || 'Некорректные данные');
+            } catch (e) {
+                showError(text || 'Ошибка валидации');
+            }
+            return false;
+        }
         if (!response.ok) throw new Error('Ошибка ' + response.status);
         clearForm();
         await renderTable();
@@ -121,13 +147,36 @@ async function createConcert() {
 
 async function updateConcert(id) {
     if (!validateForm()) return false;
-    const concert = { concert_id: id, title: titleInput.value.trim(), venue: venueInput.value.trim(), datetime: datetimeInput.value };
+    const data = { title: titleInput.value.trim(), venue: venueInput.value.trim(), datetime: datetimeInput.value };
     try {
         const response = await fetch(`${API_URL}/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(concert)
+            body: JSON.stringify(data)
         });
+        if (response.status === 409) {
+            const text = await response.text();
+            let msg = text;
+            try { const json = JSON.parse(text); msg = json.title || json.message || text; } catch (e) { }
+            showError(msg);
+            return false;
+        }
+        if (response.status === 400) {
+            const text = await response.text();
+            let errors = '';
+            try {
+                const json = JSON.parse(text);
+                if (json.errors) {
+                    for (const field in json.errors) {
+                        errors += `${field}: ${json.errors[field].join(', ')}\n`;
+                    }
+                }
+                showError(errors || json.title || 'Некорректные данные');
+            } catch (e) {
+                showError(text || 'Ошибка валидации');
+            }
+            return false;
+        }
         if (!response.ok) throw new Error('HTTP ' + response.status);
         clearForm();
         await renderTable();

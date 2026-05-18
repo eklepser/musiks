@@ -33,6 +33,8 @@ function clearForm() {
     formTitle.textContent = 'Добавить жанр';
     submitBtn.textContent = 'Добавить';
     cancelBtn.style.display = 'none';
+    nameInput.required = true;
+    descInput.required = false;
 }
 
 function validateForm() {
@@ -49,7 +51,10 @@ async function renderTable() {
         let genres = await response.json();
         genres.sort((a, b) => a.genre_id - b.genre_id);
         tbody.innerHTML = '';
-        if (genres.length === 0) { tbody.innerHTML = '<tr><td colspan="4">Нет данных</td></tr>'; return; }
+        if (genres.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4">Нет данных</td></tr>';
+            return;
+        }
         genres.forEach(genre => {
             const row = tbody.insertRow();
             row.insertCell(0).textContent = genre.genre_id;
@@ -69,7 +74,7 @@ async function renderTable() {
         });
     } catch (err) {
         showError('Ошибка загрузки: ' + err.message);
-        tbody.innerHTML = '<tr><td colspan="4">Ошибка загрузки данных</td></tr>';
+        tbody.innerHTML = '<td><td colspan="4">Ошибка загрузки данных</td></tr>';
     }
 }
 
@@ -81,17 +86,42 @@ function fillFormForEdit(genre) {
     formTitle.textContent = 'Редактировать жанр';
     submitBtn.textContent = 'Сохранить';
     cancelBtn.style.display = 'inline-block';
+    nameInput.required = true;
+    descInput.required = false;
 }
 
 async function createGenre() {
     if (!validateForm()) return false;
-    const genre = { name: nameInput.value.trim(), description: descInput.value.trim() || null };
+    const data = { name: nameInput.value.trim(), description: descInput.value.trim() || null };
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(genre)
+            body: JSON.stringify(data)
         });
+        if (response.status === 409) {
+            const text = await response.text();
+            let msg = text;
+            try { const json = JSON.parse(text); msg = json.title || json.message || text; } catch (e) { }
+            showError(msg);
+            return false;
+        }
+        if (response.status === 400) {
+            const text = await response.text();
+            let errors = '';
+            try {
+                const json = JSON.parse(text);
+                if (json.errors) {
+                    for (const field in json.errors) {
+                        errors += `${field}: ${json.errors[field].join(', ')}\n`;
+                    }
+                }
+                showError(errors || json.title || 'Некорректные данные');
+            } catch (e) {
+                showError(text || 'Ошибка валидации');
+            }
+            return false;
+        }
         if (!response.ok) throw new Error('Ошибка ' + response.status);
         clearForm();
         await renderTable();
@@ -105,13 +135,36 @@ async function createGenre() {
 
 async function updateGenre(id) {
     if (!validateForm()) return false;
-    const genre = { genre_id: id, name: nameInput.value.trim(), description: descInput.value.trim() || null };
+    const data = { genre_id: id, name: nameInput.value.trim(), description: descInput.value.trim() || null };
     try {
         const response = await fetch(`${API_URL}/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(genre)
+            body: JSON.stringify(data)
         });
+        if (response.status === 409) {
+            const text = await response.text();
+            let msg = text;
+            try { const json = JSON.parse(text); msg = json.title || json.message || text; } catch (e) { }
+            showError(msg);
+            return false;
+        }
+        if (response.status === 400) {
+            const text = await response.text();
+            let errors = '';
+            try {
+                const json = JSON.parse(text);
+                if (json.errors) {
+                    for (const field in json.errors) {
+                        errors += `${field}: ${json.errors[field].join(', ')}\n`;
+                    }
+                }
+                showError(errors || json.title || 'Некорректные данные');
+            } catch (e) {
+                showError(text || 'Ошибка валидации');
+            }
+            return false;
+        }
         if (!response.ok) throw new Error('HTTP ' + response.status);
         clearForm();
         await renderTable();

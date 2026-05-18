@@ -79,7 +79,7 @@ async function renderTable() {
         users.sort((a, b) => a.user_id - b.user_id);
         tbody.innerHTML = '';
         if (users.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6">Нет данных</tr>';
+            tbody.innerHTML = '<tr><td colspan="6">Нет данных</td></tr>';
             return;
         }
         users.forEach(user => {
@@ -103,7 +103,7 @@ async function renderTable() {
         });
     } catch (err) {
         showError('Ошибка загрузки: ' + err.message);
-        tbody.innerHTML = '<tr><td colspan="6">Ошибка загрузки данных</tr>';
+        tbody.innerHTML = '<tr><td colspan="6">Ошибка загрузки данных</td></tr>';
     }
 }
 
@@ -113,7 +113,7 @@ function fillFormForEdit(user) {
     fullNameInput.value = user.full_name;
     passwordInput.value = '';
     passwordInput.required = false;
-    passwordInput.placeholder = 'Новый пароль';
+    passwordInput.placeholder = 'Новый пароль (оставьте пустым, чтобы не менять)';
     editIdField.value = user.user_id;
     currentEditId = user.user_id;
     formTitle.textContent = 'Редактировать пользователя';
@@ -136,8 +136,26 @@ async function createUser() {
             body: JSON.stringify(data)
         });
         if (response.status === 409) {
-            const conflict = await response.json();
-            showError(conflict.title || 'Логин или email уже существуют');
+            const text = await response.text();
+            let msg = text;
+            try { const json = JSON.parse(text); msg = json.title || json.message || text; } catch (e) { }
+            showError(msg);
+            return false;
+        }
+        if (response.status === 400) {
+            const text = await response.text();
+            let errors = '';
+            try {
+                const json = JSON.parse(text);
+                if (json.errors) {
+                    for (const field in json.errors) {
+                        errors += `${field}: ${json.errors[field].join(', ')}\n`;
+                    }
+                }
+                showError(errors || json.title || 'Некорректные данные');
+            } catch (e) {
+                showError(text || 'Ошибка валидации');
+            }
             return false;
         }
         if (!response.ok) throw new Error('Ошибка ' + response.status);
@@ -170,8 +188,26 @@ async function updateUser(id) {
             body: JSON.stringify(data)
         });
         if (response.status === 409) {
-            const conflict = await response.json();
-            showError(conflict.title || 'Логин или email уже заняты');
+            const text = await response.text();
+            let msg = text;
+            try { const json = JSON.parse(text); msg = json.title || json.message || text; } catch (e) { }
+            showError(msg);
+            return false;
+        }
+        if (response.status === 400) {
+            const text = await response.text();
+            let errors = '';
+            try {
+                const json = JSON.parse(text);
+                if (json.errors) {
+                    for (const field in json.errors) {
+                        errors += `${field}: ${json.errors[field].join(', ')}\n`;
+                    }
+                }
+                showError(errors || json.title || 'Некорректные данные');
+            } catch (e) {
+                showError(text || 'Ошибка валидации');
+            }
             return false;
         }
         if (!response.ok) throw new Error('HTTP ' + response.status);
@@ -201,9 +237,7 @@ async function onSubmit() {
     if (currentEditId !== null) await updateUser(currentEditId);
     else await createUser();
 }
-
 function onCancel() { clearForm(); }
-
 submitBtn.addEventListener('click', onSubmit);
 cancelBtn.addEventListener('click', onCancel);
 renderTable();

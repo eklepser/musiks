@@ -42,6 +42,17 @@ namespace MusicMarketplace.Controllers
         [HttpPost]
         public async Task<ActionResult<TicketDto>> CreateTicket(TicketDto dto)
         {
+            if (string.IsNullOrWhiteSpace(dto.name))
+                return BadRequest("Название товара обязательно");
+            if (dto.manufacturer_id == 0)
+                return BadRequest("Производитель обязателен");
+            if (dto.concert_id == 0)
+                return BadRequest("Концерт обязателен");
+
+            var manufacturerExists = await _context.Manufacturers.AnyAsync(m => m.manufacturer_id == dto.manufacturer_id);
+            if (!manufacturerExists)
+                return BadRequest("Указанный производитель не существует");
+
             using var tx = await _context.Database.BeginTransactionAsync();
 
             var product = new Product
@@ -73,11 +84,24 @@ namespace MusicMarketplace.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateTicket(int id, TicketDto dto)
+        public async Task<IActionResult> PutTicket(int id, TicketDto dto)
         {
             if (id != dto.ticket_id) return BadRequest();
 
-            using var tx = await _context.Database.BeginTransactionAsync();
+            if (string.IsNullOrWhiteSpace(dto.name))
+                return BadRequest("Название товара обязательно");
+
+            if (dto.manufacturer_id == 0)
+                return BadRequest("Производитель обязателен");
+
+            if (dto.concert_id == 0)
+                return BadRequest("Концерт обязателен");
+
+            var manufacturerExists = await _context.Manufacturers.AnyAsync(m => m.manufacturer_id == dto.manufacturer_id);
+            if (!manufacturerExists)
+                return BadRequest("Указанный производитель не существует");
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
 
             var ticket = await _context.Tickets.FindAsync(id);
             if (ticket == null) return NotFound();
@@ -97,7 +121,7 @@ namespace MusicMarketplace.Controllers
             ticket.price_category = dto.price_category;
 
             await _context.SaveChangesAsync();
-            await tx.CommitAsync();
+            await transaction.CommitAsync();
 
             return NoContent();
         }

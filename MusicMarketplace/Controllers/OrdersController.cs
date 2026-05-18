@@ -1,11 +1,9 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using MusicMarketplace.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using MusicMarketplace.Models;
 
 namespace MusicMarketplace.Controllers
 {
@@ -20,88 +18,60 @@ namespace MusicMarketplace.Controllers
             _context = context;
         }
 
-        // GET: api/Orders
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Order>>> GetOrders()
         {
             return await _context.Orders.ToListAsync();
         }
 
-        // GET: api/Orders/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Order>> GetOrder(int id)
         {
             var order = await _context.Orders.FindAsync(id);
-
-            if (order == null)
-            {
-                return NotFound();
-            }
-
+            if (order == null) return NotFound();
             return order;
         }
 
-        // PUT: api/Orders/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutOrder(int id, Order order)
+        [HttpPost]
+        public async Task<ActionResult<Order>> PostOrder(OrderDto dto)
         {
-            if (id != order.order_id)
+            var order = new Order
             {
-                return BadRequest();
-            }
+                user_id = dto.user_id,
+                order_date = dto.order_date,
+                status = dto.status,
+                total_amount = dto.total_amount
+            };
+            _context.Orders.Add(order);
+            await _context.SaveChangesAsync();
+            return CreatedAtAction(nameof(GetOrder), new { id = order.order_id }, order);
+        }
 
-            _context.Entry(order).State = EntityState.Modified;
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutOrder(int id, OrderDto dto)
+        {
+            if (id != dto.order_id) return BadRequest();
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!OrderExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            var order = await _context.Orders.FindAsync(id);
+            if (order == null) return NotFound();
 
+            order.user_id = dto.user_id;
+            order.order_date = dto.order_date;
+            order.status = dto.status;
+            order.total_amount = dto.total_amount;
+
+            await _context.SaveChangesAsync();
             return NoContent();
         }
 
-        // POST: api/Orders
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<Order>> PostOrder(Order order)
-        {
-            _context.Orders.Add(order);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetOrder", new { id = order.order_id }, order);
-        }
-
-        // DELETE: api/Orders/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteOrder(int id)
         {
             var order = await _context.Orders.FindAsync(id);
-            if (order == null)
-            {
-                return NotFound();
-            }
-
+            if (order == null) return NotFound();
             _context.Orders.Remove(order);
             await _context.SaveChangesAsync();
-
             return NoContent();
-        }
-
-        private bool OrderExists(int id)
-        {
-            return _context.Orders.Any(e => e.order_id == id);
         }
     }
 }

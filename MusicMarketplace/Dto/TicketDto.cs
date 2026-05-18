@@ -3,7 +3,6 @@
     public class TicketDto
     {
         public int ticket_id { get; set; }
-        public int product_id { get; set; }
         public string name { get; set; }
         public decimal price { get; set; }
         public string description { get; set; }

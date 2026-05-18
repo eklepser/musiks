@@ -1,10 +1,10 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using MusicMarketplace.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using MusicMarketplace.Models;
 
 namespace MusicMarketplace.Controllers
 {
@@ -61,6 +61,8 @@ namespace MusicMarketplace.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUser(int id, UserDto dto)
         {
+            if (id != dto.user_id) return BadRequest();
+
             var user = await _context.Users.FindAsync(id);
             if (user == null) return NotFound();
 
@@ -75,13 +77,8 @@ namespace MusicMarketplace.Controllers
             user.full_name = dto.full_name;
 
             if (!string.IsNullOrWhiteSpace(dto.password))
-            {
-                if (dto.password.Length < 4)
-                    return BadRequest("Пароль должен быть не менее 4 символов");
                 user.password_hash = dto.password;
-            }
 
-            _context.Entry(user).Property(u => u.registration_date).IsModified = false;
             await _context.SaveChangesAsync();
             return NoContent();
         }
