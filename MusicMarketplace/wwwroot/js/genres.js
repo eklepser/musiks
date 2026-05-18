@@ -35,6 +35,13 @@ function clearForm() {
     cancelBtn.style.display = 'none';
 }
 
+function validateForm() {
+    const name = nameInput.value.trim();
+    if (!name) { showError('Название обязательно'); return false; }
+    if (name.length > 50) { showError('Название не может быть длиннее 50 символов'); return false; }
+    return true;
+}
+
 async function renderTable() {
     try {
         const response = await fetch(API_URL);
@@ -42,10 +49,7 @@ async function renderTable() {
         let genres = await response.json();
         genres.sort((a, b) => a.genre_id - b.genre_id);
         tbody.innerHTML = '';
-        if (genres.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4">Нет данных</td></tr>';
-            return;
-        }
+        if (genres.length === 0) { tbody.innerHTML = '<tr><td colspan="4">Нет данных</td></tr>'; return; }
         genres.forEach(genre => {
             const row = tbody.insertRow();
             row.insertCell(0).textContent = genre.genre_id;
@@ -80,9 +84,8 @@ function fillFormForEdit(genre) {
 }
 
 async function createGenre() {
-    const name = nameInput.value.trim();
-    if (!name) { showError('Название обязательно'); return false; }
-    const genre = { name: name, description: descInput.value.trim() || null };
+    if (!validateForm()) return false;
+    const genre = { name: nameInput.value.trim(), description: descInput.value.trim() || null };
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
@@ -101,9 +104,8 @@ async function createGenre() {
 }
 
 async function updateGenre(id) {
-    const name = nameInput.value.trim();
-    if (!name) { showError('Название обязательно'); return false; }
-    const genre = { genre_id: id, name: name, description: descInput.value.trim() || null };
+    if (!validateForm()) return false;
+    const genre = { genre_id: id, name: nameInput.value.trim(), description: descInput.value.trim() || null };
     try {
         const response = await fetch(`${API_URL}/${id}`, {
             method: 'PUT',
@@ -137,9 +139,7 @@ async function onSubmit() {
     if (currentEditId !== null) await updateGenre(currentEditId);
     else await createGenre();
 }
-
 function onCancel() { clearForm(); }
-
 submitBtn.addEventListener('click', onSubmit);
 cancelBtn.addEventListener('click', onCancel);
 renderTable();

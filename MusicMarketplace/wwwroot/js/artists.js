@@ -37,6 +37,25 @@ function clearForm() {
     formTitle.textContent = 'Добавить исполнителя';
     submitBtn.textContent = 'Добавить';
     cancelBtn.style.display = 'none';
+    nameInput.required = true;
+}
+
+function formatDate(dateString) { return dateString ? new Date(dateString).toLocaleDateString() : ''; }
+
+function validateForm(isEdit) {
+    const name = nameInput.value.trim();
+    if (!name) { showError('Имя обязательно'); return false; }
+    if (name.length > 100) { showError('Имя не может быть длиннее 100 символов'); return false; }
+    const debut = debutInput.value;
+    if (debut) {
+        const year = parseInt(debut);
+        const currentYear = new Date().getFullYear();
+        if (year < 1900 || year > currentYear + 1) {
+            showError(`Год дебюта должен быть между 1900 и ${currentYear + 1}`);
+            return false;
+        }
+    }
+    return true;
 }
 
 async function renderTable() {
@@ -46,10 +65,7 @@ async function renderTable() {
         let artists = await response.json();
         artists.sort((a, b) => a.artist_id - b.artist_id);
         tbody.innerHTML = '';
-        if (artists.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6">Нет данных</td></tr>';
-            return;
-        }
+        if (artists.length === 0) { tbody.innerHTML = '<table><td colspan="6">Нет данных</td></tr>'; return; }
         artists.forEach(artist => {
             const row = tbody.insertRow();
             row.insertCell(0).textContent = artist.artist_id;
@@ -85,13 +101,13 @@ function fillFormForEdit(artist) {
     formTitle.textContent = 'Редактировать исполнителя';
     submitBtn.textContent = 'Сохранить';
     cancelBtn.style.display = 'inline-block';
+    nameInput.required = true;
 }
 
 async function createArtist() {
-    const name = nameInput.value.trim();
-    if (!name) { showError('Имя обязательно'); return false; }
+    if (!validateForm(false)) return false;
     const artist = {
-        name: name,
+        name: nameInput.value.trim(),
         country: countryInput.value.trim() || null,
         debut_year: debutInput.value ? parseInt(debutInput.value) : null,
         language: langInput.value.trim() || null
@@ -114,11 +130,10 @@ async function createArtist() {
 }
 
 async function updateArtist(id) {
-    const name = nameInput.value.trim();
-    if (!name) { showError('Имя обязательно'); return false; }
+    if (!validateForm(true)) return false;
     const artist = {
         artist_id: id,
-        name: name,
+        name: nameInput.value.trim(),
         country: countryInput.value.trim() || null,
         debut_year: debutInput.value ? parseInt(debutInput.value) : null,
         language: langInput.value.trim() || null
@@ -156,9 +171,7 @@ async function onSubmit() {
     if (currentEditId !== null) await updateArtist(currentEditId);
     else await createArtist();
 }
-
 function onCancel() { clearForm(); }
-
 submitBtn.addEventListener('click', onSubmit);
 cancelBtn.addEventListener('click', onCancel);
 renderTable();

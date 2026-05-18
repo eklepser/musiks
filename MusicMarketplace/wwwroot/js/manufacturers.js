@@ -35,6 +35,13 @@ function clearForm() {
     cancelBtn.style.display = 'none';
 }
 
+function validateForm() {
+    const name = nameInput.value.trim();
+    if (!name) { showError('Название обязательно'); return false; }
+    if (name.length > 100) { showError('Название не может быть длиннее 100 символов'); return false; }
+    return true;
+}
+
 async function renderTable() {
     try {
         const response = await fetch(API_URL);
@@ -42,10 +49,7 @@ async function renderTable() {
         let items = await response.json();
         items.sort((a, b) => a.manufacturer_id - b.manufacturer_id);
         tbody.innerHTML = '';
-        if (items.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4">Нет данных</td></tr>';
-            return;
-        }
+        if (items.length === 0) { tbody.innerHTML = '<tr><td colspan="4">Нет данных</td></td>'; return; }
         items.forEach(item => {
             const row = tbody.insertRow();
             row.insertCell(0).textContent = item.manufacturer_id;
@@ -80,9 +84,8 @@ function fillFormForEdit(item) {
 }
 
 async function createItem() {
-    const name = nameInput.value.trim();
-    if (!name) { showError('Название обязательно'); return false; }
-    const data = { name: name, contact_info: contactInput.value.trim() || null };
+    if (!validateForm()) return false;
+    const data = { name: nameInput.value.trim(), contact_info: contactInput.value.trim() || null };
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
@@ -101,9 +104,8 @@ async function createItem() {
 }
 
 async function updateItem(id) {
-    const name = nameInput.value.trim();
-    if (!name) { showError('Название обязательно'); return false; }
-    const data = { manufacturer_id: id, name: name, contact_info: contactInput.value.trim() || null };
+    if (!validateForm()) return false;
+    const data = { manufacturer_id: id, name: nameInput.value.trim(), contact_info: contactInput.value.trim() || null };
     try {
         const response = await fetch(`${API_URL}/${id}`, {
             method: 'PUT',
@@ -137,9 +139,7 @@ async function onSubmit() {
     if (currentEditId !== null) await updateItem(currentEditId);
     else await createItem();
 }
-
 function onCancel() { clearForm(); }
-
 submitBtn.addEventListener('click', onSubmit);
 cancelBtn.addEventListener('click', onCancel);
 renderTable();

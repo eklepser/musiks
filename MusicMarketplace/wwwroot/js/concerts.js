@@ -43,6 +43,18 @@ function formatDateTimeLocal(dateString) {
     return d.toISOString().slice(0, 16);
 }
 
+function validateForm() {
+    const title = titleInput.value.trim();
+    const venue = venueInput.value.trim();
+    const datetime = datetimeInput.value;
+    if (!title) { showError('Название обязательно'); return false; }
+    if (title.length > 150) { showError('Название не может быть длиннее 150 символов'); return false; }
+    if (!venue) { showError('Место проведения обязательно'); return false; }
+    if (venue.length > 100) { showError('Место не может быть длиннее 100 символов'); return false; }
+    if (!datetime) { showError('Дата и время обязательны'); return false; }
+    return true;
+}
+
 async function renderTable() {
     try {
         const response = await fetch(API_URL);
@@ -50,10 +62,7 @@ async function renderTable() {
         let concerts = await response.json();
         concerts.sort((a, b) => a.concert_id - b.concert_id);
         tbody.innerHTML = '';
-        if (concerts.length === 0) {
-            tbody.innerHTML = '<td><td colspan="5">Нет данных</td></tr>';
-            return;
-        }
+        if (concerts.length === 0) { tbody.innerHTML = '<tr><td colspan="5">Нет данных</td></tr>'; return; }
         concerts.forEach(concert => {
             const row = tbody.insertRow();
             row.insertCell(0).textContent = concert.concert_id;
@@ -91,11 +100,8 @@ function fillFormForEdit(concert) {
 }
 
 async function createConcert() {
-    const title = titleInput.value.trim();
-    const venue = venueInput.value.trim();
-    const datetime = datetimeInput.value;
-    if (!title || !venue || !datetime) { showError('Заполните все поля'); return false; }
-    const concert = { title, venue, datetime };
+    if (!validateForm()) return false;
+    const concert = { title: titleInput.value.trim(), venue: venueInput.value.trim(), datetime: datetimeInput.value };
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
@@ -114,11 +120,8 @@ async function createConcert() {
 }
 
 async function updateConcert(id) {
-    const title = titleInput.value.trim();
-    const venue = venueInput.value.trim();
-    const datetime = datetimeInput.value;
-    if (!title || !venue || !datetime) { showError('Заполните все поля'); return false; }
-    const concert = { concert_id: id, title, venue, datetime };
+    if (!validateForm()) return false;
+    const concert = { concert_id: id, title: titleInput.value.trim(), venue: venueInput.value.trim(), datetime: datetimeInput.value };
     try {
         const response = await fetch(`${API_URL}/${id}`, {
             method: 'PUT',
@@ -152,9 +155,7 @@ async function onSubmit() {
     if (currentEditId !== null) await updateConcert(currentEditId);
     else await createConcert();
 }
-
 function onCancel() { clearForm(); }
-
 submitBtn.addEventListener('click', onSubmit);
 cancelBtn.addEventListener('click', onCancel);
 renderTable();

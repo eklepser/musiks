@@ -33,6 +33,17 @@ function formatDateTimeLocal(dateString) {
     const d = new Date(dateString);
     return d.toISOString().slice(0, 16);
 }
+function validateForm() {
+    const userId = userIdSelect.value;
+    const orderDate = orderDateInput.value;
+    const totalAmount = parseFloat(totalAmountInput.value);
+    if (!userId) { showError('Выберите пользователя'); return false; }
+    if (!orderDate) { showError('Дата заказа обязательна'); return false; }
+    if (isNaN(totalAmount)) { showError('Сумма должна быть числом'); return false; }
+    if (totalAmount <= 0) { showError('Сумма должна быть больше нуля'); return false; }
+    if (totalAmount > 100000000) { showError('Сумма не может превышать 100 000 000'); return false; }
+    return true;
+}
 async function loadUsers() {
     const resp = await fetch(USERS_URL);
     if (resp.ok) {
@@ -82,12 +93,8 @@ function fillFormForEdit(order) {
     cancelBtn.style.display = 'inline-block';
 }
 async function createOrder() {
-    const userId = parseInt(userIdSelect.value);
-    const orderDate = orderDateInput.value;
-    const status = statusSelect.value;
-    const totalAmount = parseFloat(totalAmountInput.value);
-    if (!userId || !orderDate || isNaN(totalAmount)) { showError('Заполните все поля'); return false; }
-    const data = { user_id: userId, order_date: orderDate, status, total_amount: totalAmount };
+    if (!validateForm()) return false;
+    const data = { user_id: parseInt(userIdSelect.value), order_date: orderDateInput.value, status: statusSelect.value, total_amount: parseFloat(totalAmountInput.value) };
     try {
         const resp = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         if (!resp.ok) throw new Error('Ошибка ' + resp.status);
@@ -95,12 +102,8 @@ async function createOrder() {
     } catch (err) { showError('Ошибка добавления: ' + err.message); return false; }
 }
 async function updateOrder(id) {
-    const userId = parseInt(userIdSelect.value);
-    const orderDate = orderDateInput.value;
-    const status = statusSelect.value;
-    const totalAmount = parseFloat(totalAmountInput.value);
-    if (!userId || !orderDate || isNaN(totalAmount)) { showError('Заполните все поля'); return false; }
-    const data = { order_id: id, user_id: userId, order_date: orderDate, status, total_amount: totalAmount };
+    if (!validateForm()) return false;
+    const data = { order_id: id, user_id: parseInt(userIdSelect.value), order_date: orderDateInput.value, status: statusSelect.value, total_amount: parseFloat(totalAmountInput.value) };
     try {
         const resp = await fetch(`${API_URL}/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         if (!resp.ok) throw new Error('HTTP ' + resp.status);

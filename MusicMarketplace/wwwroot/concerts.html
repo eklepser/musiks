@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Концерты</title>
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        input:required, select:required, textarea:required {
+            border-left: 4px solid #dc3545;
+        }
+
+            input:required:valid, select:required:valid, textarea:required:valid {
+                border-left-color: #28a745;
+            }
+    </style>
 </head>
 <body>
     <div class="nav-menu">
@@ -26,8 +35,8 @@
             <h2 id="form-title">Добавить концерт</h2>
             <input type="hidden" id="edit-id">
             <div class="form-group">
-                <input type="text" id="title" placeholder="Название" required>
-                <input type="text" id="venue" placeholder="Место проведения" required>
+                <input type="text" id="title" placeholder="Название*" required>
+                <input type="text" id="venue" placeholder="Место проведения*" required>
                 <input type="datetime-local" id="datetime" required>
                 <button id="submit-btn">Добавить</button>
                 <button id="cancel-btn" style="display:none;">Отмена</button>
@@ -40,7 +49,7 @@
                 <tr><th>ID</th><th>Название</th><th>Место</th><th>Дата и время</th><th>Действия</th></tr>
             </thead>
             <tbody id="concert-tbody">
-                <tr><td colspan="5">Загрузка...</td></tr>
+                <tr><td colspan="5">Загрузка...–</td></tr>
             </tbody>
         </table>
     </div>
