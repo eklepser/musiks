@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MusicMarketplace.Models;
@@ -20,88 +19,81 @@ namespace MusicMarketplace.Controllers
             _context = context;
         }
 
-        // GET: api/Users
         [HttpGet]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
         {
             return await _context.Users.ToListAsync();
         }
 
-        // GET: api/Users/5
         [HttpGet("{id}")]
         public async Task<ActionResult<User>> GetUser(int id)
         {
             var user = await _context.Users.FindAsync(id);
-
-            if (user == null)
-            {
-                return NotFound();
-            }
-
+            if (user == null) return NotFound();
             return user;
         }
 
-        // PUT: api/Users/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutUser(int id, User user)
+        [HttpPost]
+        public async Task<ActionResult<User>> PostUser(UserDto dto)
         {
-            if (id != user.user_id)
+            if (string.IsNullOrWhiteSpace(dto.password))
+                return BadRequest("Пароль обязателен при создании");
+
+            if (await _context.Users.AnyAsync(u => u.login == dto.login))
+                return Conflict("Логин уже существует");
+
+            if (await _context.Users.AnyAsync(u => u.email == dto.email))
+                return Conflict("Email уже существует");
+
+            var user = new User
             {
-                return BadRequest();
+                login = dto.login,
+                email = dto.email,
+                full_name = dto.full_name,
+                registration_date = DateTime.UtcNow,
+                password_hash = dto.password
+            };
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+            return CreatedAtAction(nameof(GetUser), new { id = user.user_id }, user);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutUser(int id, UserDto dto)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return NotFound();
+
+            if (await _context.Users.AnyAsync(u => u.login == dto.login && u.user_id != id))
+                return Conflict("Логин уже занят другим пользователем");
+
+            if (await _context.Users.AnyAsync(u => u.email == dto.email && u.user_id != id))
+                return Conflict("Email уже занят другим пользователем");
+
+            user.login = dto.login;
+            user.email = dto.email;
+            user.full_name = dto.full_name;
+
+            if (!string.IsNullOrWhiteSpace(dto.password))
+            {
+                if (dto.password.Length < 4)
+                    return BadRequest("Пароль должен быть не менее 4 символов");
+                user.password_hash = dto.password;
             }
 
-            _context.Entry(user).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UserExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
+            _context.Entry(user).Property(u => u.registration_date).IsModified = false;
+            await _context.SaveChangesAsync();
             return NoContent();
         }
 
-        // POST: api/Users
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<User>> PostUser(User user)
-        {
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetUser", new { id = user.user_id }, user);
-        }
-
-        // DELETE: api/Users/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
             var user = await _context.Users.FindAsync(id);
-            if (user == null)
-            {
-                return NotFound();
-            }
-
+            if (user == null) return NotFound();
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
-
             return NoContent();
-        }
-
-        private bool UserExists(int id)
-        {
-            return _context.Users.Any(e => e.user_id == id);
         }
     }
 }

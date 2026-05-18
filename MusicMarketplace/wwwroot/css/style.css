@@ -191,3 +191,11 @@ button:hover {
     gap: 10px;
     flex-wrap: wrap;
 }
+
+input:required, select:required, textarea:required {
+    border-left: 4px solid #dc3545;
+}
+
+input:required:valid, select:required:valid {
+    border-left-color: #28a745;
+}

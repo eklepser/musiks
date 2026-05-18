@@ -26,7 +26,6 @@ namespace MusicMarketplace.Controllers
                                  select new TicketDto
                                  {
                                      ticket_id = t.ticket_id,
-                                     product_id = t.product_id,
                                      name = p.name,
                                      price = p.price,
                                      description = p.description,
@@ -43,7 +42,7 @@ namespace MusicMarketplace.Controllers
         [HttpPost]
         public async Task<ActionResult<TicketDto>> CreateTicket(TicketDto dto)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            using var tx = await _context.Database.BeginTransactionAsync();
 
             var product = new Product
             {
@@ -67,10 +66,9 @@ namespace MusicMarketplace.Controllers
             _context.Tickets.Add(ticket);
             await _context.SaveChangesAsync();
 
-            await transaction.CommitAsync();
+            await tx.CommitAsync();
 
             dto.ticket_id = ticket.ticket_id;
-            dto.product_id = product.product_id;
             return CreatedAtAction(nameof(GetTickets), new { id = ticket.ticket_id }, dto);
         }
 
@@ -79,7 +77,7 @@ namespace MusicMarketplace.Controllers
         {
             if (id != dto.ticket_id) return BadRequest();
 
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            using var tx = await _context.Database.BeginTransactionAsync();
 
             var ticket = await _context.Tickets.FindAsync(id);
             if (ticket == null) return NotFound();
@@ -99,7 +97,7 @@ namespace MusicMarketplace.Controllers
             ticket.price_category = dto.price_category;
 
             await _context.SaveChangesAsync();
-            await transaction.CommitAsync();
+            await tx.CommitAsync();
 
             return NoContent();
         }
@@ -111,10 +109,15 @@ namespace MusicMarketplace.Controllers
             if (ticket == null) return NotFound();
 
             var product = await _context.Products.FindAsync(ticket.product_id);
+            if (product != null)
+            {
+                var orderItems = _context.OrderItems.Where(oi => oi.product_id == product.product_id);
+                _context.OrderItems.RemoveRange(orderItems);
+                _context.Products.Remove(product);
+            }
             _context.Tickets.Remove(ticket);
-            if (product != null) _context.Products.Remove(product);
-            await _context.SaveChangesAsync();
 
+            await _context.SaveChangesAsync();
             return NoContent();
         }
     }

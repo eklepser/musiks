@@ -11,7 +11,7 @@ namespace MusicMarketplace.Models
         public decimal price { get; set; }
         public string description { get; set; }
         public int stock { get; set; }
-        public int? manufacturer_id { get; set; }
+        public int manufacturer_id { get; set; }
 
         public virtual Manufacturer manufacturer { get; set; }
         public virtual Ticket Ticket { get; set; }

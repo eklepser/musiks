@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Пользователи</title>
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        input:required, select:required {
+            border-left: 4px solid #dc3545;
+        }
+
+            input:required:valid, select:required:valid {
+                border-left-color: #28a745;
+            }
+    </style>
 </head>
 <body>
     <div class="nav-menu">
@@ -26,10 +35,10 @@
             <h2 id="form-title">Добавить пользователя</h2>
             <input type="hidden" id="edit-id">
             <div class="form-group">
-                <input type="text" id="login" placeholder="Логин" required>
-                <input type="email" id="email" placeholder="Email" required>
-                <input type="text" id="full-name" placeholder="ФИО" required>
-                <input type="password" id="password" placeholder="Пароль">
+                <input type="text" id="login" placeholder="Логин*" required>
+                <input type="email" id="email" placeholder="Email*" required>
+                <input type="text" id="full-name" placeholder="ФИО*" required>
+                <input type="password" id="password" placeholder="Пароль*">
                 <button id="submit-btn">Добавить</button>
                 <button id="cancel-btn" style="display:none;">Отмена</button>
             </div>
@@ -40,9 +49,7 @@
             <thead>
                 <tr><th>ID</th><th>Логин</th><th>Email</th><th>ФИО</th><th>Дата регистрации</th><th>Действия</th></tr>
             </thead>
-            <tbody id="user-tbody">
-                <tr><td colspan="6">Загрузка...–</td></tr>
-            </tbody>
+            <tbody id="user-tbody"><tr><td colspan="6">Загрузка...</td></tr></tbody>
         </table>
     </div>
     <script src="js/users.js"></script>

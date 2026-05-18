@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Товары</title>
     <link rel="stylesheet" href="css/style.css">
     <style>
@@ -9,6 +10,7 @@
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
 
         .tab-btn {
@@ -35,7 +37,13 @@
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
-            margin-bottom: 10px;
+            align-items: flex-end;
+            margin-top: 10px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 60px;
         }
 
         table {
@@ -69,6 +77,14 @@
         .show {
             display: block;
         }
+
+        input:required, select:required, textarea:required {
+            border-left: 4px solid #dc3545;
+        }
+
+            input:required:valid, select:required:valid {
+                border-left-color: #28a745;
+            }
     </style>
 </head>
 <body>
@@ -99,12 +115,11 @@
                 <h2 id="ticket-form-title">Добавить билет</h2>
                 <input type="hidden" id="ticket-edit-id">
                 <div class="form-group-row">
-                    <input type="text" id="ticket-name" placeholder="Название" required>
-                    <input type="number" id="ticket-price" placeholder="Цена" step="0.01" required>
+                    <input type="text" id="ticket-name" placeholder="Название*" required>
+                    <input type="number" id="ticket-price" placeholder="Цена*" step="0.01" required>
                     <textarea id="ticket-description" placeholder="Описание"></textarea>
                     <input type="number" id="ticket-stock" placeholder="Остаток">
-                    <input type="number" id="ticket-manufacturer-id" placeholder="ID производителя">
-                    <select id="ticket-concert-id" required><option value="">Концерт</option></select>
+                    <select id="ticket-concert-id" required><option value="">Концерт*</option></select>
                     <input type="text" id="ticket-seat-row" placeholder="Ряд">
                     <input type="text" id="ticket-seat-number" placeholder="Место">
                     <input type="text" id="ticket-price-category" placeholder="Категория">
@@ -115,8 +130,10 @@
                 <div id="ticket-success" class="success"></div>
             </div>
             <table>
-                <thead><tr><th>ID</th><th>Название</th><th>Цена</th><th>Остаток</th><th>Концерт ID</th><th>Место</th><th>Действия</th></tr></thead>
-                <tbody id="ticket-tbody"><tr><td colspan="7">Загрузка...</td></tr></tbody>
+                <thead>
+                    <tr><th>ID</th><th>Название</th><th>Цена</th><th>Остаток</th><th>Концерт</th><th>Ряд</th><th>Место</th><th>Категория</th><th>Действия</th></tr>
+                </thead>
+                <tbody id="ticket-tbody"><tr><td colspan="9">Загрузка...</td></tr></tbody>
             </table>
         </div>
 
@@ -126,15 +143,28 @@
                 <h2 id="clothing-form-title">Добавить одежду</h2>
                 <input type="hidden" id="clothing-edit-id">
                 <div class="form-group-row">
-                    <input type="text" id="clothing-name" placeholder="Название" required>
-                    <input type="number" id="clothing-price" placeholder="Цена" step="0.01" required>
+                    <input type="text" id="clothing-name" placeholder="Название*" required>
+                    <input type="number" id="clothing-price" placeholder="Цена*" step="0.01" required>
                     <textarea id="clothing-description" placeholder="Описание"></textarea>
                     <input type="number" id="clothing-stock" placeholder="Остаток">
-                    <input type="number" id="clothing-manufacturer-id" placeholder="ID производителя">
+                    <select id="clothing-manufacturer-id" required><option value="">Производитель</option></select>
                     <input type="text" id="clothing-material" placeholder="Материал">
                     <input type="text" id="clothing-color" placeholder="Цвет">
-                    <input type="text" id="clothing-size" placeholder="Размер">
-                    <select id="clothing-gender"><option value="">Пол</option><option value="male">Мужской</option><option value="female">Женский</option><option value="unisex">Унисекс</option></select>
+                    <select id="clothing-size">
+                        <option value="">Размер</option>
+                        <option value="XS">XS</option>
+                        <option value="S">S</option>
+                        <option value="M" selected>M</option>
+                        <option value="L">L</option>
+                        <option value="XL">XL</option>
+                        <option value="XXL">XXL</option>
+                    </select>
+                    <select id="clothing-gender">
+                        <option value="">Пол</option>
+                        <option value="male">Мужской</option>
+                        <option value="female">Женский</option>
+                        <option value="unisex" selected>Унисекс</option>
+                    </select>
                     <button id="clothing-submit">Добавить</button>
                     <button id="clothing-cancel" style="display:none;">Отмена</button>
                 </div>
@@ -142,8 +172,10 @@
                 <div id="clothing-success" class="success"></div>
             </div>
             <table>
-                <thead><tr><th>ID</th><th>Название</th><th>Цена</th><th>Остаток</th><th>Материал</th><th>Цвет</th><th>Размер/Пол</th><th>Действия</th></tr></thead>
-                <tbody id="clothing-tbody"><tr><td colspan="8">Загрузка...</td></tr></tbody>
+                <thead>
+                    <tr><th>ID</th><th>Название</th><th>Производитель</th><th>Цена</th><th>Остаток</th><th>Материал</th><th>Цвет</th><th>Размер</th><th>Пол</th><th>Действия</th></tr>
+                </thead>
+                <tbody id="clothing-tbody"><tr><td colspan="10">Загрузка...</td></tr></tbody>
             </table>
         </div>
 
@@ -153,11 +185,11 @@
                 <h2 id="accessory-form-title">Добавить аксессуар</h2>
                 <input type="hidden" id="accessory-edit-id">
                 <div class="form-group-row">
-                    <input type="text" id="accessory-name" placeholder="Название" required>
-                    <input type="number" id="accessory-price" placeholder="Цена" step="0.01" required>
+                    <input type="text" id="accessory-name" placeholder="Название*" required>
+                    <input type="number" id="accessory-price" placeholder="Цена*" step="0.01" required>
                     <textarea id="accessory-description" placeholder="Описание"></textarea>
                     <input type="number" id="accessory-stock" placeholder="Остаток">
-                    <input type="number" id="accessory-manufacturer-id" placeholder="ID производителя">
+                    <select id="accessory-manufacturer-id" required><option value="">Производитель</option></select>
                     <input type="text" id="accessory-material" placeholder="Материал">
                     <input type="text" id="accessory-color" placeholder="Цвет">
                     <input type="text" id="accessory-type" placeholder="Тип">
@@ -169,8 +201,10 @@
                 <div id="accessory-success" class="success"></div>
             </div>
             <table>
-                <thead><tr><th>ID</th><th>Название</th><th>Цена</th><th>Остаток</th><th>Материал</th><th>Цвет</th><th>Тип/Вес</th><th>Действия</th></tr></thead>
-                <tbody id="accessory-tbody"><tr><td colspan="8">Загрузка...</td></tr></tbody>
+                <thead>
+                    <tr><th>ID</th><th>Название</th><th>Производитель</th><th>Цена</th><th>Остаток</th><th>Материал</th><th>Цвет</th><th>Тип</th><th>Вес (г)</th><th>Действия</th></tr>
+                </thead>
+                <tbody id="accessory-tbody"><tr><td colspan="10">Загрузка...</td></tr></tbody>
             </table>
         </div>
     </div>

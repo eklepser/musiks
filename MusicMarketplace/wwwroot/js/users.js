@@ -37,12 +37,38 @@ function clearForm() {
     formTitle.textContent = 'Добавить пользователя';
     submitBtn.textContent = 'Добавить';
     cancelBtn.style.display = 'none';
+    passwordInput.required = true;
+    passwordInput.placeholder = 'Пароль*';
 }
 
 function formatDate(dateString) {
     if (!dateString) return '';
     const d = new Date(dateString);
     return d.toLocaleDateString();
+}
+
+function validateForm(isEdit) {
+    const login = loginInput.value.trim();
+    const email = emailInput.value.trim();
+    const fullName = fullNameInput.value.trim();
+    if (!login) { showError('Логин обязателен'); return false; }
+    if (login.length > 50) { showError('Логин не может быть длиннее 50 символов'); return false; }
+    if (!email) { showError('Email обязателен'); return false; }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) { showError('Введите корректный email'); return false; }
+    if (!fullName) { showError('ФИО обязательно'); return false; }
+    if (fullName.length > 100) { showError('ФИО не может быть длиннее 100 символов'); return false; }
+    const password = passwordInput.value;
+    if (!isEdit) {
+        if (!password) { showError('Пароль обязателен при создании'); return false; }
+        if (password.length < 4) { showError('Пароль должен быть не менее 4 символов'); return false; }
+    } else {
+        if (password && password.length < 4) {
+            showError('Пароль должен быть не менее 4 символов');
+            return false;
+        }
+    }
+    return true;
 }
 
 async function renderTable() {
@@ -53,7 +79,7 @@ async function renderTable() {
         users.sort((a, b) => a.user_id - b.user_id);
         tbody.innerHTML = '';
         if (users.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6">Нет данных</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6">Нет данных</tr>';
             return;
         }
         users.forEach(user => {
@@ -77,7 +103,7 @@ async function renderTable() {
         });
     } catch (err) {
         showError('Ошибка загрузки: ' + err.message);
-        tbody.innerHTML = '<tr><td colspan="6">Ошибка загрузки данных</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6">Ошибка загрузки данных</tr>';
     }
 }
 
@@ -86,6 +112,8 @@ function fillFormForEdit(user) {
     emailInput.value = user.email;
     fullNameInput.value = user.full_name;
     passwordInput.value = '';
+    passwordInput.required = false;
+    passwordInput.placeholder = 'Новый пароль';
     editIdField.value = user.user_id;
     currentEditId = user.user_id;
     formTitle.textContent = 'Редактировать пользователя';
@@ -94,19 +122,24 @@ function fillFormForEdit(user) {
 }
 
 async function createUser() {
-    const login = loginInput.value.trim();
-    const email = emailInput.value.trim();
-    const fullName = fullNameInput.value.trim();
-    const password = passwordInput.value;
-    if (!login || !email || !fullName) { showError('Заполните все обязательные поля'); return false; }
-    const data = { login, email, full_name: fullName };
-    if (password) data.password = password;
+    if (!validateForm(false)) return false;
+    const data = {
+        login: loginInput.value.trim(),
+        email: emailInput.value.trim(),
+        full_name: fullNameInput.value.trim(),
+        password: passwordInput.value
+    };
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
+        if (response.status === 409) {
+            const conflict = await response.json();
+            showError(conflict.title || 'Логин или email уже существуют');
+            return false;
+        }
         if (!response.ok) throw new Error('Ошибка ' + response.status);
         clearForm();
         await renderTable();
@@ -119,19 +152,28 @@ async function createUser() {
 }
 
 async function updateUser(id) {
-    const login = loginInput.value.trim();
-    const email = emailInput.value.trim();
-    const fullName = fullNameInput.value.trim();
+    if (!validateForm(true)) return false;
+    const data = {
+        user_id: id,
+        login: loginInput.value.trim(),
+        email: emailInput.value.trim(),
+        full_name: fullNameInput.value.trim()
+    };
     const password = passwordInput.value;
-    if (!login || !email || !fullName) { showError('Заполните все обязательные поля'); return false; }
-    const data = { user_id: id, login, email, full_name: fullName };
-    if (password) data.password = password;
+    if (password && password.trim() !== '') {
+        data.password = password;
+    }
     try {
         const response = await fetch(`${API_URL}/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
+        if (response.status === 409) {
+            const conflict = await response.json();
+            showError(conflict.title || 'Логин или email уже заняты');
+            return false;
+        }
         if (!response.ok) throw new Error('HTTP ' + response.status);
         clearForm();
         await renderTable();

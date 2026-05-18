@@ -27,8 +27,6 @@ namespace MusicMarketplace.Controllers
                                    select new ClothingDto
                                    {
                                        clothing_id = c.clothing_id,
-                                       merch_id = c.merch_id,
-                                       product_id = p.product_id,
                                        name = p.name,
                                        price = p.price,
                                        description = p.description,
@@ -45,7 +43,7 @@ namespace MusicMarketplace.Controllers
         [HttpPost]
         public async Task<ActionResult<ClothingDto>> CreateClothing(ClothingDto dto)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            using var tx = await _context.Database.BeginTransactionAsync();
 
             var product = new Product
             {
@@ -76,11 +74,9 @@ namespace MusicMarketplace.Controllers
             _context.Clothings.Add(clothing);
             await _context.SaveChangesAsync();
 
-            await transaction.CommitAsync();
+            await tx.CommitAsync();
 
             dto.clothing_id = clothing.clothing_id;
-            dto.merch_id = merch.merch_id;
-            dto.product_id = product.product_id;
             return CreatedAtAction(nameof(GetClothings), new { id = clothing.clothing_id }, dto);
         }
 
@@ -89,7 +85,7 @@ namespace MusicMarketplace.Controllers
         {
             if (id != dto.clothing_id) return BadRequest();
 
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            using var tx = await _context.Database.BeginTransactionAsync();
 
             var clothing = await _context.Clothings.FindAsync(id);
             if (clothing == null) return NotFound();
@@ -113,7 +109,7 @@ namespace MusicMarketplace.Controllers
             clothing.gender = dto.gender;
 
             await _context.SaveChangesAsync();
-            await transaction.CommitAsync();
+            await tx.CommitAsync();
 
             return NoContent();
         }
@@ -125,13 +121,20 @@ namespace MusicMarketplace.Controllers
             if (clothing == null) return NotFound();
 
             var merch = await _context.Merches.FindAsync(clothing.merch_id);
-            var product = merch != null ? await _context.Products.FindAsync(merch.product_id) : null;
-
+            if (merch != null)
+            {
+                var product = await _context.Products.FindAsync(merch.product_id);
+                if (product != null)
+                {
+                    var orderItems = _context.OrderItems.Where(oi => oi.product_id == product.product_id);
+                    _context.OrderItems.RemoveRange(orderItems);
+                    _context.Products.Remove(product);
+                }
+                _context.Merches.Remove(merch);
+            }
             _context.Clothings.Remove(clothing);
-            if (merch != null) _context.Merches.Remove(merch);
-            if (product != null) _context.Products.Remove(product);
-            await _context.SaveChangesAsync();
 
+            await _context.SaveChangesAsync();
             return NoContent();
         }
     }
