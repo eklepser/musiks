@@ -1,5 +1,4 @@
-﻿// main.js
-document.getElementById('ticket-submit').addEventListener('click', saveTicket);
+﻿document.getElementById('ticket-submit').addEventListener('click', saveTicket);
 document.getElementById('ticket-cancel').addEventListener('click', clearTicketForm);
 document.getElementById('clothing-submit').addEventListener('click', saveClothing);
 document.getElementById('clothing-cancel').addEventListener('click', clearClothingForm);
@@ -116,14 +115,13 @@ function loadUsersAndInit() {
                 select.appendChild(opt);
             });
             const savedId = localStorage.getItem('currentUserId');
-            if (savedId) select.value = savedId;
-            if (select.value) {
-                const userId = parseInt(select.value);
+            if (savedId) {
+                select.value = savedId;
+                const userId = parseInt(savedId);
                 fetch(`https://localhost:7062/api/Users/${userId}`)
                     .then(resp => resp.json())
                     .then(user => {
                         localStorage.setItem('currentUserId', userId);
-                        if (typeof showToast === 'function') showToast(`Выбран пользователь: ${user.full_name}`, 'success');
                         loadUserStatus();
                     })
                     .catch(err => console.error(err));
@@ -137,6 +135,7 @@ function loadUsersAndInit() {
         if (!userId) {
             localStorage.removeItem('currentUserId');
             loadUserStatus();
+            if (typeof showToast === 'function') showToast('Пользователь не выбран', 'success');
             return;
         }
         fetch(`https://localhost:7062/api/Users/${userId}`)

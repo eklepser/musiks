@@ -76,7 +76,7 @@ function renderCart() {
     const tbody = document.getElementById('cart-tbody');
     tbody.innerHTML = '';
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6">Нет данных</tbody>';
+        tbody.innerHTML = '<td><td colspan="6">Нет данных</tbody>';
         return;
     }
     filtered.forEach(item => {
@@ -106,7 +106,7 @@ function renderReviews() {
     const tbody = document.getElementById('reviews-tbody');
     tbody.innerHTML = '';
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4">Нет данных</tbody>';
+        tbody.innerHTML = '<tr><td colspan="5">Нет данных</tbody>';
         return;
     }
     filtered.forEach(r => {
@@ -115,6 +115,12 @@ function renderReviews() {
         row.insertCell(1).textContent = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
         row.insertCell(2).textContent = r.review_text || '';
         row.insertCell(3).textContent = new Date(r.review_date).toLocaleDateString();
+        const actions = row.insertCell(4);
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'Удалить';
+        delBtn.className = 'delete-btn';
+        delBtn.onclick = () => deleteReviewFromDashboard(r.product_id);
+        actions.appendChild(delBtn);
     });
 }
 
@@ -170,6 +176,18 @@ async function removeFromCart(productId) {
     } else if (typeof showToast === 'function') showToast('Ошибка удаления', 'error');
 }
 
+async function deleteReviewFromDashboard(productId) {
+    const user = await getCurrentUser();
+    if (!user) return;
+    if (!confirm('Удалить отзыв?')) return;
+    const resp = await fetch(`https://localhost:7062/api/Reviews/${user.user_id}/${productId}`, { method: 'DELETE' });
+    if (resp.ok) {
+        await loadReviews();
+        if (typeof showToast === 'function') showToast('Отзыв удалён', 'success');
+        if (typeof loadUserStatus === 'function') await loadUserStatus();
+    } else if (typeof showToast === 'function') showToast('Ошибка удаления', 'error');
+}
+
 function showOrderDetails(orderId) {
     alert(`Детали заказа ${orderId} будут реализованы позже`);
 }
@@ -177,7 +195,7 @@ function showOrderDetails(orderId) {
 function clearAllTables() {
     document.getElementById('wishlist-tbody').innerHTML = '<tr><td colspan="5">Выберите пользователя</tbody>';
     document.getElementById('cart-tbody').innerHTML = '<tr><td colspan="6">Выберите пользователя</tbody>';
-    document.getElementById('reviews-tbody').innerHTML = '<tr><td colspan="4">Выберите пользователя</tbody>';
+    document.getElementById('reviews-tbody').innerHTML = '<tr><td colspan="5">Выберите пользователя</tbody>';
     document.getElementById('orders-tbody').innerHTML = '<tr><td colspan="5">Выберите пользователя</tbody>';
 }
 

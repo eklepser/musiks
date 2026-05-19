@@ -3,70 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Личный кабинет</title>
+    <title>Musiks - Мой профиль</title>
     <link rel="stylesheet" href="css/style.css">
-    <style>
-        .tab-buttons {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .tab-btn {
-            padding: 10px 20px;
-            background: #e0e0e0;
-            border: none;
-            cursor: pointer;
-        }
-
-            .tab-btn.active {
-                background: #007bff;
-                color: white;
-            }
-
-        .tab-content {
-            display: none;
-        }
-
-            .tab-content.active {
-                display: block;
-            }
-
-        .filter-group {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            border: 1px solid #ccc;
-            padding: 8px;
-            text-align: left;
-        }
-
-        .user-info {
-            background: #e9ecef;
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-        }
-    </style>
 </head>
 <body>
     <div class="nav-menu">
         <ul>
-            <li><a href="index.html">Главная</a></li>
-            <li><a href="products.html">Товары</a></li>
-            <li><a href="artists.html">Исполнители</a></li>
-            <li><a href="user.html" class="active">Мой кабинет</a></li>
+            <li><a href="/products">Товары</a></li>
+            <li><a href="/artists">Исполнители</a></li>
+            <li><a href="/user">Мой профиль</a></li>
             <li style="margin-left: auto;">
                 <select id="user-select">
                     <option value="">-- Выберите пользователя --</option>
@@ -75,7 +20,7 @@
         </ul>
     </div>
     <div class="container">
-        <h1>Личный кабинет</h1>
+        <h1>Мой профиль</h1>
         <div id="user-info" class="user-info">Выберите пользователя</div>
 
         <div class="tab-buttons">
@@ -95,8 +40,10 @@
                 </div>
             </div>
             <table>
-                <thead><tr><th>ID товара</th><th>Название</th><th>Цена</th><th>Дата добавления</th><th>Действия</th></tr></thead>
-                <tbody id="wishlist-tbody"><tr><td colspan="5">Загрузка...</tbody>
+                <thead>
+                    <tr><th>ID товара</th><th>Название</th><th>Цена</th><th>Дата добавления</th><th>Действия</th></tr>
+                </thead>
+                <tbody id="wishlist-tbody"><tr><td colspan="5">Загрузка...</td></tr></tbody>
             </table>
         </div>
 
@@ -110,8 +57,10 @@
                 </div>
             </div>
             <table>
-                <thead><tr><th>ID товара</th><th>Название</th><th>Цена</th><th>Количество</th><th>Дата добавления</th><th>Действия</th></tr></thead>
-                <tbody id="cart-tbody"><tr><td colspan="6">Загрузка...</tbody>
+                <thead>
+                    <tr><th>ID товара</th><th>Название</th><th>Цена</th><th>Количество</th><th>Дата добавления</th><th>Действия</th></tr>
+                </thead>
+                <tbody id="cart-tbody"><tr><td colspan="6">Загрузка...</td></tr></tbody>
             </table>
         </div>
 
@@ -126,8 +75,10 @@
                 </div>
             </div>
             <table>
-                <thead><tr><th>Товар</th><th>Оценка</th><th>Текст отзыва</th><th>Дата</th></tr></thead>
-                <tbody id="reviews-tbody"><tr><td colspan="4">Загрузка...</tbody>
+                <thead>
+                    <tr><th>Товар</th><th>Оценка</th><th>Текст отзыва</th><th>Дата</th><th>Действия</th></tr>
+                </thead>
+                <tbody id="reviews-tbody"><tr><td colspan="5">Загрузка...</td></tr></tbody>
             </table>
         </div>
 
@@ -143,12 +94,14 @@
                 </div>
             </div>
             <table>
-                <thead><tr><th>ID заказа</th><th>Дата</th><th>Статус</th><th>Сумма</th><th>Действия</th></tr></thead>
-                <tbody id="orders-tbody"></td>
-                <td colspan="5">Загрузка...</tbody>
+                <thead>
+                    <tr><th>ID заказа</th><th>Дата</th><th>Статус</th><th>Сумма</th><th>Действия</th></tr>
+                </thead>
+                <tbody id="orders-tbody"><tr><td colspan="5">Загрузка...</td></tr></tbody>
             </table>
         </div>
     </div>
+
     <script src="js/toast.js"></script>
     <script src="js/user-menu.js"></script>
     <script src="js/user-dashboard.js"></script>

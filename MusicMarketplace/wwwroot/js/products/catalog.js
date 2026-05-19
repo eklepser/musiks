@@ -1,5 +1,4 @@
-﻿// catalog.js
-async function loadAllItems() {
+﻿async function loadAllItems() {
     try {
         const [ticketsRes, clothingsRes, accessoriesRes] = await Promise.all([
             fetch(TICKETS_URL),
@@ -52,15 +51,27 @@ function renderCatalog() {
         row.insertCell(3).textContent = item.price;
         row.insertCell(4).textContent = item.stock;
         row.insertCell(5).textContent = getManufacturerName(item.manufacturer_id);
-        let extra = '';
+
+        let extraLines = [];
         if (item.type === 'ticket') {
-            extra = `Концерт: ${item.concert_title || item.concert_id}, Место: ${item.seat_row || ''} ${item.seat_number || ''}, Категория: ${item.price_category || ''}`;
+            extraLines.push(`Концерт: ${item.concert_title || item.concert_id}`);
+            if (item.seat_row || item.seat_number) extraLines.push(`Место: ${item.seat_row || ''} ${item.seat_number || ''}`);
+            if (item.price_category) extraLines.push(`Категория: ${item.price_category}`);
         } else if (item.type === 'clothing') {
-            extra = `Материал: ${item.material || '-'}, Цвет: ${item.color || '-'}, Размер: ${item.size || '-'}, Пол: ${item.gender || '-'}`;
+            if (item.material) extraLines.push(`Материал: ${item.material}`);
+            if (item.color) extraLines.push(`Цвет: ${item.color}`);
+            if (item.size) extraLines.push(`Размер: ${item.size}`);
+            if (item.gender) extraLines.push(`Пол: ${item.gender}`);
         } else if (item.type === 'accessory') {
-            extra = `Материал: ${item.material || '-'}, Цвет: ${item.color || '-'}, Тип: ${item.accessory_type || '-'}, Вес: ${item.weight || '-'}г`;
+            if (item.material) extraLines.push(`Материал: ${item.material}`);
+            if (item.color) extraLines.push(`Цвет: ${item.color}`);
+            if (item.accessory_type) extraLines.push(`Тип: ${item.accessory_type}`);
+            if (item.weight) extraLines.push(`Вес: ${item.weight} г`);
         }
-        row.insertCell(6).textContent = extra;
+        const extraText = extraLines.length ? extraLines.join('\n') : '—';
+        const extraCell = row.insertCell(6);
+        extraCell.style.whiteSpace = 'pre-wrap';
+        extraCell.textContent = extraText;
 
         const actions = row.insertCell(7);
         const topRow = document.createElement('div');
@@ -152,10 +163,4 @@ function hideEditPanel() {
     document.getElementById('edit-ticket-form').style.display = 'none';
     document.getElementById('edit-clothing-form').style.display = 'none';
     document.getElementById('edit-accessory-form').style.display = 'none';
-}
-
-function hideReviewModal() {
-    const modal = document.getElementById('review-modal');
-    if (modal) modal.style.display = 'none';
-    currentProductForReview = null;
 }

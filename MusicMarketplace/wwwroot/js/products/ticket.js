@@ -1,5 +1,4 @@
-﻿// ticket.js
-let ticketEditId = null;
+﻿let ticketEditId = null;
 
 function clearTicketForm() {
     document.getElementById('ticket-name').value = '';
@@ -32,6 +31,17 @@ function fillEditTicketForm(t) {
     document.getElementById('edit-ticket-form').style.display = 'block';
 }
 
+function validateTicketFields(name, price, concertId, stock, isEdit = false) {
+    if (!name || name.trim() === '') return 'Название обязательно.';
+    if (name.length > 100) return 'Название не может быть длиннее 100 символов.';
+    if (isNaN(price) || price === '') return 'Цена должна быть числом.';
+    if (price <= 0) return 'Цена должна быть больше нуля.';
+    if (price > 1000000) return 'Цена не может превышать 1 000 000 руб.';
+    if (!concertId) return 'Выберите концерт.';
+    if (stock !== undefined && stock !== null && stock < 0) return 'Остаток не может быть отрицательным.';
+    return null;
+}
+
 async function saveEditTicket() {
     const id = document.getElementById('edit-ticket-id').value;
     const manufacturerId = parseInt(document.getElementById('edit-ticket-manufacturer-id').value);
@@ -40,22 +50,26 @@ async function saveEditTicket() {
         return;
     }
     const name = document.getElementById('edit-ticket-name').value.trim();
+    const price = parseFloat(document.getElementById('edit-ticket-price').value);
+    const concertId = document.getElementById('edit-ticket-concert-id').value;
+    const stock = parseInt(document.getElementById('edit-ticket-stock').value) || 0;
+    const validationError = validateTicketFields(name, price, concertId, stock, true);
+    if (validationError) {
+        showToast(validationError, 'error');
+        return;
+    }
     const data = {
         ticket_id: parseInt(id),
         name: name,
-        price: parseFloat(document.getElementById('edit-ticket-price').value),
+        price: price,
         description: document.getElementById('edit-ticket-description').value.trim(),
-        stock: parseInt(document.getElementById('edit-ticket-stock').value) || 0,
-        concert_id: parseInt(document.getElementById('edit-ticket-concert-id').value),
+        stock: stock,
+        concert_id: parseInt(concertId),
         seat_row: document.getElementById('edit-ticket-seat-row').value.trim(),
         seat_number: document.getElementById('edit-ticket-seat-number').value.trim(),
         price_category: document.getElementById('edit-ticket-price-category').value.trim(),
         manufacturer_id: manufacturerId
     };
-    if (!data.name || isNaN(data.price) || !data.concert_id) {
-        showToast('Заполните обязательные поля', 'error');
-        return;
-    }
     try {
         const resp = await fetch(`${TICKETS_URL}/${id}`, {
             method: 'PUT',
@@ -67,37 +81,50 @@ async function saveEditTicket() {
             showToast(text.includes('already') ? text : 'Такой билет уже существует', 'error');
             return;
         }
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        if (!resp.ok) {
+            let errorMsg = 'Ошибка обновления';
+            try {
+                const text = await resp.text();
+                if (text) errorMsg = text;
+            } catch (e) { }
+            showToast(errorMsg, 'error');
+            return;
+        }
         await loadAllItems();
         hideEditPanel();
         showToast(`Запись «${name}» (ID ${id}) обновлена`, 'success');
     } catch (err) {
-        showToast('Ошибка обновления', 'error');
+        showToast('Ошибка соединения', 'error');
     }
 }
 
 async function saveTicket() {
-    const errorMsg = validateTicket();
-    if (errorMsg) { showToast(errorMsg, 'error'); return; }
-    const id = document.getElementById('ticket-edit-id').value;
     const name = document.getElementById('ticket-name').value.trim();
+    const price = parseFloat(document.getElementById('ticket-price').value);
+    const concertId = document.getElementById('ticket-concert-id').value;
+    const stock = parseInt(document.getElementById('ticket-stock').value) || 0;
+    const validationError = validateTicketFields(name, price, concertId, stock, false);
+    if (validationError) {
+        showToast(validationError, 'error');
+        return;
+    }
+    const id = document.getElementById('ticket-edit-id').value;
     const data = {
         name: name,
-        price: parseFloat(document.getElementById('ticket-price').value),
+        price: price,
         description: document.getElementById('ticket-description').value.trim(),
-        stock: parseInt(document.getElementById('ticket-stock').value) || 0,
-        concert_id: parseInt(document.getElementById('ticket-concert-id').value),
+        stock: stock,
+        concert_id: parseInt(concertId),
         seat_row: document.getElementById('ticket-seat-row').value.trim(),
         seat_number: document.getElementById('ticket-seat-number').value.trim(),
         price_category: document.getElementById('ticket-price-category').value.trim(),
         manufacturer_id: parseInt(document.getElementById('ticket-manufacturer-id').value) || null
     };
-    let url = TICKETS_URL, method = 'POST', isUpdate = false;
+    let url = TICKETS_URL, method = 'POST';
     if (id) {
         data.ticket_id = parseInt(id);
         url += `/${id}`;
         method = 'PUT';
-        isUpdate = true;
     }
     try {
         const resp = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
@@ -106,7 +133,15 @@ async function saveTicket() {
             showToast(text.includes('already') ? text : 'Такой билет уже существует', 'error');
             return;
         }
-        if (!resp.ok) throw new Error('Ошибка ' + resp.status);
+        if (!resp.ok) {
+            let errorMsg = 'Ошибка сохранения';
+            try {
+                const text = await resp.text();
+                if (text) errorMsg = text;
+            } catch (e) { }
+            showToast(errorMsg, 'error');
+            return;
+        }
         let newId = id;
         if (!id) {
             const result = await resp.json();

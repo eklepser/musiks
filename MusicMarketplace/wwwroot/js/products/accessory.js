@@ -1,5 +1,4 @@
-﻿// accessory.js
-let accessoryEditId = null;
+﻿let accessoryEditId = null;
 
 function clearAccessoryForm() {
     document.getElementById('accessory-name').value = '';
@@ -35,30 +34,42 @@ function fillEditAccessoryForm(a) {
     if (artistsBtn) artistsBtn.setAttribute('data-product-id', a.accessory_id);
 }
 
+function validateAccessoryFields(name, price, manufacturerId, weight, stock) {
+    if (!name || name.trim() === '') return 'Название обязательно.';
+    if (name.length > 100) return 'Название не может быть длиннее 100 символов.';
+    if (isNaN(price) || price === '') return 'Цена должна быть числом.';
+    if (price <= 0) return 'Цена должна быть больше нуля.';
+    if (price > 1000000) return 'Цена не может превышать 1 000 000 руб.';
+    if (!manufacturerId) return 'Выберите производителя.';
+    if (weight !== undefined && weight !== null && weight < 0) return 'Вес не может быть отрицательным.';
+    if (stock !== undefined && stock !== null && stock < 0) return 'Остаток не может быть отрицательным.';
+    return null;
+}
+
 async function saveEditAccessory() {
     const id = document.getElementById('edit-accessory-id').value;
     const manufacturerId = parseInt(document.getElementById('edit-accessory-manufacturer-id').value);
-    if (!manufacturerId) {
-        showToast('Выберите производителя', 'error');
+    const name = document.getElementById('edit-accessory-name').value.trim();
+    const price = parseFloat(document.getElementById('edit-accessory-price').value);
+    const stock = parseInt(document.getElementById('edit-accessory-stock').value) || 0;
+    const weight = parseFloat(document.getElementById('edit-accessory-weight').value) || null;
+    const validationError = validateAccessoryFields(name, price, manufacturerId, weight, stock);
+    if (validationError) {
+        showToast(validationError, 'error');
         return;
     }
-    const name = document.getElementById('edit-accessory-name').value.trim();
     const data = {
         accessory_id: parseInt(id),
         name: name,
-        price: parseFloat(document.getElementById('edit-accessory-price').value),
+        price: price,
         description: document.getElementById('edit-accessory-description').value.trim(),
-        stock: parseInt(document.getElementById('edit-accessory-stock').value) || 0,
+        stock: stock,
         manufacturer_id: manufacturerId,
         material: document.getElementById('edit-accessory-material').value.trim(),
         color: document.getElementById('edit-accessory-color').value.trim(),
         accessory_type: document.getElementById('edit-accessory-type').value.trim(),
-        weight: parseFloat(document.getElementById('edit-accessory-weight').value) || null
+        weight: weight
     };
-    if (!data.name || isNaN(data.price)) {
-        showToast('Заполните название и цену', 'error');
-        return;
-    }
     try {
         const resp = await fetch(`${ACCESSORIES_URL}/${id}`, {
             method: 'PUT',
@@ -70,37 +81,51 @@ async function saveEditAccessory() {
             showToast(text.includes('already') ? text : 'Такой аксессуар уже существует', 'error');
             return;
         }
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        if (!resp.ok) {
+            let errorMsg = 'Ошибка обновления';
+            try {
+                const text = await resp.text();
+                if (text) errorMsg = text;
+            } catch (e) { }
+            showToast(errorMsg, 'error');
+            return;
+        }
         await loadAllItems();
         hideEditPanel();
         showToast(`Запись «${name}» (ID ${id}) обновлена`, 'success');
     } catch (err) {
-        showToast('Ошибка обновления', 'error');
+        showToast('Ошибка соединения', 'error');
     }
 }
 
 async function saveAccessory() {
-    const errorMsg = validateAccessory();
-    if (errorMsg) { showToast(errorMsg, 'error'); return; }
-    const id = document.getElementById('accessory-edit-id').value;
     const name = document.getElementById('accessory-name').value.trim();
+    const price = parseFloat(document.getElementById('accessory-price').value);
+    const manufacturerId = parseInt(document.getElementById('accessory-manufacturer-id').value);
+    const stock = parseInt(document.getElementById('accessory-stock').value) || 0;
+    const weight = parseFloat(document.getElementById('accessory-weight').value) || null;
+    const validationError = validateAccessoryFields(name, price, manufacturerId, weight, stock);
+    if (validationError) {
+        showToast(validationError, 'error');
+        return;
+    }
+    const id = document.getElementById('accessory-edit-id').value;
     const data = {
         name: name,
-        price: parseFloat(document.getElementById('accessory-price').value),
+        price: price,
         description: document.getElementById('accessory-description').value.trim(),
-        stock: parseInt(document.getElementById('accessory-stock').value) || 0,
-        manufacturer_id: parseInt(document.getElementById('accessory-manufacturer-id').value) || null,
+        stock: stock,
+        manufacturer_id: manufacturerId,
         material: document.getElementById('accessory-material').value.trim(),
         color: document.getElementById('accessory-color').value.trim(),
         accessory_type: document.getElementById('accessory-type').value.trim(),
-        weight: parseFloat(document.getElementById('accessory-weight').value) || null
+        weight: weight
     };
-    let url = ACCESSORIES_URL, method = 'POST', isUpdate = false;
+    let url = ACCESSORIES_URL, method = 'POST';
     if (id) {
         data.accessory_id = parseInt(id);
         url += `/${id}`;
         method = 'PUT';
-        isUpdate = true;
     }
     try {
         const resp = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
@@ -109,7 +134,15 @@ async function saveAccessory() {
             showToast(text.includes('already') ? text : 'Такой аксессуар уже существует', 'error');
             return;
         }
-        if (!resp.ok) throw new Error('Ошибка ' + resp.status);
+        if (!resp.ok) {
+            let errorMsg = 'Ошибка сохранения';
+            try {
+                const text = await resp.text();
+                if (text) errorMsg = text;
+            } catch (e) { }
+            showToast(errorMsg, 'error');
+            return;
+        }
         let newId = id;
         if (!id) {
             const result = await resp.json();

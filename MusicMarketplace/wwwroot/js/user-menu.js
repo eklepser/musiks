@@ -3,7 +3,11 @@
     const navLinks = document.querySelectorAll('.nav-menu a');
     navLinks.forEach(link => {
         const href = link.getAttribute('href');
-        if (href && (currentPath === href || (href !== 'index.html' && currentPath.endsWith(href)))) {
+        if (!href) return;
+        let cleanHref = href.replace(/^\.?\//, '');
+        let cleanCurrent = currentPath.replace(/^\/+/, '');
+        if (cleanCurrent === '' || cleanCurrent === 'index.html') cleanCurrent = 'index.html';
+        if (cleanHref === cleanCurrent) {
             link.classList.add('active');
         } else {
             link.classList.remove('active');
@@ -27,13 +31,15 @@ function loadUsers() {
                 select.appendChild(opt);
             });
             const savedId = localStorage.getItem('currentUserId');
-            if (savedId) select.value = savedId;
-            if (select.value) onUserChange(parseInt(select.value), false);
+            if (savedId) {
+                select.value = savedId;
+                onUserChange(parseInt(savedId), false, false);
+            }
         })
         .catch(err => console.error(err));
 }
 
-function onUserChange(userId, reload = true) {
+function onUserChange(userId, reload = true, showNotification = true) {
     if (!userId) {
         localStorage.removeItem('currentUserId');
         currentUser = null;
@@ -45,7 +51,9 @@ function onUserChange(userId, reload = true) {
         .then(user => {
             currentUser = user;
             localStorage.setItem('currentUserId', userId);
-            if (typeof showToast === 'function') showToast(`Выбран пользователь: ${user.full_name}`, 'success');
+            if (showNotification && typeof showToast === 'function') {
+                showToast(`Выбран пользователь: ${user.full_name}`, 'success');
+            }
             if (reload && window.location.pathname !== '/user.html') window.location.reload();
         })
         .catch(err => console.error(err));
@@ -53,7 +61,9 @@ function onUserChange(userId, reload = true) {
 
 function initUserMenu() {
     const select = document.getElementById('user-select');
-    if (select) select.addEventListener('change', (e) => onUserChange(parseInt(e.target.value), true));
+    if (select) {
+        select.addEventListener('change', (e) => onUserChange(parseInt(e.target.value), true, true));
+    }
     loadUsers();
     highlightActiveNavItem();
 }
