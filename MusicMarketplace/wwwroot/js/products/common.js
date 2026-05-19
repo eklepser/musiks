@@ -1,4 +1,5 @@
-﻿const TICKETS_URL = 'https://localhost:7062/api/Tickets';
+﻿// common.js (без изменений, но оставлен для полноты)
+const TICKETS_URL = 'https://localhost:7062/api/Tickets';
 const CLOTHINGS_URL = 'https://localhost:7062/api/Clothings';
 const ACCESSORIES_URL = 'https://localhost:7062/api/Accessories';
 const CONCERTS_URL = 'https://localhost:7062/api/Concerts';
@@ -73,6 +74,7 @@ async function loadManufacturersForSelect(selectId) {
                 select.appendChild(opt);
             });
         }
+        if (typeof renderCatalog === 'function') renderCatalog();
     }
 }
 

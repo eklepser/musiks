@@ -1,4 +1,5 @@
-﻿document.getElementById('ticket-submit').addEventListener('click', saveTicket);
+﻿// main.js
+document.getElementById('ticket-submit').addEventListener('click', saveTicket);
 document.getElementById('ticket-cancel').addEventListener('click', clearTicketForm);
 document.getElementById('clothing-submit').addEventListener('click', saveClothing);
 document.getElementById('clothing-cancel').addEventListener('click', clearClothingForm);
@@ -88,6 +89,67 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     });
 });
 
+function highlightActiveNavItem() {
+    const currentPath = window.location.pathname;
+    const navLinks = document.querySelectorAll('.nav-menu a');
+    navLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (href && (currentPath === href || (href !== 'index.html' && currentPath.endsWith(href)))) {
+            link.classList.add('active');
+        } else {
+            link.classList.remove('active');
+        }
+    });
+}
+
+function loadUsersAndInit() {
+    const select = document.getElementById('user-select');
+    if (!select) return;
+    fetch('https://localhost:7062/api/Users')
+        .then(resp => resp.json())
+        .then(users => {
+            select.innerHTML = '<option value="">-- Выберите пользователя --</option>';
+            users.forEach(user => {
+                const opt = document.createElement('option');
+                opt.value = user.user_id;
+                opt.textContent = `${user.full_name} (${user.login})`;
+                select.appendChild(opt);
+            });
+            const savedId = localStorage.getItem('currentUserId');
+            if (savedId) select.value = savedId;
+            if (select.value) {
+                const userId = parseInt(select.value);
+                fetch(`https://localhost:7062/api/Users/${userId}`)
+                    .then(resp => resp.json())
+                    .then(user => {
+                        localStorage.setItem('currentUserId', userId);
+                        if (typeof showToast === 'function') showToast(`Выбран пользователь: ${user.full_name}`, 'success');
+                        loadUserStatus();
+                    })
+                    .catch(err => console.error(err));
+            } else {
+                loadUserStatus();
+            }
+        })
+        .catch(err => console.error(err));
+    select.addEventListener('change', (e) => {
+        const userId = parseInt(e.target.value);
+        if (!userId) {
+            localStorage.removeItem('currentUserId');
+            loadUserStatus();
+            return;
+        }
+        fetch(`https://localhost:7062/api/Users/${userId}`)
+            .then(resp => resp.json())
+            .then(user => {
+                localStorage.setItem('currentUserId', userId);
+                if (typeof showToast === 'function') showToast(`Выбран пользователь: ${user.full_name}`, 'success');
+                loadUserStatus();
+            })
+            .catch(err => console.error(err));
+    });
+}
+
 loadAllItems();
 loadManufacturersForSelect('filter-manufacturer');
 loadGenresAndLinks();
@@ -102,12 +164,5 @@ loadConcertsSelect('ticket-concert-id');
 loadManufacturersTable();
 loadGenresTable();
 
-window.addEventListener('load', () => {
-    loadUserStatus();
-    const userSelect = document.getElementById('user-select');
-    if (userSelect) {
-        userSelect.addEventListener('change', () => {
-            loadUserStatus();
-        });
-    }
-});
+highlightActiveNavItem();
+loadUsersAndInit();

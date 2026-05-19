@@ -1,4 +1,5 @@
-﻿async function loadAllItems() {
+﻿// catalog.js
+async function loadAllItems() {
     try {
         const [ticketsRes, clothingsRes, accessoriesRes] = await Promise.all([
             fetch(TICKETS_URL),
@@ -15,7 +16,7 @@
         ];
         renderCatalog();
     } catch (err) {
-        document.getElementById('catalog-tbody').innerHTML = '<table><td colspan="8">Ошибка загрузки';
+        document.getElementById('catalog-tbody').innerHTML = '<tr><td colspan="8">Ошибка загрузки';
     }
 }
 
@@ -40,7 +41,7 @@ function renderCatalog() {
     const tbody = document.getElementById('catalog-tbody');
     tbody.innerHTML = '';
     if (filtered.length === 0) {
-        tbody.innerHTML = '<td><td colspan="8">Нет данных';
+        tbody.innerHTML = '<tr><td colspan="8">Нет данных';
         return;
     }
     filtered.forEach(item => {

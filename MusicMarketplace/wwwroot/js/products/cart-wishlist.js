@@ -1,4 +1,5 @@
-﻿function getCurrentUserId() {
+﻿// cart-wishlist.js
+function getCurrentUserId() {
     const savedId = localStorage.getItem('currentUserId');
     return savedId ? parseInt(savedId) : null;
 }

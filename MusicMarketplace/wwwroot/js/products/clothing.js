@@ -1,4 +1,5 @@
-﻿let clothingEditId = null;
+﻿// clothing.js
+let clothingEditId = null;
 
 function clearClothingForm() {
     document.getElementById('clothing-name').value = '';
@@ -71,6 +72,7 @@ async function saveEditClothing() {
         }
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         await loadAllItems();
+        hideEditPanel();
         showToast(`Запись «${name}» (ID ${id}) обновлена`, 'success');
     } catch (err) {
         showToast('Ошибка обновления', 'error');

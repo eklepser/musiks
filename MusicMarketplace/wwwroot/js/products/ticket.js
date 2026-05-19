@@ -1,4 +1,5 @@
-﻿let ticketEditId = null;
+﻿// ticket.js
+let ticketEditId = null;
 
 function clearTicketForm() {
     document.getElementById('ticket-name').value = '';
@@ -68,6 +69,7 @@ async function saveEditTicket() {
         }
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         await loadAllItems();
+        hideEditPanel();
         showToast(`Запись «${name}» (ID ${id}) обновлена`, 'success');
     } catch (err) {
         showToast('Ошибка обновления', 'error');

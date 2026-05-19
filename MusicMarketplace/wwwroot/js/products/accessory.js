@@ -1,4 +1,5 @@
-﻿let accessoryEditId = null;
+﻿// accessory.js
+let accessoryEditId = null;
 
 function clearAccessoryForm() {
     document.getElementById('accessory-name').value = '';
@@ -71,6 +72,7 @@ async function saveEditAccessory() {
         }
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         await loadAllItems();
+        hideEditPanel();
         showToast(`Запись «${name}» (ID ${id}) обновлена`, 'success');
     } catch (err) {
         showToast('Ошибка обновления', 'error');
