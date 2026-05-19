@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿// TicketsController.cs
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MusicMarketplace.Models;
 
@@ -14,6 +15,7 @@ namespace MusicMarketplace.Controllers
         public class TicketDto
         {
             public int ticket_id { get; set; }
+            public int product_id { get; set; }
             public string name { get; set; }
             public decimal price { get; set; }
             public string description { get; set; }
@@ -46,6 +48,7 @@ namespace MusicMarketplace.Controllers
                                select new TicketDto
                                {
                                    ticket_id = t.ticket_id,
+                                   product_id = p.product_id,
                                    name = p.name,
                                    price = p.price,
                                    description = p.description,
@@ -60,7 +63,7 @@ namespace MusicMarketplace.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostTicket(TicketCreateDto dto)
+        public async Task<ActionResult<TicketDto>> PostTicket(TicketCreateDto dto)
         {
             using var tx = await _context.Database.BeginTransactionAsync();
 
@@ -87,7 +90,22 @@ namespace MusicMarketplace.Controllers
             await _context.SaveChangesAsync();
 
             await tx.CommitAsync();
-            return Ok();
+
+            var resultDto = new TicketDto
+            {
+                ticket_id = ticket.ticket_id,
+                product_id = product.product_id,
+                name = dto.name,
+                price = dto.price,
+                description = dto.description,
+                stock = dto.stock,
+                manufacturer_id = dto.manufacturer_id,
+                concert_id = dto.concert_id,
+                seat_row = dto.seat_row,
+                seat_number = dto.seat_number,
+                price_category = dto.price_category
+            };
+            return CreatedAtAction(nameof(GetTickets), new { id = ticket.ticket_id }, resultDto);
         }
 
         [HttpPut("{id}")]

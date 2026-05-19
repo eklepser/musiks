@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿// AccessoriesController.cs
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MusicMarketplace.Models;
 
@@ -14,6 +15,7 @@ namespace MusicMarketplace.Controllers
         public class AccessoryDto
         {
             public int accessory_id { get; set; }
+            public int product_id { get; set; }
             public string name { get; set; }
             public decimal price { get; set; }
             public string description { get; set; }
@@ -47,6 +49,7 @@ namespace MusicMarketplace.Controllers
                                select new AccessoryDto
                                {
                                    accessory_id = a.accessory_id,
+                                   product_id = p.product_id,
                                    name = p.name,
                                    price = p.price,
                                    description = p.description,
@@ -61,7 +64,7 @@ namespace MusicMarketplace.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostAccessory(AccessoryCreateDto dto)
+        public async Task<ActionResult<AccessoryDto>> PostAccessory(AccessoryCreateDto dto)
         {
             using var tx = await _context.Database.BeginTransactionAsync();
 
@@ -95,7 +98,22 @@ namespace MusicMarketplace.Controllers
             await _context.SaveChangesAsync();
 
             await tx.CommitAsync();
-            return Ok();
+
+            var resultDto = new AccessoryDto
+            {
+                accessory_id = accessory.accessory_id,
+                product_id = product.product_id,
+                name = dto.name,
+                price = dto.price,
+                description = dto.description,
+                stock = dto.stock,
+                manufacturer_id = dto.manufacturer_id,
+                material = dto.material,
+                color = dto.color,
+                accessory_type = dto.accessory_type,
+                weight = dto.weight
+            };
+            return CreatedAtAction(nameof(GetAccessories), new { id = accessory.accessory_id }, resultDto);
         }
 
         [HttpPut("{id}")]
