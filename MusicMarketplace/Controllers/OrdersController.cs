@@ -1,9 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MusicMarketplace.Models;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace MusicMarketplace.Controllers
 {
@@ -12,11 +9,7 @@ namespace MusicMarketplace.Controllers
     public class OrdersController : ControllerBase
     {
         private readonly MusicMarketplaceContext _context;
-
-        public OrdersController(MusicMarketplaceContext context)
-        {
-            _context = context;
-        }
+        public OrdersController(MusicMarketplaceContext context) => _context = context;
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Order>>> GetOrders()
@@ -30,6 +23,23 @@ namespace MusicMarketplace.Controllers
             var order = await _context.Orders.FindAsync(id);
             if (order == null) return NotFound();
             return order;
+        }
+
+        [HttpGet("byUser/{userId}")]
+        public async Task<ActionResult<IEnumerable<OrderDto>>> GetByUser(int userId)
+        {
+            var orders = await _context.Orders
+                .Where(o => o.user_id == userId)
+                .OrderByDescending(o => o.order_date)
+                .Select(o => new OrderDto
+                {
+                    order_id = o.order_id,
+                    order_date = o.order_date,
+                    status = o.status,
+                    total_amount = o.total_amount
+                })
+                .ToListAsync();
+            return Ok(orders);
         }
 
         [HttpPost]

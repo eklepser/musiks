@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MusicMarketplace.Models;
 
@@ -14,108 +9,75 @@ namespace MusicMarketplace.Controllers
     public class CartsController : ControllerBase
     {
         private readonly MusicMarketplaceContext _context;
+        public CartsController(MusicMarketplaceContext context) => _context = context;
 
-        public CartsController(MusicMarketplaceContext context)
+        public class CartCreateDto
         {
-            _context = context;
+            public int user_id { get; set; }
+            public int product_id { get; set; }
+            public int quantity { get; set; }
         }
 
-        // GET: api/Carts
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Cart>>> GetCarts()
+        public class CartDto
         {
-            return await _context.Carts.ToListAsync();
+            public int product_id { get; set; }
+            public string name { get; set; }
+            public decimal price { get; set; }
+            public int quantity { get; set; }
+            public DateTime added_date { get; set; }
         }
 
-        // GET: api/Carts/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Cart>> GetCart(int id)
+        [HttpGet("byUser/{userId}")]
+        public async Task<ActionResult<IEnumerable<CartDto>>> GetByUser(int userId)
         {
-            var cart = await _context.Carts.FindAsync(id);
-
-            if (cart == null)
-            {
-                return NotFound();
-            }
-
-            return cart;
-        }
-
-        // PUT: api/Carts/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutCart(int id, Cart cart)
-        {
-            if (id != cart.user_id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(cart).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!CartExists(id))
+            var items = await _context.Carts
+                .Where(c => c.user_id == userId)
+                .Join(_context.Products, c => c.product_id, p => p.product_id, (c, p) => new CartDto
                 {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+                    product_id = c.product_id,
+                    name = p.name,
+                    price = p.price,
+                    quantity = c.quantity,
+                    added_date = c.added_date
+                })
+                .ToListAsync();
+            return Ok(items);
         }
 
-        // POST: api/Carts
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Cart>> PostCart(Cart cart)
+        public async Task<IActionResult> PostCart(CartCreateDto dto)
         {
-            _context.Carts.Add(cart);
-            try
+            var existing = await _context.Carts
+                .FirstOrDefaultAsync(c => c.user_id == dto.user_id && c.product_id == dto.product_id);
+            if (existing != null)
             {
-                await _context.SaveChangesAsync();
+                existing.quantity += dto.quantity;
+                _context.Carts.Update(existing);
             }
-            catch (DbUpdateException)
+            else
             {
-                if (CartExists(cart.user_id))
+                var cart = new Cart
                 {
-                    return Conflict();
-                }
-                else
-                {
-                    throw;
-                }
+                    user_id = dto.user_id,
+                    product_id = dto.product_id,
+                    quantity = dto.quantity,
+                    added_date = DateTime.Now
+                };
+                _context.Carts.Add(cart);
             }
-
-            return CreatedAtAction("GetCart", new { id = cart.user_id }, cart);
+            await _context.SaveChangesAsync();
+            return Ok();
         }
 
-        // DELETE: api/Carts/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteCart(int id)
+        [HttpDelete("{userId}/{productId}")]
+        public async Task<IActionResult> DeleteCart(int userId, int productId)
         {
-            var cart = await _context.Carts.FindAsync(id);
-            if (cart == null)
-            {
-                return NotFound();
-            }
-
+            var cart = await _context.Carts
+                .FirstOrDefaultAsync(c => c.user_id == userId && c.product_id == productId);
+            if (cart == null) return NotFound();
             _context.Carts.Remove(cart);
             await _context.SaveChangesAsync();
-
             return NoContent();
-        }
-
-        private bool CartExists(int id)
-        {
-            return _context.Carts.Any(e => e.user_id == id);
         }
     }
 }

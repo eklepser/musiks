@@ -125,10 +125,13 @@
         <ul>
             <li><a href="index.html">Главная</a></li>
             <li><a href="products.html">Товары</a></li>
-            <li><a href="artists.html" class="active">Исполнители и концерты</a></li>
-            <li><a href="orders.html">Заказы</a></li>
-            <li><a href="users.html">Пользователи</a></li>
-            <li><a href="relations.html">Связи</a></li>
+            <li><a href="artists.html">Исполнители</a></li>
+            <li><a href="user.html" class="active">Мой кабинет</a></li>
+            <li style="margin-left: auto;">
+                <select id="user-select">
+                    <option value="">-- Выберите пользователя --</option>
+                </select>
+            </li>
         </ul>
     </div>
     <div class="container">
@@ -221,6 +224,10 @@
     </div>
 
     <script src="js/toast.js"></script>
+    <script src="js/user-menu.js"></script>
+    <script>
+        initUserMenu();
+    </script>
     <script src="js/artists-concerts.js"></script>
 </body>
 </html>

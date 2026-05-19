@@ -170,11 +170,8 @@ public partial class MusicMarketplaceContext : DbContext
 
         modelBuilder.Entity<Wishlist>(entity =>
         {
-            entity.HasKey(e => new { e.user_id, e.product_id }).HasName("Wishlist_pkey");
             entity.ToTable("Wishlist");
-            entity.Property(e => e.added_date).HasDefaultValueSql("CURRENT_TIMESTAMP").HasColumnType("timestamp without time zone");
-            entity.HasOne(d => d.product).WithMany(p => p.Wishlists).HasForeignKey(d => d.product_id).HasConstraintName("Wishlist_product_id_fkey");
-            entity.HasOne(d => d.user).WithMany(p => p.Wishlists).HasForeignKey(d => d.user_id).HasConstraintName("Wishlist_user_id_fkey");
+            entity.HasKey(e => new { e.user_id, e.product_id }); 
         });
 
         modelBuilder.Entity<ArtistConcert>(entity =>

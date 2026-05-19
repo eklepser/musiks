@@ -19,6 +19,5 @@ namespace MusicMarketplace.Models
         public virtual ICollection<Cart> Carts { get; set; }
         public virtual ICollection<OrderItem> OrderItems { get; set; }
         public virtual ICollection<Review> Reviews { get; set; }
-        public virtual ICollection<Wishlist> Wishlists { get; set; }
     }
 }

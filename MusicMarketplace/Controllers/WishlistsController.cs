@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MusicMarketplace.Models;
 
@@ -14,108 +9,63 @@ namespace MusicMarketplace.Controllers
     public class WishlistsController : ControllerBase
     {
         private readonly MusicMarketplaceContext _context;
+        public WishlistsController(MusicMarketplaceContext context) => _context = context;
 
-        public WishlistsController(MusicMarketplaceContext context)
+        public class WishlistCreateDto
         {
-            _context = context;
+            public int user_id { get; set; }
+            public int product_id { get; set; }
         }
 
-        // GET: api/Wishlists
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Wishlist>>> GetWishlists()
         {
             return await _context.Wishlists.ToListAsync();
         }
 
-        // GET: api/Wishlists/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Wishlist>> GetWishlist(int id)
+        [HttpGet("byUser/{userId}")]
+        public async Task<ActionResult<IEnumerable<WishlistDto>>> GetByUser(int userId)
         {
-            var wishlist = await _context.Wishlists.FindAsync(id);
-
-            if (wishlist == null)
-            {
-                return NotFound();
-            }
-
-            return wishlist;
+            var items = await _context.Wishlists
+                .Where(w => w.user_id == userId)
+                .Join(_context.Products, w => w.product_id, p => p.product_id, (w, p) => new WishlistDto
+                {
+                    product_id = w.product_id,
+                    name = p.name,
+                    price = p.price,
+                    added_date = w.added_date
+                })
+                .ToListAsync();
+            return Ok(items);
         }
 
-        // PUT: api/Wishlists/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutWishlist(int id, Wishlist wishlist)
-        {
-            if (id != wishlist.user_id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(wishlist).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!WishlistExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
-        // POST: api/Wishlists
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Wishlist>> PostWishlist(Wishlist wishlist)
+        public async Task<IActionResult> PostWishlist(WishlistCreateDto dto)
         {
-            _context.Wishlists.Add(wishlist);
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
-            {
-                if (WishlistExists(wishlist.user_id))
-                {
-                    return Conflict();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            var exists = await _context.Wishlists
+                .AnyAsync(w => w.user_id == dto.user_id && w.product_id == dto.product_id);
+            if (exists) return Conflict("Товар уже в вишлисте");
 
-            return CreatedAtAction("GetWishlist", new { id = wishlist.user_id }, wishlist);
+            var wishlist = new Wishlist
+            {
+                user_id = dto.user_id,
+                product_id = dto.product_id,
+                added_date = DateTime.UtcNow
+            };
+            _context.Wishlists.Add(wishlist);
+            await _context.SaveChangesAsync();
+            return Ok();
         }
 
-        // DELETE: api/Wishlists/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteWishlist(int id)
+        [HttpDelete("{userId}/{productId}")]
+        public async Task<IActionResult> DeleteWishlist(int userId, int productId)
         {
-            var wishlist = await _context.Wishlists.FindAsync(id);
-            if (wishlist == null)
-            {
-                return NotFound();
-            }
-
+            var wishlist = await _context.Wishlists
+                .FirstOrDefaultAsync(w => w.user_id == userId && w.product_id == productId);
+            if (wishlist == null) return NotFound();
             _context.Wishlists.Remove(wishlist);
             await _context.SaveChangesAsync();
-
             return NoContent();
-        }
-
-        private bool WishlistExists(int id)
-        {
-            return _context.Wishlists.Any(e => e.user_id == id);
         }
     }
 }

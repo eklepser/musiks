@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MusicMarketplace.Models;
 
@@ -14,108 +9,71 @@ namespace MusicMarketplace.Controllers
     public class ReviewsController : ControllerBase
     {
         private readonly MusicMarketplaceContext _context;
+        public ReviewsController(MusicMarketplaceContext context) => _context = context;
 
-        public ReviewsController(MusicMarketplaceContext context)
+        public class ReviewCreateDto
         {
-            _context = context;
+            public int user_id { get; set; }
+            public int product_id { get; set; }
+            public int rating { get; set; }
+            public string review_text { get; set; }
         }
 
-        // GET: api/Reviews
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Review>>> GetReviews()
+        public class ReviewDto
         {
-            return await _context.Reviews.ToListAsync();
+            public int product_id { get; set; }
+            public string product_name { get; set; }
+            public int rating { get; set; }
+            public string review_text { get; set; }
+            public DateTime review_date { get; set; }
         }
 
-        // GET: api/Reviews/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Review>> GetReview(int id)
+        [HttpGet("byUser/{userId}")]
+        public async Task<ActionResult<IEnumerable<ReviewDto>>> GetByUser(int userId)
         {
-            var review = await _context.Reviews.FindAsync(id);
-
-            if (review == null)
-            {
-                return NotFound();
-            }
-
-            return review;
-        }
-
-        // PUT: api/Reviews/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutReview(int id, Review review)
-        {
-            if (id != review.user_id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(review).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ReviewExists(id))
+            var items = await _context.Reviews
+                .Where(r => r.user_id == userId)
+                .Join(_context.Products, r => r.product_id, p => p.product_id, (r, p) => new ReviewDto
                 {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+                    product_id = r.product_id,
+                    product_name = p.name,
+                    rating = r.rating,
+                    review_text = r.review_text,
+                    review_date = r.review_date
+                })
+                .ToListAsync();
+            return Ok(items);
         }
 
-        // POST: api/Reviews
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Review>> PostReview(Review review)
+        public async Task<IActionResult> PostReview(ReviewCreateDto dto)
         {
-            _context.Reviews.Add(review);
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
-            {
-                if (ReviewExists(review.user_id))
-                {
-                    return Conflict();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            var exists = await _context.Reviews
+                .AnyAsync(r => r.user_id == dto.user_id && r.product_id == dto.product_id);
+            if (exists) return Conflict("Вы уже оставляли отзыв на этот товар");
 
-            return CreatedAtAction("GetReview", new { id = review.user_id }, review);
+            var review = new Review
+            {
+                user_id = dto.user_id,
+                product_id = dto.product_id,
+                rating = dto.rating,
+                review_text = dto.review_text,
+                review_date = DateTime.Now
+            };
+            _context.Reviews.Add(review);
+            await _context.SaveChangesAsync();
+            return Ok();
         }
 
-        // DELETE: api/Reviews/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteReview(int id)
+        [HttpDelete("{userId}/{productId}")]
+        public async Task<IActionResult> DeleteReview(int userId, int productId)
         {
-            var review = await _context.Reviews.FindAsync(id);
-            if (review == null)
-            {
-                return NotFound();
-            }
-
+            var review = await _context.Reviews
+                .FirstOrDefaultAsync(r => r.user_id == userId && r.product_id == productId);
+            if (review == null) return NotFound();
             _context.Reviews.Remove(review);
             await _context.SaveChangesAsync();
-
             return NoContent();
-        }
-
-        private bool ReviewExists(int id)
-        {
-            return _context.Reviews.Any(e => e.user_id == id);
         }
     }
 }

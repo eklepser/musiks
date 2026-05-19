@@ -1,17 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace MusicMarketplace.Models;
-
-public partial class Wishlist
+namespace MusicMarketplace.Models
 {
-    public int user_id { get; set; }
-
-    public int product_id { get; set; }
-
-    public DateTime added_date { get; set; }
-
-    public virtual Product product { get; set; } = null!;
-
-    public virtual User user { get; set; } = null!;
+    [Table("Wishlist")]
+    public class Wishlist
+    {
+        public int user_id { get; set; }
+        public int product_id { get; set; }
+        public DateTime added_date { get; set; }
+    }
 }

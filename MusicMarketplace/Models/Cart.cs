@@ -1,5 +1,8 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace MusicMarketplace.Models
 {
@@ -11,7 +14,12 @@ namespace MusicMarketplace.Models
         public int quantity { get; set; }
         public DateTime added_date { get; set; }
 
-        public virtual User user { get; set; }
-        public virtual Product product { get; set; }
+        [JsonIgnore]
+        [ValidateNever]
+        public virtual User user { get; set; } = null!;
+
+        [JsonIgnore]
+        [ValidateNever]
+        public virtual Product product { get; set; } = null!;
     }
 }

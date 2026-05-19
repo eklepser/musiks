@@ -21,10 +21,12 @@
             <li><a href="index.html">Главная</a></li>
             <li><a href="products.html">Товары</a></li>
             <li><a href="artists.html">Исполнители</a></li>
-            <li><a href="concerts.html">Концерты</a></li>
-            <li><a href="orders.html" class="active">Заказы</a></li>
-            <li><a href="users.html">Пользователи</a></li>
-            <li><a href="relations.html">Связи</a></li>
+            <li><a href="user.html" class="active">Мой кабинет</a></li>
+            <li style="margin-left: auto;">
+                <select id="user-select">
+                    <option value="">-- Выберите пользователя --</option>
+                </select>
+            </li>
         </ul>
     </div>
     <div class="container">
@@ -56,6 +58,12 @@
             </tbody>
         </table>
     </div>
+
+    <script src="js/toast.js"></script>
+    <script src="js/user-menu.js"></script>
+    <script>
+        initUserMenu();
+    </script>
     <script src="js/orders.js"></script>
 </body>
 </html>
