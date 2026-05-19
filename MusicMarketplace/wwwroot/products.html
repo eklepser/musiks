@@ -454,13 +454,57 @@
             </div>
         </div>
     </div>
+
+    <div id="cart-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Добавление в корзину</h3>
+            <p id="cart-product-name"></p>
+            <div class="form-group">
+                <label>Количество:</label>
+                <input type="number" id="cart-quantity" value="1" min="1" style="width: 100%;">
+            </div>
+            <div class="form-group">
+                <button id="cart-confirm-btn">Добавить</button>
+                <button id="cart-cancel-btn">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="review-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Оставить отзыв</h3>
+            <p id="review-product-name"></p>
+            <div class="form-group">
+                <label>Оценка (1-5):</label>
+                <select id="review-rating" style="width: 100%;">
+                    <option value="5">5</option>
+                    <option value="4">4</option>
+                    <option value="3">3</option>
+                    <option value="2">2</option>
+                    <option value="1">1</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Текст отзыва:</label>
+                <textarea id="review-text" rows="3" style="width: 100%;"></textarea>
+            </div>
+            <div class="form-group">
+                <button id="review-confirm-btn">Отправить</button>
+                <button id="review-cancel-btn">Отмена</button>
+            </div>
+        </div>
+    </div>
+
     <script src="js/toast.js"></script>
-    <script src="js/user-menu.js"></script>
-    <script>
-        initUserMenu();
-    </script>
-    <script src="js/products-common.js"></script>
-    <script src="js/products-main.js"></script>
-    <script src="js/user-actions.js"></script>
+    <script src="js/products/common.js"></script>
+    <script src="js/products/catalog.js"></script>
+    <script src="js/products/cart-wishlist.js"></script>
+    <script src="js/products/ticket.js"></script>
+    <script src="js/products/clothing.js"></script>
+    <script src="js/products/accessory.js"></script>
+    <script src="js/products/manufacturer.js"></script>
+    <script src="js/products/genre.js"></script>
+    <script src="js/products/artist-merch.js"></script>
+    <script src="js/products/main.js"></script> 
 </body>
 </html>

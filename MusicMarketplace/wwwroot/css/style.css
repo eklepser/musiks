@@ -199,3 +199,38 @@ input:required, select:required, textarea:required {
 input:required:valid, select:required:valid {
     border-left-color: #28a745;
 }
+
+.nav-menu a.active {
+    background: #007bff;
+    color: white;
+}
+
+.nav-menu a:not(.active) {
+    background: #2c3e50;
+}
+
+.modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background: #fff;
+    margin: 10% auto;
+    padding: 20px;
+    width: 400px;
+    border-radius: 8px;
+}
+
+.modal-content h3 {
+    margin-top: 0;
+}
+
+.modal-content button {
+    margin-right: 10px;
+}
