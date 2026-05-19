@@ -18,20 +18,6 @@ let accessoryEditId = null;
 let manufacturerEditId = null;
 let genreEditId = null;
 
-function showMessage(prefix, text, isError) {
-    const errDiv = document.getElementById(`${prefix}-error`);
-    const sucDiv = document.getElementById(`${prefix}-success`);
-    if (isError) {
-        if (errDiv) { errDiv.textContent = text; errDiv.classList.add('show'); }
-        if (sucDiv) sucDiv.classList.remove('show');
-        setTimeout(() => { if (errDiv) errDiv.classList.remove('show'); }, 5000);
-    } else {
-        if (sucDiv) { sucDiv.textContent = text; sucDiv.classList.add('show'); }
-        if (errDiv) errDiv.classList.remove('show');
-        setTimeout(() => { if (sucDiv) sucDiv.classList.remove('show'); }, 3000);
-    }
-}
-
 async function loadManufacturersForSelect(selectId) {
     const resp = await fetch(MANUFACTURERS_URL);
     if (resp.ok) {

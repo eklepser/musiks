@@ -58,7 +58,7 @@ async function loadAllItems() {
         ];
         renderCatalog();
     } catch (err) {
-        document.getElementById('catalog-tbody').innerHTML = '<tr><td colspan="8">Ошибка загрузки';
+        document.getElementById('catalog-tbody').innerHTML = '<tr><td colspan="8">Ошибка загрузки</td></tr>';
     }
 }
 
@@ -83,7 +83,7 @@ function renderCatalog() {
     const tbody = document.getElementById('catalog-tbody');
     tbody.innerHTML = '';
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8">Нет данных</tr>';
+        tbody.innerHTML = '<tr><td colspan="8">Нет данных</td></tr>';
         return;
     }
     filtered.forEach(item => {
@@ -96,7 +96,7 @@ function renderCatalog() {
         row.insertCell(5).textContent = getManufacturerName(item.manufacturer_id);
         let extra = '';
         if (item.type === 'ticket') {
-            extra = `Концерт: ${item.concert_title || item.concert_id}, Место: ${item.seat_row || ''} ${item.seat_number || ''}, Кат: ${item.price_category || ''}`;
+            extra = `Концерт: ${item.concert_title || item.concert_id}, Место: ${item.seat_row || ''} ${item.seat_number || ''}, Категория: ${item.price_category || ''}`;
         } else if (item.type === 'clothing') {
             extra = `Материал: ${item.material || '-'}, Цвет: ${item.color || '-'}, Размер: ${item.size || '-'}, Пол: ${item.gender || '-'}`;
         } else if (item.type === 'accessory') {
@@ -104,24 +104,29 @@ function renderCatalog() {
         }
         row.insertCell(6).textContent = extra;
         const actions = row.insertCell(7);
+        const topRow = document.createElement('div');
+        topRow.className = 'action-buttons-row';
+        const bottomRow = document.createElement('div');
+        bottomRow.className = 'action-buttons-row';
         const wishBtn = document.createElement('button');
         wishBtn.textContent = '❤️';
         wishBtn.title = 'В вишлист';
         wishBtn.style.background = '#ffc107';
         wishBtn.style.marginRight = '5px';
-        wishBtn.onclick = () => alert('Функция "В вишлист" в разработке');
+        wishBtn.onclick = () => showToast('Функция "В вишлист" в разработке', 'info');
         const reviewBtn = document.createElement('button');
         reviewBtn.textContent = '✍️';
         reviewBtn.title = 'Оставить отзыв';
         reviewBtn.style.background = '#17a2b8';
         reviewBtn.style.marginRight = '5px';
-        reviewBtn.onclick = () => alert('Функция "Отзыв" в разработке');
+        reviewBtn.onclick = () => showToast('Функция "Отзыв" в разработке', 'info');
         const cartBtn = document.createElement('button');
         cartBtn.textContent = '🛒';
         cartBtn.title = 'В корзину';
         cartBtn.style.background = '#28a745';
         cartBtn.style.marginRight = '5px';
-        cartBtn.onclick = () => alert('Функция "В корзину" в разработке');
+        cartBtn.onclick = () => showToast('Функция "В корзину" в разработке', 'info');
+        topRow.append(wishBtn, reviewBtn, cartBtn);
         const editBtn = document.createElement('button');
         editBtn.textContent = 'Ред.';
         editBtn.className = 'edit-btn';
@@ -141,7 +146,8 @@ function renderCatalog() {
             else if (item.type === 'clothing') deleteClothing(item.clothing_id, item.name);
             else if (item.type === 'accessory') deleteAccessory(item.accessory_id, item.name);
         };
-        actions.append(wishBtn, reviewBtn, cartBtn, editBtn, delBtn);
+        bottomRow.append(editBtn, delBtn);
+        actions.append(topRow, bottomRow);
     });
 }
 
@@ -218,7 +224,7 @@ async function saveEditTicket() {
         manufacturer_id: parseInt(document.getElementById('edit-ticket-manufacturer-id').value) || null
     };
     if (!data.name || isNaN(data.price) || !data.concert_id) {
-        showMessage('edit-ticket', 'Заполните обязательные поля', true);
+        showToast('Заполните обязательные поля', 'error');
         return;
     }
     try {
@@ -229,15 +235,14 @@ async function saveEditTicket() {
         });
         if (resp.status === 409) {
             const text = await resp.text();
-            showMessage('edit-ticket', text.includes('already') ? text : 'Такой билет уже существует', true);
+            showToast(text.includes('already') ? text : 'Такой билет уже существует', 'error');
             return;
         }
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        hideEditPanel();
         await loadAllItems();
-        showMessage('edit-ticket', `Запись «${name}» (ID ${id}) обновлена`, false);
+        showToast(`Запись «${name}» (ID ${id}) обновлена`, 'success');
     } catch (err) {
-        showMessage('edit-ticket', 'Ошибка обновления', true);
+        showToast('Ошибка обновления', 'error');
     }
 }
 
@@ -257,7 +262,7 @@ async function saveEditClothing() {
         gender: document.getElementById('edit-clothing-gender').value
     };
     if (!data.name || isNaN(data.price)) {
-        showMessage('edit-clothing', 'Заполните название и цену', true);
+        showToast('Заполните название и цену', 'error');
         return;
     }
     try {
@@ -268,15 +273,14 @@ async function saveEditClothing() {
         });
         if (resp.status === 409) {
             const text = await resp.text();
-            showMessage('edit-clothing', text.includes('already') ? text : 'Такая одежда уже существует', true);
+            showToast(text.includes('already') ? text : 'Такая одежда уже существует', 'error');
             return;
         }
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        hideEditPanel();
         await loadAllItems();
-        showMessage('edit-clothing', `Запись «${name}» (ID ${id}) обновлена`, false);
+        showToast(`Запись «${name}» (ID ${id}) обновлена`, 'success');
     } catch (err) {
-        showMessage('edit-clothing', 'Ошибка обновления', true);
+        showToast('Ошибка обновления', 'error');
     }
 }
 
@@ -296,7 +300,7 @@ async function saveEditAccessory() {
         weight: parseFloat(document.getElementById('edit-accessory-weight').value) || null
     };
     if (!data.name || isNaN(data.price)) {
-        showMessage('edit-accessory', 'Заполните название и цену', true);
+        showToast('Заполните название и цену', 'error');
         return;
     }
     try {
@@ -307,15 +311,14 @@ async function saveEditAccessory() {
         });
         if (resp.status === 409) {
             const text = await resp.text();
-            showMessage('edit-accessory', text.includes('already') ? text : 'Такой аксессуар уже существует', true);
+            showToast(text.includes('already') ? text : 'Такой аксессуар уже существует', 'error');
             return;
         }
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        hideEditPanel();
         await loadAllItems();
-        showMessage('edit-accessory', `Запись «${name}» (ID ${id}) обновлена`, false);
+        showToast(`Запись «${name}» (ID ${id}) обновлена`, 'success');
     } catch (err) {
-        showMessage('edit-accessory', 'Ошибка обновления', true);
+        showToast('Ошибка обновления', 'error');
     }
 }
 
@@ -325,9 +328,9 @@ async function deleteTicket(id, name) {
         const resp = await fetch(`${TICKETS_URL}/${id}`, { method: 'DELETE' });
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         await loadAllItems();
-        showMessage('ticket', `Запись «${name}» (ID ${id}) удалена`, false);
+        showToast(`Запись «${name}» (ID ${id}) удалена`, 'success');
     } catch (err) {
-        showMessage('ticket', 'Ошибка удаления', true);
+        showToast('Ошибка удаления', 'error');
     }
 }
 
@@ -337,9 +340,9 @@ async function deleteClothing(id, name) {
         const resp = await fetch(`${CLOTHINGS_URL}/${id}`, { method: 'DELETE' });
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         await loadAllItems();
-        showMessage('clothing', `Запись «${name}» (ID ${id}) удалена`, false);
+        showToast(`Запись «${name}» (ID ${id}) удалена`, 'success');
     } catch (err) {
-        showMessage('clothing', 'Ошибка удаления', true);
+        showToast('Ошибка удаления', 'error');
     }
 }
 
@@ -349,9 +352,9 @@ async function deleteAccessory(id, name) {
         const resp = await fetch(`${ACCESSORIES_URL}/${id}`, { method: 'DELETE' });
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         await loadAllItems();
-        showMessage('accessory', `Запись «${name}» (ID ${id}) удалена`, false);
+        showToast(`Запись «${name}» (ID ${id}) удалена`, 'success');
     } catch (err) {
-        showMessage('accessory', 'Ошибка удаления', true);
+        showToast('Ошибка удаления', 'error');
     }
 }
 
@@ -373,7 +376,7 @@ function clearTicketForm() {
 
 async function saveTicket() {
     const errorMsg = validateTicket();
-    if (errorMsg) { showMessage('ticket', errorMsg, true); return; }
+    if (errorMsg) { showToast(errorMsg, 'error'); return; }
     const id = document.getElementById('ticket-edit-id').value;
     const name = document.getElementById('ticket-name').value.trim();
     const data = {
@@ -398,7 +401,7 @@ async function saveTicket() {
         const resp = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         if (resp.status === 409) {
             const text = await resp.text();
-            showMessage('ticket', text.includes('already') ? text : 'Такой билет уже существует', true);
+            showToast(text.includes('already') ? text : 'Такой билет уже существует', 'error');
             return;
         }
         if (!resp.ok) throw new Error('Ошибка ' + resp.status);
@@ -406,9 +409,9 @@ async function saveTicket() {
         if (!id) newId = (await resp.json()).ticket_id;
         clearTicketForm();
         await loadAllItems();
-        showMessage('ticket', `Запись «${name}» (ID ${newId}) ${isUpdate ? 'обновлён' : 'добавлен'}`, false);
+        showToast(`Запись «${name}» (ID ${newId}) ${isUpdate ? 'обновлён' : 'добавлен'}`, 'success');
     } catch (err) {
-        showMessage('ticket', 'Ошибка сохранения', true);
+        showToast('Ошибка сохранения', 'error');
     }
 }
 
@@ -430,7 +433,7 @@ function clearClothingForm() {
 
 async function saveClothing() {
     const errorMsg = validateClothing();
-    if (errorMsg) { showMessage('clothing', errorMsg, true); return; }
+    if (errorMsg) { showToast(errorMsg, 'error'); return; }
     const id = document.getElementById('clothing-edit-id').value;
     const name = document.getElementById('clothing-name').value.trim();
     const data = {
@@ -455,7 +458,7 @@ async function saveClothing() {
         const resp = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         if (resp.status === 409) {
             const text = await resp.text();
-            showMessage('clothing', text.includes('already') ? text : 'Такая одежда уже существует', true);
+            showToast(text.includes('already') ? text : 'Такая одежда уже существует', 'error');
             return;
         }
         if (!resp.ok) throw new Error('Ошибка ' + resp.status);
@@ -463,9 +466,9 @@ async function saveClothing() {
         if (!id) newId = (await resp.json()).clothing_id;
         clearClothingForm();
         await loadAllItems();
-        showMessage('clothing', `Запись «${name}» (ID ${newId}) ${isUpdate ? 'обновлена' : 'добавлена'}`, false);
+        showToast(`Запись «${name}» (ID ${newId}) ${isUpdate ? 'обновлена' : 'добавлена'}`, 'success');
     } catch (err) {
-        showMessage('clothing', 'Ошибка сохранения', true);
+        showToast('Ошибка сохранения', 'error');
     }
 }
 
@@ -487,7 +490,7 @@ function clearAccessoryForm() {
 
 async function saveAccessory() {
     const errorMsg = validateAccessory();
-    if (errorMsg) { showMessage('accessory', errorMsg, true); return; }
+    if (errorMsg) { showToast(errorMsg, 'error'); return; }
     const id = document.getElementById('accessory-edit-id').value;
     const name = document.getElementById('accessory-name').value.trim();
     const data = {
@@ -512,7 +515,7 @@ async function saveAccessory() {
         const resp = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         if (resp.status === 409) {
             const text = await resp.text();
-            showMessage('accessory', text.includes('already') ? text : 'Такой аксессуар уже существует', true);
+            showToast(text.includes('already') ? text : 'Такой аксессуар уже существует', 'error');
             return;
         }
         if (!resp.ok) throw new Error('Ошибка ' + resp.status);
@@ -520,9 +523,9 @@ async function saveAccessory() {
         if (!id) newId = (await resp.json()).accessory_id;
         clearAccessoryForm();
         await loadAllItems();
-        showMessage('accessory', `Запись «${name}» (ID ${newId}) ${isUpdate ? 'обновлён' : 'добавлен'}`, false);
+        showToast(`Запись «${name}» (ID ${newId}) ${isUpdate ? 'обновлён' : 'добавлен'}`, 'success');
     } catch (err) {
-        showMessage('accessory', 'Ошибка сохранения', true);
+        showToast('Ошибка сохранения', 'error');
     }
 }
 
@@ -535,7 +538,7 @@ async function loadManufacturersTable() {
         const tbody = document.getElementById('manufacturers-tbody');
         tbody.innerHTML = '';
         if (items.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4">Нет данных</tr>';
+            tbody.innerHTML = '<tr><td colspan="4">Нет данных</td></table>';
             return;
         }
         items.forEach(item => {
@@ -556,7 +559,7 @@ async function loadManufacturersTable() {
             actions.append(editBtn, delBtn);
         });
     } catch (err) {
-        document.getElementById('manufacturers-tbody').innerHTML = '<tr><td colspan="4">Ошибка загрузки</tr>';
+        document.getElementById('manufacturers-tbody').innerHTML = '<tr><td colspan="4">Ошибка загрузки</td></tr>';
     }
 }
 
@@ -587,7 +590,7 @@ async function saveManufacturer() {
         name: name,
         contact_info: document.getElementById('manufacturer-contact').value.trim() || null
     };
-    if (!data.name) { showMessage('manufacturer', 'Название обязательно', true); return; }
+    if (!data.name) { showToast('Название обязательно', 'error'); return; }
     let url = MANUFACTURERS_URL, method = 'POST', isUpdate = false;
     if (id) {
         data.manufacturer_id = parseInt(id);
@@ -599,7 +602,7 @@ async function saveManufacturer() {
         const resp = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         if (resp.status === 409) {
             const text = await resp.text();
-            showMessage('manufacturer', text.includes('already') ? text : 'Такой производитель уже существует', true);
+            showToast(text.includes('already') ? text : 'Такой производитель уже существует', 'error');
             return;
         }
         if (!resp.ok) throw new Error('Ошибка ' + resp.status);
@@ -614,9 +617,9 @@ async function saveManufacturer() {
         await loadManufacturersForSelect('edit-ticket-manufacturer-id');
         await loadManufacturersForSelect('edit-clothing-manufacturer-id');
         await loadManufacturersForSelect('edit-accessory-manufacturer-id');
-        showMessage('manufacturer', `Запись «${name}» (ID ${newId}) ${isUpdate ? 'обновлён' : 'добавлен'}`, false);
+        showToast(`Запись «${name}» (ID ${newId}) ${isUpdate ? 'обновлён' : 'добавлен'}`, 'success');
     } catch (err) {
-        showMessage('manufacturer', 'Ошибка сохранения', true);
+        showToast('Ошибка сохранения', 'error');
     }
 }
 
@@ -633,9 +636,9 @@ async function deleteManufacturer(id, name) {
         await loadManufacturersForSelect('edit-ticket-manufacturer-id');
         await loadManufacturersForSelect('edit-clothing-manufacturer-id');
         await loadManufacturersForSelect('edit-accessory-manufacturer-id');
-        showMessage('manufacturer', `Запись «${name}» (ID ${id}) удалена`, false);
+        showToast(`Запись «${name}» (ID ${id}) удалена`, 'success');
     } catch (err) {
-        showMessage('manufacturer', 'Ошибка удаления', true);
+        showToast('Ошибка удаления', 'error');
     }
 }
 
@@ -648,7 +651,7 @@ async function loadGenresTable() {
         const tbody = document.getElementById('genres-tbody');
         tbody.innerHTML = '';
         if (items.length === 0) {
-            tbody.innerHTML = '<td><td colspan="4">Нет данных</tr>';
+            tbody.innerHTML = '<tr><td colspan="4">Нет данных</td></td>';
             return;
         }
         items.forEach(item => {
@@ -669,7 +672,7 @@ async function loadGenresTable() {
             actions.append(editBtn, delBtn);
         });
     } catch (err) {
-        document.getElementById('genres-tbody').innerHTML = '<tr><td colspan="4">Ошибка загрузки</tr>';
+        document.getElementById('genres-tbody').innerHTML = '<tr><td colspan="4">Ошибка загрузки</td></td>';
     }
 }
 
@@ -700,7 +703,7 @@ async function saveGenre() {
         name: name,
         description: document.getElementById('genre-description').value.trim() || null
     };
-    if (!data.name) { showMessage('genre', 'Название обязательно', true); return; }
+    if (!data.name) { showToast('Название обязательно', 'error'); return; }
     let url = GENRES_URL, method = 'POST', isUpdate = false;
     if (id) {
         data.genre_id = parseInt(id);
@@ -712,7 +715,7 @@ async function saveGenre() {
         const resp = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         if (resp.status === 409) {
             const text = await resp.text();
-            showMessage('genre', text.includes('already') ? text : 'Такой жанр уже существует', true);
+            showToast(text.includes('already') ? text : 'Такой жанр уже существует', 'error');
             return;
         }
         if (!resp.ok) throw new Error('Ошибка ' + resp.status);
@@ -721,9 +724,9 @@ async function saveGenre() {
         clearGenreForm();
         await loadGenresTable();
         await loadGenresAndLinks();
-        showMessage('genre', `Запись «${name}» (ID ${newId}) ${isUpdate ? 'обновлён' : 'добавлен'}`, false);
+        showToast(`Запись «${name}» (ID ${newId}) ${isUpdate ? 'обновлён' : 'добавлен'}`, 'success');
     } catch (err) {
-        showMessage('genre', 'Ошибка сохранения', true);
+        showToast('Ошибка сохранения', 'error');
     }
 }
 
@@ -734,9 +737,9 @@ async function deleteGenre(id, name) {
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         await loadGenresTable();
         await loadGenresAndLinks();
-        showMessage('genre', `Запись «${name}» (ID ${id}) удалена`, false);
+        showToast(`Запись «${name}» (ID ${id}) удалена`, 'success');
     } catch (err) {
-        showMessage('genre', 'Ошибка удаления', true);
+        showToast('Ошибка удаления', 'error');
     }
 }
 

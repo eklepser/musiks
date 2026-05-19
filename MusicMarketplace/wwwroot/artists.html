@@ -3,15 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Исполнители</title>
+    <title>Исполнители и концерты</title>
     <link rel="stylesheet" href="css/style.css">
     <style>
-        input:required, select:required, textarea:required {
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            background: #e0e0e0;
+            border: none;
+            cursor: pointer;
+        }
+
+            .tab-btn.active {
+                background: #007bff;
+                color: white;
+            }
+
+        .tab-content {
+            display: none;
+        }
+
+            .tab-content.active {
+                display: block;
+            }
+
+        .form-group-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            margin-top: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+
+        input:required, select:required {
             border-left: 4px solid #dc3545;
         }
 
-            input:required:valid, select:required:valid, textarea:required:valid {
+            input:required:valid, select:required:valid {
                 border-left-color: #28a745;
+            }
+
+        .filter-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+            .filter-group input, .filter-group select {
+                padding: 6px;
+            }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background: #fff;
+            margin: 10% auto;
+            padding: 20px;
+            width: 400px;
+            border-radius: 8px;
+        }
+
+            .modal-content h3 {
+                margin-top: 0;
+            }
+
+            .modal-content select {
+                width: 100%;
+                padding: 8px;
+                margin: 10px 0;
+            }
+
+            .modal-content button {
+                margin-right: 10px;
+            }
+
+        .artist-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+            .artist-list label {
+                display: block;
+                margin: 5px 0;
             }
     </style>
 </head>
@@ -20,38 +125,102 @@
         <ul>
             <li><a href="index.html">Главная</a></li>
             <li><a href="products.html">Товары</a></li>
-            <li><a href="artists.html" class="active">Исполнители</a></li>
-            <li><a href="concerts.html">Концерты</a></li>
+            <li><a href="artists.html" class="active">Исполнители и концерты</a></li>
             <li><a href="orders.html">Заказы</a></li>
-            <li><a href="manufacturers.html">Производители</a></li>
+            <li><a href="users.html">Пользователи</a></li>
             <li><a href="relations.html">Связи</a></li>
         </ul>
     </div>
     <div class="container">
-        <h1>Управление исполнителями</h1>
-        <div class="form-card">
-            <h2 id="form-title">Добавить исполнителя</h2>
-            <input type="hidden" id="edit-id">
-            <div class="form-group">
-                <input type="text" id="name" placeholder="Имя*" required>
-                <input type="text" id="country" placeholder="Страна">
-                <input type="number" id="debut-year" placeholder="Год дебюта">
-                <input type="text" id="language" placeholder="Язык песен">
-                <button id="submit-btn">Добавить</button>
-                <button id="cancel-btn" style="display:none;">Отмена</button>
-            </div>
-            <div id="error-message" class="error"></div>
-            <div id="success-message" class="success"></div>
+        <h1>Управление исполнителями и концертами</h1>
+        <div class="tab-buttons">
+            <button class="tab-btn active" data-tab="artists">Исполнители</button>
+            <button class="tab-btn" data-tab="concerts">Концерты</button>
         </div>
-        <table>
-            <thead>
-                <tr><th>ID</th><th>Имя</th><th>Страна</th><th>Год дебюта</th><th>Язык</th><th>Действия</th></tr>
-            </thead>
-            <tbody id="artist-tbody">
-                <tr><td colspan="6">Загрузка...</td></tr>
-            </tbody>
-        </table>
+
+        <div id="artists-tab" class="tab-content active">
+            <div class="filters-card">
+                <h3>Фильтры</h3>
+                <div class="filter-group">
+                    <input type="text" id="artist-search-name" list="artist-name-datalist" placeholder="Поиск по имени">
+                    <datalist id="artist-name-datalist"></datalist>
+                    <select id="artist-search-country">
+                        <option value="">Все страны</option>
+                    </select>
+                    <select id="artist-search-language">
+                        <option value="">Все языки</option>
+                    </select>
+                    <button id="apply-artist-filters">Применить</button>
+                    <button id="clear-artist-filters">Сбросить</button>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <h2 id="artist-form-title">Добавить исполнителя</h2>
+                <input type="hidden" id="artist-edit-id">
+                <div class="form-group-row">
+                    <input type="text" id="artist-name" placeholder="Имя*" required>
+                    <input type="text" id="artist-country" placeholder="Страна">
+                    <input type="number" id="artist-debut-year" placeholder="Год дебюта">
+                    <input type="text" id="artist-language" placeholder="Язык">
+                    <button id="artist-submit">Добавить</button>
+                    <button id="artist-cancel" style="display:none;">Отмена</button>
+                </div>
+            </div>
+
+            <table id="artists-table">
+                <thead><tr><th>ID</th><th>Имя</th><th>Страна</th><th>Год дебюта</th><th>Язык</th><th>Действия</th></tr></thead>
+                <tbody id="artists-tbody"><tr><td colspan="6">Загрузка...–</tbody>
+            </table>
+        </div>
+
+        <div id="concerts-tab" class="tab-content">
+            <div class="filters-card">
+                <h3>Фильтры</h3>
+                <div class="filter-group">
+                    <input type="text" id="concert-search-title" list="concert-title-datalist" placeholder="Название">
+                    <datalist id="concert-title-datalist"></datalist>
+                    <select id="concert-search-venue">
+                        <option value="">Все места</option>
+                    </select>
+                    <input type="date" id="concert-search-date" placeholder="Дата">
+                    <button id="apply-concert-filters">Применить</button>
+                    <button id="clear-concert-filters">Сбросить</button>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <h2 id="concert-form-title">Добавить концерт</h2>
+                <input type="hidden" id="concert-edit-id">
+                <div class="form-group-row">
+                    <input type="text" id="concert-title" placeholder="Название*" required>
+                    <input type="text" id="concert-venue" placeholder="Место*" required>
+                    <input type="datetime-local" id="concert-datetime" required>
+                    <button id="concert-submit">Добавить</button>
+                    <button id="concert-cancel" style="display:none;">Отмена</button>
+                </div>
+            </div>
+
+            <table id="concerts-table">
+                <thead><tr><th>ID</th><th>Название</th><th>Место</th><th>Дата и время</th><th>Артисты</th><th>Действия</th></tr></thead>
+                <tbody id="concerts-tbody"><tr><td colspan="6">Загрузка...–</tbody>
+            </table>
+        </div>
     </div>
-    <script src="js/artists.js"></script>
+
+    <div id="artists-modal" class="modal">
+        <div class="modal-content">
+            <h3>Артисты концерта</h3>
+            <div id="modal-artists-list" class="artist-list"></div>
+            <select id="modal-artist-select">
+                <option value="">-- Добавить артиста --</option>
+            </select>
+            <button id="modal-add-artist">Добавить</button>
+            <button id="modal-close">Закрыть</button>
+        </div>
+    </div>
+
+    <script src="js/toast.js"></script>
+    <script src="js/artists-concerts.js"></script>
 </body>
 </html>
