@@ -1,4 +1,50 @@
-﻿function validateTicket() {
+﻿let ticketEditId = null;
+let clothingEditId = null;
+let accessoryEditId = null;
+let currentProductIdForArtist = null;
+let manufacturerEditId = null;
+let genreEditId = null;
+
+function showToast(message, type = 'success') {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.position = 'fixed';
+        container.style.bottom = '20px';
+        container.style.right = '20px';
+        container.style.zIndex = '9999';
+        container.style.display = 'flex';
+        container.style.flexDirection = 'column';
+        container.style.gap = '10px';
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification';
+    toast.textContent = message;
+    toast.style.backgroundColor = type === 'success' ? '#28a745' : '#dc3545';
+    toast.style.color = 'white';
+    toast.style.padding = '12px 20px';
+    toast.style.borderRadius = '8px';
+    toast.style.fontSize = '14px';
+    toast.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(20px)';
+    toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+    toast.style.pointerEvents = 'none';
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0)';
+    }, 10);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(20px)';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+function validateTicket() {
     const name = document.getElementById('ticket-name').value.trim();
     const price = parseFloat(document.getElementById('ticket-price').value);
     const concertId = document.getElementById('ticket-concert-id').value;
@@ -58,7 +104,7 @@ async function loadAllItems() {
         ];
         renderCatalog();
     } catch (err) {
-        document.getElementById('catalog-tbody').innerHTML = '<tr><td colspan="8">Ошибка загрузки</td></tr>';
+        document.getElementById('catalog-tbody').innerHTML = '<tr><td colspan="8">Ошибка загрузки';
     }
 }
 
@@ -83,7 +129,7 @@ function renderCatalog() {
     const tbody = document.getElementById('catalog-tbody');
     tbody.innerHTML = '';
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8">Нет данных</td></tr>';
+        tbody.innerHTML = '<table><td colspan="8">Нет данных';
         return;
     }
     filtered.forEach(item => {
@@ -191,6 +237,8 @@ function fillEditClothingForm(c) {
     document.getElementById('edit-clothing-size').value = c.size || 'M';
     document.getElementById('edit-clothing-gender').value = c.gender || 'unisex';
     document.getElementById('edit-clothing-form').style.display = 'block';
+    const artistsBtn = document.getElementById('edit-clothing-artists-btn');
+    if (artistsBtn) artistsBtn.setAttribute('data-product-id', c.clothing_id);
 }
 
 function fillEditAccessoryForm(a) {
@@ -206,6 +254,8 @@ function fillEditAccessoryForm(a) {
     document.getElementById('edit-accessory-type').value = a.accessory_type || '';
     document.getElementById('edit-accessory-weight').value = a.weight || '';
     document.getElementById('edit-accessory-form').style.display = 'block';
+    const artistsBtn = document.getElementById('edit-accessory-artists-btn');
+    if (artistsBtn) artistsBtn.setAttribute('data-product-id', a.accessory_id);
 }
 
 async function saveEditTicket() {
@@ -406,10 +456,17 @@ async function saveTicket() {
         }
         if (!resp.ok) throw new Error('Ошибка ' + resp.status);
         let newId = id;
-        if (!id) newId = (await resp.json()).ticket_id;
+        if (!id) {
+            const result = await resp.json();
+            newId = result.ticket_id;
+            clearTicketForm();
+            await loadAllItems();
+            showToast(`Запись «${name}» (ID ${newId}) добавлена`, 'success');
+            return;
+        }
         clearTicketForm();
         await loadAllItems();
-        showToast(`Запись «${name}» (ID ${newId}) ${isUpdate ? 'обновлён' : 'добавлен'}`, 'success');
+        showToast(`Запись «${name}» (ID ${newId}) обновлена`, 'success');
     } catch (err) {
         showToast('Ошибка сохранения', 'error');
     }
@@ -429,6 +486,7 @@ function clearClothingForm() {
     clothingEditId = null;
     document.getElementById('clothing-submit').innerText = 'Добавить';
     document.getElementById('clothing-cancel').style.display = 'none';
+    document.getElementById('add-clothing-artists-btn').style.display = 'none';
 }
 
 async function saveClothing() {
@@ -463,10 +521,22 @@ async function saveClothing() {
         }
         if (!resp.ok) throw new Error('Ошибка ' + resp.status);
         let newId = id;
-        if (!id) newId = (await resp.json()).clothing_id;
+        if (!id) {
+            const result = await resp.json();
+            newId = result.clothing_id;
+            clearClothingForm();
+            await loadAllItems();
+            showToast(`Запись «${name}» (ID ${newId}) добавлена`, 'success');
+            const artistsBtn = document.getElementById('add-clothing-artists-btn');
+            if (artistsBtn) {
+                artistsBtn.setAttribute('data-product-id', newId);
+                artistsBtn.style.display = 'inline-block';
+            }
+            return;
+        }
         clearClothingForm();
         await loadAllItems();
-        showToast(`Запись «${name}» (ID ${newId}) ${isUpdate ? 'обновлена' : 'добавлена'}`, 'success');
+        showToast(`Запись «${name}» (ID ${newId}) обновлена`, 'success');
     } catch (err) {
         showToast('Ошибка сохранения', 'error');
     }
@@ -486,6 +556,7 @@ function clearAccessoryForm() {
     accessoryEditId = null;
     document.getElementById('accessory-submit').innerText = 'Добавить';
     document.getElementById('accessory-cancel').style.display = 'none';
+    document.getElementById('add-accessory-artists-btn').style.display = 'none';
 }
 
 async function saveAccessory() {
@@ -520,15 +591,28 @@ async function saveAccessory() {
         }
         if (!resp.ok) throw new Error('Ошибка ' + resp.status);
         let newId = id;
-        if (!id) newId = (await resp.json()).accessory_id;
+        if (!id) {
+            const result = await resp.json();
+            newId = result.accessory_id;
+            clearAccessoryForm();
+            await loadAllItems();
+            showToast(`Запись «${name}» (ID ${newId}) добавлена`, 'success');
+            const artistsBtn = document.getElementById('add-accessory-artists-btn');
+            if (artistsBtn) {
+                artistsBtn.setAttribute('data-product-id', newId);
+                artistsBtn.style.display = 'inline-block';
+            }
+            return;
+        }
         clearAccessoryForm();
         await loadAllItems();
-        showToast(`Запись «${name}» (ID ${newId}) ${isUpdate ? 'обновлён' : 'добавлен'}`, 'success');
+        showToast(`Запись «${name}» (ID ${newId}) обновлена`, 'success');
     } catch (err) {
         showToast('Ошибка сохранения', 'error');
     }
 }
 
+// ========== ПРОИЗВОДИТЕЛИ ==========
 async function loadManufacturersTable() {
     try {
         const resp = await fetch(MANUFACTURERS_URL);
@@ -538,7 +622,7 @@ async function loadManufacturersTable() {
         const tbody = document.getElementById('manufacturers-tbody');
         tbody.innerHTML = '';
         if (items.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4">Нет данных</td></table>';
+            tbody.innerHTML = '<tr><td colspan="4">Нет данных';
             return;
         }
         items.forEach(item => {
@@ -559,7 +643,7 @@ async function loadManufacturersTable() {
             actions.append(editBtn, delBtn);
         });
     } catch (err) {
-        document.getElementById('manufacturers-tbody').innerHTML = '<tr><td colspan="4">Ошибка загрузки</td></tr>';
+        document.getElementById('manufacturers-tbody').innerHTML = '<tr><td colspan="4">Ошибка загрузки';
     }
 }
 
@@ -642,6 +726,7 @@ async function deleteManufacturer(id, name) {
     }
 }
 
+// ========== ЖАНРЫ ==========
 async function loadGenresTable() {
     try {
         const resp = await fetch(GENRES_URL);
@@ -651,7 +736,7 @@ async function loadGenresTable() {
         const tbody = document.getElementById('genres-tbody');
         tbody.innerHTML = '';
         if (items.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4">Нет данных</td></td>';
+            tbody.innerHTML = '</td><td colspan="4">Нет данных';
             return;
         }
         items.forEach(item => {
@@ -672,7 +757,7 @@ async function loadGenresTable() {
             actions.append(editBtn, delBtn);
         });
     } catch (err) {
-        document.getElementById('genres-tbody').innerHTML = '<tr><td colspan="4">Ошибка загрузки</td></td>';
+        document.getElementById('genres-tbody').innerHTML = '<td><td colspan="4">Ошибка загрузки';
     }
 }
 
@@ -743,6 +828,96 @@ async function deleteGenre(id, name) {
     }
 }
 
+// ========== ИСПОЛНИТЕЛИ ДЛЯ МЕРЧА ==========
+async function loadProductArtists(productId) {
+    const resp = await fetch(`${ARTIST_MERCH_URL}/byMerch/${productId}`);
+    if (resp.ok) return await resp.json();
+    return [];
+}
+
+async function loadAllArtists() {
+    const resp = await fetch(ARTISTS_URL);
+    if (resp.ok) {
+        allArtists = await resp.json();
+        return allArtists;
+    }
+    return [];
+}
+
+async function openProductArtistsModal(productId) {
+    currentProductIdForArtist = productId;
+    const modal = document.getElementById('product-artists-modal');
+    const listDiv = document.getElementById('product-artists-list');
+    const select = document.getElementById('product-artist-select');
+
+    const existingLinks = await loadProductArtists(productId);
+    const existingIds = existingLinks.map(link => link.artist_id);
+    const allArtists = await loadAllArtists();
+
+    listDiv.innerHTML = '';
+    if (existingIds.length === 0) {
+        listDiv.innerHTML = '<p>Нет исполнителей</p>';
+    } else {
+        existingIds.forEach(id => {
+            const artist = allArtists.find(a => a.artist_id === id);
+            const name = artist ? artist.name : `ID ${id}`;
+            const div = document.createElement('div');
+            div.innerHTML = `${name} <button class="remove-product-artist-btn" data-artist-id="${id}">Удалить</button>`;
+            listDiv.appendChild(div);
+        });
+        document.querySelectorAll('.remove-product-artist-btn').forEach(btn => {
+            btn.onclick = () => removeProductArtist(parseInt(btn.dataset.artistId));
+        });
+    }
+
+    const available = allArtists.filter(a => !existingIds.includes(a.artist_id));
+    select.innerHTML = '<option value="">-- Добавить исполнителя --</option>';
+    available.forEach(artist => {
+        const opt = document.createElement('option');
+        opt.value = artist.artist_id;
+        opt.textContent = artist.name;
+        select.appendChild(opt);
+    });
+
+    modal.style.display = 'block';
+}
+
+async function addProductArtist() {
+    const artistId = parseInt(document.getElementById('product-artist-select').value);
+    if (!artistId) return;
+    const data = { artist_id: artistId, merch_id: currentProductIdForArtist };
+    try {
+        const resp = await fetch(ARTIST_MERCH_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        if (resp.ok) {
+            await openProductArtistsModal(currentProductIdForArtist);
+            showToast('Исполнитель добавлен', 'success');
+        } else {
+            showToast('Ошибка добавления', 'error');
+        }
+    } catch (err) {
+        showToast('Ошибка сети', 'error');
+    }
+}
+
+async function removeProductArtist(artistId) {
+    try {
+        const resp = await fetch(`${ARTIST_MERCH_URL}/${currentProductIdForArtist}/${artistId}`, { method: 'DELETE' });
+        if (resp.ok) {
+            await openProductArtistsModal(currentProductIdForArtist);
+            showToast('Исполнитель удалён', 'success');
+        } else {
+            showToast('Ошибка удаления', 'error');
+        }
+    } catch (err) {
+        showToast('Ошибка сети', 'error');
+    }
+}
+
+// ========== ОБРАБОТЧИКИ СОБЫТИЙ ==========
 document.getElementById('ticket-submit').addEventListener('click', saveTicket);
 document.getElementById('ticket-cancel').addEventListener('click', clearTicketForm);
 document.getElementById('clothing-submit').addEventListener('click', saveClothing);
@@ -769,6 +944,31 @@ document.getElementById('edit-clothing-cancel').addEventListener('click', () => 
 document.getElementById('edit-accessory-submit').addEventListener('click', saveEditAccessory);
 document.getElementById('edit-accessory-cancel').addEventListener('click', () => hideEditPanel());
 
+document.getElementById('edit-clothing-artists-btn').addEventListener('click', () => {
+    const pid = document.getElementById('edit-clothing-artists-btn').getAttribute('data-product-id');
+    if (pid) openProductArtistsModal(parseInt(pid));
+});
+document.getElementById('edit-accessory-artists-btn').addEventListener('click', () => {
+    const pid = document.getElementById('edit-accessory-artists-btn').getAttribute('data-product-id');
+    if (pid) openProductArtistsModal(parseInt(pid));
+});
+document.getElementById('add-clothing-artists-btn').addEventListener('click', () => {
+    const pid = document.getElementById('add-clothing-artists-btn').getAttribute('data-product-id');
+    if (pid) openProductArtistsModal(parseInt(pid));
+});
+document.getElementById('add-accessory-artists-btn').addEventListener('click', () => {
+    const pid = document.getElementById('add-accessory-artists-btn').getAttribute('data-product-id');
+    if (pid) openProductArtistsModal(parseInt(pid));
+});
+document.getElementById('product-artist-add').addEventListener('click', addProductArtist);
+document.getElementById('product-artist-close').addEventListener('click', () => {
+    document.getElementById('product-artists-modal').style.display = 'none';
+});
+window.addEventListener('click', (e) => {
+    const modal = document.getElementById('product-artists-modal');
+    if (e.target === modal) modal.style.display = 'none';
+});
+
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -792,6 +992,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     });
 });
 
+// Инициализация
 loadAllItems();
 loadManufacturersForSelect('filter-manufacturer');
 loadGenresAndLinks();
@@ -799,3 +1000,9 @@ loadManufacturersForSelect('edit-ticket-manufacturer-id');
 loadManufacturersForSelect('edit-clothing-manufacturer-id');
 loadManufacturersForSelect('edit-accessory-manufacturer-id');
 loadConcertsSelect('edit-ticket-concert-id');
+loadManufacturersForSelect('ticket-manufacturer-id');
+loadManufacturersForSelect('clothing-manufacturer-id');
+loadManufacturersForSelect('accessory-manufacturer-id');
+loadConcertsSelect('ticket-concert-id');
+loadManufacturersTable();
+loadGenresTable();

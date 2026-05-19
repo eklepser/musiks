@@ -6,14 +6,17 @@ const CONCERTS_URL = 'https://localhost:7062/api/Concerts';
 const MANUFACTURERS_URL = 'https://localhost:7062/api/Manufacturers';
 const GENRES_URL = 'https://localhost:7062/api/Genres';
 const PRODUCT_GENRES_URL = 'https://localhost:7062/api/ProductGenres';
-const ARTISTS_URL = 'https://localhost:7062/api/Artists';
-const ARTIST_MERCH_URL = 'https://localhost:7062/api/ArtistMerches';
 
 let manufacturers = [];
 let allProducts = [];
 let genres = [];
 let productGenres = {};
-let allArtists = [];
+
+let ticketEditId = null;
+let clothingEditId = null;
+let accessoryEditId = null;
+let manufacturerEditId = null;
+let genreEditId = null;
 
 async function loadManufacturersForSelect(selectId) {
     const resp = await fetch(MANUFACTURERS_URL);

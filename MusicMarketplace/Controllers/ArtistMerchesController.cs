@@ -29,6 +29,21 @@ namespace MusicMarketplace.Controllers
             return data;
         }
 
+        [HttpGet("byMerch/{merchId}")]
+        public async Task<ActionResult<IEnumerable<ArtistMerchDto>>> GetByMerch(int merchId)
+        {
+            var data = await _context.ArtistMerches
+                .Where(am => am.merch_id == merchId)
+                .Join(_context.Artists, am => am.artist_id, a => a.artist_id, (am, a) => new ArtistMerchDto
+                {
+                    artist_id = am.artist_id,
+                    merch_id = am.merch_id,
+                    artist_name = a.name
+                })
+                .ToListAsync();
+            return data;
+        }
+
         [HttpPost]
         public async Task<ActionResult<ArtistMerch>> PostArtistMerch(ArtistMerch dto)
         {
