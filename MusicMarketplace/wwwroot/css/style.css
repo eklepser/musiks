@@ -1,6 +1,4 @@
-﻿/* style.css – обновлённый дизайн */
-
-* {
+﻿* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -11,6 +9,41 @@ body {
     background-color: #f5f5f5;
     color: #2d2d2d;
     line-height: 1.6;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+html, body {
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 3px;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.35);
+}
+
+.modal .artist-list, .artist-list {
+    scrollbar-width: thin;
 }
 
 .container {
@@ -19,7 +52,6 @@ body {
     padding: 0 25px;
 }
 
-/* Навигационное меню – тёмно-серый фон */
 .nav-menu {
     background: #2c2c2c;
     padding: 18px 25px;
@@ -78,7 +110,6 @@ body {
         border-color: #7b2cbf;
     }
 
-/* Карточки */
 .form-card, .filters-card {
     background: #fff;
     padding: 25px;
@@ -92,6 +123,10 @@ body {
     padding: 20px;
 }
 
+    .filters-card h3 {
+        margin-bottom: 15px;
+    }
+
 .stats-card {
     background: #f0f0f0;
     padding: 12px 20px;
@@ -101,7 +136,6 @@ body {
     color: #2c2c2c;
 }
 
-/* Кнопки */
 button {
     padding: 10px 20px;
     border: none;
@@ -137,7 +171,6 @@ button {
         background: #b02a37;
     }
 
-/* Таблицы */
 table {
     width: 100%;
     border-collapse: collapse;
@@ -164,7 +197,6 @@ td {
     font-weight: 400;
 }
 
-/* Поля ввода */
 input, select, textarea {
     padding: 8px 12px;
     border: 1px solid #ccc;
@@ -187,7 +219,6 @@ input, select, textarea {
             border-left-color: #28a745;
         }
 
-/* Фильтры */
 .filter-group {
     display: flex;
     gap: 18px;
@@ -205,7 +236,10 @@ input, select, textarea {
 }
 
     .genres-filter label {
-        margin-right: 10px;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        margin-right: 15px;
         cursor: pointer;
         font-weight: 500;
     }
@@ -262,7 +296,6 @@ textarea {
         background: #5a6268;
     }
 
-/* Модальные окна */
 .modal {
     display: none;
     position: fixed;
@@ -313,7 +346,6 @@ textarea {
         font-size: 12px;
     }
 
-/* Вкладки */
 .tab-buttons {
     display: flex;
     gap: 12px;
@@ -322,27 +354,33 @@ textarea {
 
 .tab-btn {
     padding: 12px 24px;
-    background: #e0e0e0;
+    background: #c8c8c8;
     border: none;
     cursor: pointer;
     font-weight: 600;
     border-radius: 30px;
     transition: all 0.2s;
+    color: #2c2c2c;
 }
 
-    .tab-btn.active {
-        background: #7b2cbf;
-        color: white;
-        box-shadow: 0 2px 8px rgba(123,44,191,0.3);
-    }
+.tab-btn:not(.active):hover {
+    background: #5a5a5a;
+    color: white;
+}
+
+.tab-btn.active {
+    background: #7b2cbf;
+    color: white;
+    box-shadow: 0 2px 8px rgba(123,44,191,0.3);
+}
 
 .tab-content {
     display: none;
 }
 
-    .tab-content.active {
-        display: block;
-    }
+.tab-content.active {
+    display: block;
+}
 
 .user-info {
     background: #f0f0f0;
@@ -353,7 +391,20 @@ textarea {
     border-left: 5px solid #7b2cbf;
 }
 
-/* Увеличенный отступ для заголовков страниц */
 h1 {
     margin-bottom: 15px;
+}
+
+.form-card h2 {
+    margin-bottom: 25px;
+}
+
+#artists-tab .form-card h2,
+#concerts-tab .form-card h2 {
+    margin-bottom: 25px;
+}
+
+#manufacturers-tab .form-card h2,
+#genres-tab .form-card h2 {
+    margin-bottom: 25px;
 }

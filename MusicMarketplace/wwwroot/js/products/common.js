@@ -1,5 +1,4 @@
-﻿// common.js (без изменений, но оставлен для полноты)
-const TICKETS_URL = 'https://localhost:7062/api/Tickets';
+﻿const TICKETS_URL = 'https://localhost:7062/api/Tickets';
 const CLOTHINGS_URL = 'https://localhost:7062/api/Clothings';
 const ACCESSORIES_URL = 'https://localhost:7062/api/Accessories';
 const CONCERTS_URL = 'https://localhost:7062/api/Concerts';
@@ -27,11 +26,13 @@ function showToast(message, type = 'success') {
         container = document.createElement('div');
         container.id = 'toast-container';
         container.style.position = 'fixed';
-        container.style.bottom = '20px';
-        container.style.right = '20px';
+        container.style.bottom = '30px';
+        container.style.left = '50%';
+        container.style.transform = 'translateX(-50%)';
         container.style.zIndex = '9999';
         container.style.display = 'flex';
         container.style.flexDirection = 'column';
+        container.style.alignItems = 'center';
         container.style.gap = '10px';
         document.body.appendChild(container);
     }
@@ -40,12 +41,15 @@ function showToast(message, type = 'success') {
     toast.textContent = message;
     toast.style.backgroundColor = type === 'success' ? '#28a745' : '#dc3545';
     toast.style.color = 'white';
-    toast.style.padding = '12px 20px';
-    toast.style.borderRadius = '8px';
+    toast.style.padding = '11px 22px';
+    toast.style.borderRadius = '10px';
     toast.style.fontSize = '14px';
-    toast.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+    toast.style.fontWeight = 'bold';
+    toast.style.textAlign = 'center';
+    toast.style.minWidth = '225px';
+    toast.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
     toast.style.opacity = '0';
-    toast.style.transform = 'translateY(20px)';
+    toast.style.transform = 'translateY(30px)';
     toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
     toast.style.pointerEvents = 'none';
     container.appendChild(toast);
@@ -55,7 +59,7 @@ function showToast(message, type = 'success') {
     }, 10);
     setTimeout(() => {
         toast.style.opacity = '0';
-        toast.style.transform = 'translateY(20px)';
+        toast.style.transform = 'translateY(30px)';
         setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
@@ -74,7 +78,6 @@ async function loadManufacturersForSelect(selectId) {
                 select.appendChild(opt);
             });
         }
-        if (typeof renderCatalog === 'function') renderCatalog();
     }
 }
 
@@ -121,8 +124,12 @@ function renderGenreCheckboxes() {
     const container = document.getElementById('genres-filter-container');
     if (!container) return;
     container.innerHTML = '<strong>Жанры:</strong>';
-    genres.forEach(genre => {
+    const sortedGenres = [...genres].sort((a, b) => a.name.localeCompare(b.name));
+    sortedGenres.forEach(genre => {
         const label = document.createElement('label');
+        label.style.display = 'flex';
+        label.style.alignItems = 'center';
+        label.style.gap = '3px';
         label.style.marginRight = '15px';
         const cb = document.createElement('input');
         cb.type = 'checkbox';

@@ -52,7 +52,7 @@ function renderWishlist() {
     const tbody = document.getElementById('wishlist-tbody');
     tbody.innerHTML = '';
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5">Нет данных</tbody>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Вишлист пуст</td></tr>';
         return;
     }
     filtered.forEach(item => {
@@ -76,7 +76,7 @@ function renderCart() {
     const tbody = document.getElementById('cart-tbody');
     tbody.innerHTML = '';
     if (filtered.length === 0) {
-        tbody.innerHTML = '<td><td colspan="6">Нет данных</tbody>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Корзина пуста</td></tr>';
         return;
     }
     filtered.forEach(item => {
@@ -106,7 +106,7 @@ function renderReviews() {
     const tbody = document.getElementById('reviews-tbody');
     tbody.innerHTML = '';
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5">Нет данных</tbody>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Отзывов нет</td></tr>';
         return;
     }
     filtered.forEach(r => {
@@ -137,7 +137,7 @@ function renderOrders() {
     const tbody = document.getElementById('orders-tbody');
     tbody.innerHTML = '';
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5">Нет данных</tbody>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Заказов нет</td></tr>';
         return;
     }
     filtered.forEach(o => {
@@ -193,10 +193,10 @@ function showOrderDetails(orderId) {
 }
 
 function clearAllTables() {
-    document.getElementById('wishlist-tbody').innerHTML = '<tr><td colspan="5">Выберите пользователя</tbody>';
-    document.getElementById('cart-tbody').innerHTML = '<tr><td colspan="6">Выберите пользователя</tbody>';
-    document.getElementById('reviews-tbody').innerHTML = '<tr><td colspan="5">Выберите пользователя</tbody>';
-    document.getElementById('orders-tbody').innerHTML = '<tr><td colspan="5">Выберите пользователя</tbody>';
+    document.getElementById('wishlist-tbody').innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</td></tr>';
+    document.getElementById('cart-tbody').innerHTML = '<tr><td colspan="6" style="text-align: center;">Выберите пользователя</td></tr>';
+    document.getElementById('reviews-tbody').innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</td></tr>';
+    document.getElementById('orders-tbody').innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</td></tr>';
 }
 
 function showActiveTab() {
