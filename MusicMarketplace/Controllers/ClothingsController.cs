@@ -14,12 +14,24 @@ namespace MusicMarketplace.Controllers
         public class ClothingDto
         {
             public int clothing_id { get; set; }
-            public int product_id { get; set; }
             public string name { get; set; }
             public decimal price { get; set; }
             public string description { get; set; }
             public int stock { get; set; }
-            public int? manufacturer_id { get; set; }
+            public int manufacturer_id { get; set; }
+            public string material { get; set; }
+            public string color { get; set; }
+            public string size { get; set; }
+            public string gender { get; set; }
+        }
+
+        public class ClothingCreateDto
+        {
+            public string name { get; set; }
+            public decimal price { get; set; }
+            public string description { get; set; }
+            public int stock { get; set; }
+            public int manufacturer_id { get; set; }
             public string material { get; set; }
             public string color { get; set; }
             public string size { get; set; }
@@ -35,7 +47,6 @@ namespace MusicMarketplace.Controllers
                                select new ClothingDto
                                {
                                    clothing_id = c.clothing_id,
-                                   product_id = p.product_id,
                                    name = p.name,
                                    price = p.price,
                                    description = p.description,
@@ -50,19 +61,73 @@ namespace MusicMarketplace.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Clothing>> PostClothing(Clothing clothing)
+        public async Task<IActionResult> PostClothing(ClothingCreateDto dto)
         {
+            using var tx = await _context.Database.BeginTransactionAsync();
+
+            var product = new Product
+            {
+                name = dto.name,
+                price = dto.price,
+                description = dto.description,
+                stock = dto.stock,
+                manufacturer_id = dto.manufacturer_id
+            };
+            _context.Products.Add(product);
+            await _context.SaveChangesAsync();
+
+            var merch = new Merch
+            {
+                product_id = product.product_id,
+                material = dto.material,
+                color = dto.color
+            };
+            _context.Merches.Add(merch);
+            await _context.SaveChangesAsync();
+
+            var clothing = new Clothing
+            {
+                merch_id = merch.merch_id,
+                size = dto.size,
+                gender = dto.gender
+            };
             _context.Clothings.Add(clothing);
             await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetClothings), new { id = clothing.clothing_id }, clothing);
+
+            await tx.CommitAsync();
+            return Ok();
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutClothing(int id, Clothing clothing)
+        public async Task<IActionResult> PutClothing(int id, ClothingDto dto)
         {
-            if (id != clothing.clothing_id) return BadRequest();
-            _context.Entry(clothing).State = EntityState.Modified;
+            if (id != dto.clothing_id) return BadRequest();
+
+            using var tx = await _context.Database.BeginTransactionAsync();
+
+            var clothing = await _context.Clothings.FindAsync(id);
+            if (clothing == null) return NotFound();
+
+            var merch = await _context.Merches.FindAsync(clothing.merch_id);
+            if (merch == null) return NotFound();
+
+            var product = await _context.Products.FindAsync(merch.product_id);
+            if (product == null) return NotFound();
+
+            product.name = dto.name;
+            product.price = dto.price;
+            product.description = dto.description;
+            product.stock = dto.stock;
+            product.manufacturer_id = dto.manufacturer_id;
+
+            merch.material = dto.material;
+            merch.color = dto.color;
+
+            clothing.size = dto.size;
+            clothing.gender = dto.gender;
+
             await _context.SaveChangesAsync();
+            await tx.CommitAsync();
             return NoContent();
         }
 
@@ -71,7 +136,13 @@ namespace MusicMarketplace.Controllers
         {
             var clothing = await _context.Clothings.FindAsync(id);
             if (clothing == null) return NotFound();
+
+            var merch = await _context.Merches.FindAsync(clothing.merch_id);
+            var product = merch != null ? await _context.Products.FindAsync(merch.product_id) : null;
+
             _context.Clothings.Remove(clothing);
+            if (merch != null) _context.Merches.Remove(merch);
+            if (product != null) _context.Products.Remove(product);
             await _context.SaveChangesAsync();
             return NoContent();
         }
