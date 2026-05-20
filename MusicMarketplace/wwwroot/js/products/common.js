@@ -15,10 +15,12 @@ let productGenres = {};
 let allArtists = [];
 let userWishlistIds = [];
 let userCartIds = [];
+let userCartObjects = [];
 let userReviewProductIds = [];
 
 let currentProductForCart = null;
 let currentProductForReview = null;
+let currentProductForRemove = null;
 
 function showToast(message, type = 'success') {
     let container = document.getElementById('toast-container');
@@ -201,7 +203,10 @@ async function loadUserStatus() {
             fetch(`https://localhost:7062/api/Reviews/byUser/${userId}`)
         ]);
         if (wishlistRes.ok) userWishlistIds = (await wishlistRes.json()).map(i => i.product_id);
-        if (cartRes.ok) userCartIds = (await cartRes.json()).map(i => i.product_id);
+        if (cartRes.ok) {
+            userCartObjects = await cartRes.json();
+            userCartIds = userCartObjects.map(i => i.product_id);
+        }
         if (reviewsRes.ok) userReviewProductIds = (await reviewsRes.json()).map(i => i.product_id);
     } catch (err) { console.error(err); }
     if (typeof renderCatalog === 'function') renderCatalog();

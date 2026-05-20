@@ -113,6 +113,27 @@ namespace MusicMarketplace.Controllers
             return NoContent();
         }
 
+        [HttpGet("byOrder/{orderId}")]
+        public async Task<ActionResult<IEnumerable<OrderItemDto>>> GetByOrder(int orderId)
+        {
+            var orderItems = await _context.OrderItems
+                .Where(oi => oi.order_id == orderId)
+                .Include(oi => oi.product)
+                .Select(oi => new OrderItemDto
+                {
+                    product_id = oi.product_id,
+                    product_name = oi.product.name,
+                    quantity = oi.quantity,
+                    unit_price = oi.unit_price,
+                    total_price = oi.quantity * oi.unit_price
+                })
+                .ToListAsync();
+
+            if (orderItems == null || !orderItems.Any())
+                return NotFound("Товары не найдены");
+
+            return Ok(orderItems);
+        }
         private bool OrderItemExists(int id)
         {
             return _context.OrderItems.Any(e => e.order_id == id);

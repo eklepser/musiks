@@ -149,6 +149,18 @@ function loadUsersAndInit() {
     });
 }
 
+document.getElementById('remove-cart-confirm-btn').addEventListener('click', () => {
+    if (currentProductForRemove) {
+        const quantity = parseInt(document.getElementById('remove-cart-quantity').value);
+        if (quantity && quantity > 0 && quantity <= currentProductForRemove.currentQuantity) {
+            removeFromCartWithQuantity(currentProductForRemove.id, quantity);
+        } else {
+            showToast('Некорректное количество', 'error');
+        }
+    }
+});
+document.getElementById('remove-cart-cancel-btn').addEventListener('click', hideRemoveFromCartModal);
+
 loadAllItems();
 loadManufacturersForSelect('filter-manufacturer');
 loadGenresAndLinks();

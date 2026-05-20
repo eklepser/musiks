@@ -49,10 +49,11 @@ namespace MusicMarketplace.Controllers
         {
             var existing = await _context.Carts
                 .FirstOrDefaultAsync(c => c.user_id == dto.user_id && c.product_id == dto.product_id);
+            int newQuantity;
             if (existing != null)
             {
                 existing.quantity += dto.quantity;
-                _context.Carts.Update(existing);
+                newQuantity = existing.quantity;
             }
             else
             {
@@ -64,26 +65,36 @@ namespace MusicMarketplace.Controllers
                     added_date = DateTime.Now
                 };
                 _context.Carts.Add(cart);
+                newQuantity = dto.quantity;
             }
             await _context.SaveChangesAsync();
-            return Ok();
+            return Ok(new { quantity = newQuantity });
         }
 
         [HttpDelete("{userId}/{productId}")]
-        public async Task<IActionResult> DeleteCart(int userId, int productId)
+        public async Task<IActionResult> DeleteCartItem(int userId, int productId, [FromQuery] int quantity = 0)
         {
-            var cart = await _context.Carts
+            var cartItem = await _context.Carts
                 .FirstOrDefaultAsync(c => c.user_id == userId && c.product_id == productId);
-            if (cart == null) return NotFound();
-            _context.Carts.Remove(cart);
-            await _context.SaveChangesAsync();
-            return NoContent();
+            if (cartItem == null) return NotFound();
+
+            if (quantity > 0 && quantity < cartItem.quantity)
+            {
+                cartItem.quantity -= quantity;
+                await _context.SaveChangesAsync();
+                return NoContent();
+            }
+            else
+            {
+                _context.Carts.Remove(cartItem);
+                await _context.SaveChangesAsync();
+                return NoContent();
+            }
         }
 
         [HttpPost("checkout/{userId}")]
         public async Task<IActionResult> Checkout(int userId)
         {
-            // Получаем корзину пользователя
             var cartItems = await _context.Carts
                 .Where(c => c.user_id == userId)
                 .Include(c => c.product)
@@ -92,10 +103,8 @@ namespace MusicMarketplace.Controllers
             if (cartItems == null || !cartItems.Any())
                 return BadRequest("Корзина пуста");
 
-            // Рассчитываем общую сумму
             decimal totalAmount = cartItems.Sum(item => item.quantity * item.product.price);
 
-            // Создаём заказ
             var order = new Order
             {
                 user_id = userId,
@@ -104,9 +113,8 @@ namespace MusicMarketplace.Controllers
                 total_amount = totalAmount
             };
             _context.Orders.Add(order);
-            await _context.SaveChangesAsync(); // получаем order.order_id
+            await _context.SaveChangesAsync();
 
-            // Создаём OrderItem для каждого товара в корзине
             foreach (var cartItem in cartItems)
             {
                 var orderItem = new OrderItem
@@ -114,14 +122,12 @@ namespace MusicMarketplace.Controllers
                     order_id = order.order_id,
                     product_id = cartItem.product_id,
                     quantity = cartItem.quantity,
-                    unit_price = cartItem.product.price // текущая цена из Product
+                    unit_price = cartItem.product.price
                 };
                 _context.OrderItems.Add(orderItem);
             }
 
-            // Очищаем корзину пользователя
             _context.Carts.RemoveRange(cartItems);
-
             await _context.SaveChangesAsync();
 
             return Ok(new { orderId = order.order_id, totalAmount });

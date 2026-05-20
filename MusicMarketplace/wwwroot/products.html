@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Musiks - Товары</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
 </head>
 <body>
     <div class="nav-menu">
@@ -137,7 +136,9 @@
             </div>
             <table id="catalog-table">
                 <thead><tr><th>ID</th><th>Тип</th><th>Название</th><th>Цена</th><th>Остаток</th><th>Производитель</th><th>Доп. параметры</th><th>Действия</th></tr></thead>
-                <tbody id="catalog-tbody"><tr><td colspan="8">Загрузка...–</tbody>
+                <tbody id="catalog-tbody">
+                <td>
+                <td colspan="8">Загрузка...–</tbody>
             </table>
         </div>
 
@@ -258,7 +259,9 @@
             </div>
             <table id="genres-table">
                 <thead><tr><th>ID</th><th>Название</th><th>Описание</th><th>Действия</th></tr></thead>
-                <tbody id="genres-tbody"><tr><td colspan="4">Загрузка...–</tbody>
+                <tbody id="genres-tbody">
+                <td>
+                <td colspan="4">Загрузка...–</tbody>
             </table>
         </div>
 
@@ -286,6 +289,22 @@
             <div class="form-group">
                 <button id="cart-confirm-btn">Добавить</button>
                 <button id="cart-cancel-btn">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="remove-from-cart-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Удаление из корзины</h3>
+            <p id="remove-cart-product-name"></p>
+            <div class="form-group">
+                <label>Количество для удаления:</label>
+                <input type="number" id="remove-cart-quantity" value="1" min="1" style="width: 100%;">
+                <small>Максимум: <span id="remove-cart-max"></span></small>
+            </div>
+            <div class="form-group">
+                <button id="remove-cart-confirm-btn">Удалить</button>
+                <button id="remove-cart-cancel-btn">Отмена</button>
             </div>
         </div>
     </div>

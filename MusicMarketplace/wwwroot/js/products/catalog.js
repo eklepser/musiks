@@ -93,41 +93,14 @@ function renderCatalog() {
             wishBtn.onclick = () => addToWishlist(item.product_id, item.name);
         }
 
-        const inCart = userCartIds.includes(item.product_id);
         const cartBtn = document.createElement('button');
         cartBtn.textContent = '🛒';
         cartBtn.style.marginRight = '5px';
-        if (inCart) {
-            cartBtn.style.background = '#28a745';
-            cartBtn.title = 'Удалить из корзины';
-            cartBtn.onclick = () => removeFromCart(item.product_id);
-        } else {
-            cartBtn.style.background = '#28a745';
-            cartBtn.title = 'В корзину';
-            cartBtn.onclick = () => {
-                currentProductForCart = { id: item.product_id, name: item.name };
-                showCartModal();
-            };
-        }
+        cartBtn.style.background = '#28a745';
+        cartBtn.title = 'В корзину';
+        cartBtn.onclick = () => addToCart(item.product_id, item.name, 1);
 
-        const inReviews = userReviewProductIds.includes(item.product_id);
-        const reviewBtn = document.createElement('button');
-        reviewBtn.textContent = '✍️';
-        reviewBtn.style.marginRight = '5px';
-        if (inReviews) {
-            reviewBtn.style.background = '#dc3545';
-            reviewBtn.title = 'Удалить отзыв';
-            reviewBtn.onclick = () => deleteReview(item.product_id);
-        } else {
-            reviewBtn.style.background = '#17a2b8';
-            reviewBtn.title = 'Оставить отзыв';
-            reviewBtn.onclick = () => {
-                currentProductForReview = { id: item.product_id, name: item.name };
-                showReviewModal();
-            };
-        }
-
-        topRow.append(wishBtn, reviewBtn, cartBtn);
+        topRow.append(wishBtn, cartBtn);
 
         const editBtn = document.createElement('button');
         editBtn.textContent = 'Ред.';
