@@ -134,10 +134,12 @@
                 <p>Найдено товаров: <span id="found-count">0</span></p>
             </div>
             <table id="catalog-table">
-                <thead><tr><th>ID</th><th>Тип</th><th>Название</th><th>Цена</th><th>Остаток</th><th>Производитель</th><th>Доп. параметры</th><th>Действия</th></tr></thead>
+                <thead>
+                    <tr><th>ID</th><th>Тип</th><th>Название</th><th>Цена</th><th>Остаток</th><th>Производитель</th><th>Доп. параметры</th><th>Действия</th></tr>
+                </thead>
                 <tbody id="catalog-tbody">
-                <td>
-                <td colspan="8">Загрузка...–</tbody>
+                    <tr><td colspan="8">Загрузка...</td></tr>
+                </tbody>
             </table>
         </div>
 
@@ -229,7 +231,8 @@
                 <input type="hidden" id="manufacturer-edit-id">
                 <div class="form-group">
                     <input type="text" id="manufacturer-name" placeholder="Название*" required>
-                    <input type="text" id="manufacturer-contact" placeholder="Контактные данные">
+                    <input type="text" id="manufacturer-contact" placeholder="Контактные данные*" required>
+                    <input type="text" id="manufacturer-country" placeholder="Страна">
                     <button id="manufacturer-submit">Добавить</button>
                     <button id="manufacturer-cancel" style="display:none;">Отмена</button>
                 </div>
@@ -237,8 +240,12 @@
                 <div id="manufacturer-success" class="success"></div>
             </div>
             <table id="manufacturers-table">
-                <thead><tr><th>ID</th><th>Название</th><th>Контакты</th><th>Действия</th></tr></thead>
-                <tbody id="manufacturers-tbody"><tr><td colspan="4">Загрузка...–</tbody>
+                <thead>
+                    <tr><th>ID</th><th>Название</th><th>Контакты</th><th>Страна</th><th>Действия</th></tr>
+                </thead>
+                <tbody id="manufacturers-tbody">
+                    <tr><td colspan="5">Загрузка...–
+                </tbody>
             </table>
         </div>
 
@@ -256,10 +263,12 @@
                 <div id="genre-success" class="success"></div>
             </div>
             <table id="genres-table">
-                <thead><tr><th>ID</th><th>Название</th><th>Описание</th><th>Действия</th></tr></thead>
+                <thead>
+                    <tr><th>ID</th><th>Название</th><th>Описание</th><th>Действия</th></tr>
+                </thead>
                 <tbody id="genres-tbody">
-                <td>
-                <td colspan="4">Загрузка...–</tbody>
+                    <tr><td colspan="4">Загрузка...</td></tr>
+                </tbody>
             </table>
         </div>
 

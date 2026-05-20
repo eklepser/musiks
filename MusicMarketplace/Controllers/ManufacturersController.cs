@@ -41,7 +41,8 @@ namespace MusicMarketplace.Controllers
             var manufacturer = new Manufacturer
             {
                 name = dto.name,
-                contact_info = dto.contact_info
+                contact_info = dto.contact_info,
+                country = dto.country
             };
             _context.Manufacturers.Add(manufacturer);
             await _context.SaveChangesAsync();
@@ -61,6 +62,7 @@ namespace MusicMarketplace.Controllers
 
             manufacturer.name = dto.name;
             manufacturer.contact_info = dto.contact_info;
+            manufacturer.country = dto.country;
 
             await _context.SaveChangesAsync();
             return NoContent();

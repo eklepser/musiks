@@ -9,7 +9,7 @@ async function loadManufacturersTable() {
         const tbody = document.getElementById('manufacturers-tbody');
         tbody.innerHTML = '';
         if (items.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4">Нет данных';
+            tbody.innerHTML = '<tr><td colspan="5">Нет данных';
             return;
         }
         items.forEach(item => {
@@ -17,7 +17,8 @@ async function loadManufacturersTable() {
             row.insertCell(0).textContent = item.manufacturer_id;
             row.insertCell(1).textContent = item.name;
             row.insertCell(2).textContent = item.contact_info || '';
-            const actions = row.insertCell(3);
+            row.insertCell(3).textContent = item.country || '';
+            const actions = row.insertCell(4);
             const editBtn = document.createElement('button');
             editBtn.textContent = 'Ред.';
             editBtn.className = 'edit-btn';
@@ -30,13 +31,14 @@ async function loadManufacturersTable() {
             actions.append(editBtn, delBtn);
         });
     } catch (err) {
-        document.getElementById('manufacturers-tbody').innerHTML = '<td><td colspan="4">Ошибка загрузки';
+        document.getElementById('manufacturers-tbody').innerHTML = '</table><td colspan="5">Ошибка загрузки';
     }
 }
 
 function fillManufacturerForm(item) {
     document.getElementById('manufacturer-name').value = item.name;
     document.getElementById('manufacturer-contact').value = item.contact_info || '';
+    document.getElementById('manufacturer-country').value = item.country || '';
     document.getElementById('manufacturer-edit-id').value = item.manufacturer_id;
     manufacturerEditId = item.manufacturer_id;
     document.getElementById('manufacturer-form-title').innerText = 'Редактировать производителя';
@@ -47,6 +49,7 @@ function fillManufacturerForm(item) {
 function clearManufacturerForm() {
     document.getElementById('manufacturer-name').value = '';
     document.getElementById('manufacturer-contact').value = '';
+    document.getElementById('manufacturer-country').value = '';
     document.getElementById('manufacturer-edit-id').value = '';
     manufacturerEditId = null;
     document.getElementById('manufacturer-form-title').innerText = 'Добавить производителя';
@@ -57,11 +60,24 @@ function clearManufacturerForm() {
 async function saveManufacturer() {
     const id = document.getElementById('manufacturer-edit-id').value;
     const name = document.getElementById('manufacturer-name').value.trim();
+    const contact = document.getElementById('manufacturer-contact').value.trim();
+    const country = document.getElementById('manufacturer-country').value.trim() || null;
+
+    if (!name) {
+        showToast('Название обязательно', 'error');
+        return;
+    }
+    if (!contact) {
+        showToast('Контактные данные обязательны', 'error');
+        return;
+    }
+
     const data = {
         name: name,
-        contact_info: document.getElementById('manufacturer-contact').value.trim() || null
+        contact_info: contact,
+        country: country
     };
-    if (!data.name) { showToast('Название обязательно', 'error'); return; }
+
     let url = MANUFACTURERS_URL, method = 'POST', isUpdate = false;
     if (id) {
         data.manufacturer_id = parseInt(id);
