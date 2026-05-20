@@ -219,6 +219,40 @@ async function loadDashboard() {
     showActiveTab();
 }
 
+async function checkout() {
+    const user = await getCurrentUser();
+    if (!user) {
+        showToast('Сначала выберите пользователя', 'error');
+        return;
+    }
+    if (!window.cartData || window.cartData.length === 0) {
+        showToast('Корзина пуста', 'error');
+        return;
+    }
+    if (!confirm('Оформить заказ?')) return;
+
+    try {
+        const resp = await fetch(`https://localhost:7062/api/Carts/checkout/${user.user_id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        if (!resp.ok) {
+            const error = await resp.text();
+            showToast(error || 'Ошибка оформления заказа', 'error');
+            return;
+        }
+        const result = await resp.json();
+        showToast(`Заказ №${result.orderId} оформлен на сумму ${result.totalAmount}`, 'success');
+        // Обновляем корзину и заказы
+        await loadCart();
+        await loadOrders();
+        // Переключаемся на вкладку заказов (опционально)
+        document.querySelector('.tab-btn[data-tab="orders"]').click();
+    } catch (err) {
+        showToast('Ошибка сети', 'error');
+    }
+}
+
 document.getElementById('wishlist-filter').addEventListener('click', renderWishlist);
 document.getElementById('wishlist-reset').addEventListener('click', () => { document.getElementById('wishlist-search').value = ''; renderWishlist(); });
 document.getElementById('cart-filter').addEventListener('click', renderCart);
@@ -236,6 +270,11 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         document.getElementById(`${btn.dataset.tab}-tab`).classList.add('active');
         showActiveTab();
     });
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const checkoutBtn = document.getElementById('checkout-btn');
+    if (checkoutBtn) checkoutBtn.addEventListener('click', checkout);
 });
 
 loadDashboard();

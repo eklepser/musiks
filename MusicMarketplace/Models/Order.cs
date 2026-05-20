@@ -7,6 +7,7 @@ namespace MusicMarketplace.Models
     [Table("Order")]
     public class Order
     {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int order_id { get; set; }
         public int user_id { get; set; }
         public DateTime order_date { get; set; }
