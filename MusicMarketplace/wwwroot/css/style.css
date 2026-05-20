@@ -4,46 +4,22 @@
     box-sizing: border-box;
 }
 
+html, body {
+    overflow-y: scroll;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+    html::-webkit-scrollbar, body::-webkit-scrollbar {
+        width: 0;
+        background: transparent;
+    }
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #f5f5f5;
     color: #2d2d2d;
     line-height: 1.6;
-    overflow-y: hidden;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-}
-
-html, body {
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
-}
-
-html::-webkit-scrollbar,
-body::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-}
-
-html::-webkit-scrollbar-track,
-body::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-html::-webkit-scrollbar-thumb,
-body::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.15);
-    border-radius: 3px;
-}
-
-html::-webkit-scrollbar-thumb:hover,
-body::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 0, 0, 0.35);
-}
-
-.modal .artist-list, .artist-list {
-    scrollbar-width: thin;
 }
 
 .container {
@@ -127,6 +103,15 @@ body::-webkit-scrollbar-thumb:hover {
         margin-bottom: 15px;
     }
 
+/* Отделяем сортировку визуально */
+.filter-group:has(select#sort-by),
+.filter-group:has(select#manufacturer-sort),
+.filter-group:has(select#genre-sort) {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #e0e0e0;
+}
+
 .stats-card {
     background: #f0f0f0;
     padding: 12px 20px;
@@ -134,6 +119,11 @@ body::-webkit-scrollbar-thumb:hover {
     margin-bottom: 20px;
     font-weight: 600;
     color: #2c2c2c;
+}
+
+.highlight-number {
+    font-weight: 800;
+    color: #7b2cbf;
 }
 
 button {
@@ -170,6 +160,11 @@ button {
     .delete-btn:hover {
         background: #b02a37;
     }
+
+.apply-filters-btn, .clear-filters-btn {
+    font-size: 14px;
+    padding: 8px 16px;
+}
 
 table {
     width: 100%;
@@ -224,7 +219,7 @@ input, select, textarea {
     gap: 18px;
     align-items: center;
     flex-wrap: wrap;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
 }
 
 .genres-filter {
@@ -235,13 +230,8 @@ input, select, textarea {
     align-items: center;
 }
 
-    .genres-filter label {
-        display: flex;
-        align-items: center;
-        gap: 3px;
-        margin-right: 15px;
-        cursor: pointer;
-        font-weight: 500;
+    .genres-filter select {
+        min-width: 200px;
     }
 
 .add-section {
@@ -363,24 +353,24 @@ textarea {
     color: #2c2c2c;
 }
 
-.tab-btn:not(.active):hover {
-    background: #5a5a5a;
-    color: white;
-}
+    .tab-btn:not(.active):hover {
+        background: #5a5a5a;
+        color: white;
+    }
 
-.tab-btn.active {
-    background: #7b2cbf;
-    color: white;
-    box-shadow: 0 2px 8px rgba(123,44,191,0.3);
-}
+    .tab-btn.active {
+        background: #7b2cbf;
+        color: white;
+        box-shadow: 0 2px 8px rgba(123,44,191,0.3);
+    }
 
 .tab-content {
     display: none;
 }
 
-.tab-content.active {
-    display: block;
-}
+    .tab-content.active {
+        display: block;
+    }
 
 .user-info {
     background: #f0f0f0;
@@ -393,18 +383,4 @@ textarea {
 
 h1 {
     margin-bottom: 15px;
-}
-
-.form-card h2 {
-    margin-bottom: 25px;
-}
-
-#artists-tab .form-card h2,
-#concerts-tab .form-card h2 {
-    margin-bottom: 25px;
-}
-
-#manufacturers-tab .form-card h2,
-#genres-tab .form-card h2 {
-    margin-bottom: 25px;
 }

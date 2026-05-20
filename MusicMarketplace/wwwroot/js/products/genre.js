@@ -1,17 +1,25 @@
 ﻿let genreEditId = null;
 
 async function loadGenresTable() {
+    const searchName = document.getElementById('genre-search-name').value.trim();
+    const sortBy = document.getElementById('genre-sort').value;
+
+    let url = `https://localhost:7062/api/Genres/filter?`;
+    if (searchName) url += `searchName=${encodeURIComponent(searchName)}&`;
+    if (sortBy) url += `sortBy=${sortBy}&`;
+
     try {
-        const resp = await fetch(GENRES_URL);
+        const resp = await fetch(url);
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         let items = await resp.json();
-        items.sort((a, b) => a.genre_id - b.genre_id);
         const tbody = document.getElementById('genres-tbody');
         tbody.innerHTML = '';
         if (items.length === 0) {
             tbody.innerHTML = '<td><td colspan="4">Нет данных';
+            document.getElementById('genre-found-count').innerText = '0';
             return;
         }
+        document.getElementById('genre-found-count').innerText = items.length;
         items.forEach(item => {
             const row = tbody.insertRow();
             row.insertCell(0).textContent = item.genre_id;
@@ -21,7 +29,6 @@ async function loadGenresTable() {
             const editBtn = document.createElement('button');
             editBtn.textContent = 'Ред.';
             editBtn.className = 'edit-btn';
-            editBtn.style.marginRight = '5px';
             editBtn.onclick = () => fillGenreForm(item);
             const delBtn = document.createElement('button');
             delBtn.textContent = 'Удалить';
@@ -31,6 +38,7 @@ async function loadGenresTable() {
         });
     } catch (err) {
         document.getElementById('genres-tbody').innerHTML = '<tr><td colspan="4">Ошибка загрузки';
+        document.getElementById('genre-found-count').innerText = '0';
     }
 }
 
@@ -57,11 +65,17 @@ function clearGenreForm() {
 async function saveGenre() {
     const id = document.getElementById('genre-edit-id').value;
     const name = document.getElementById('genre-name').value.trim();
+    const description = document.getElementById('genre-description').value.trim() || null;
+
+    if (!name) {
+        showToast('Название обязательно', 'error');
+        return;
+    }
+
     const data = {
         name: name,
-        description: document.getElementById('genre-description').value.trim() || null
+        description: description
     };
-    if (!data.name) { showToast('Название обязательно', 'error'); return; }
     let url = GENRES_URL, method = 'POST', isUpdate = false;
     if (id) {
         data.genre_id = parseInt(id);
@@ -100,3 +114,10 @@ async function deleteGenre(id, name) {
         showToast('Ошибка удаления', 'error');
     }
 }
+
+document.getElementById('genre-apply-filters').addEventListener('click', () => loadGenresTable());
+document.getElementById('genre-clear-filters').addEventListener('click', () => {
+    document.getElementById('genre-search-name').value = '';
+    document.getElementById('genre-sort').value = '';
+    loadGenresTable();
+});

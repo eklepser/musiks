@@ -77,5 +77,47 @@ namespace MusicMarketplace.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+
+        [HttpGet("filter")]
+        public async Task<ActionResult<IEnumerable<Manufacturer>>> GetManufacturersFiltered(
+            [FromQuery] string? searchName = null,
+            [FromQuery] string? searchCountry = null,
+            [FromQuery] string? sortBy = null)
+        {
+            var query = _context.Manufacturers.AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchName))
+                query = query.Where(m => m.name.ToLower().Contains(searchName.ToLower()));
+
+            if (!string.IsNullOrEmpty(searchCountry))
+                query = query.Where(m => m.country != null && m.country.ToLower().Contains(searchCountry.ToLower()));
+
+            query = sortBy switch
+            {
+                "name_asc" => query.OrderBy(m => m.name),
+                "name_desc" => query.OrderByDescending(m => m.name),
+                _ => query.OrderBy(m => m.manufacturer_id)
+            };
+
+            return Ok(await query.ToListAsync());
+        }
+
+        [HttpGet("filter/names")]
+        public async Task<ActionResult<IEnumerable<string>>> GetManufacturerNames()
+        {
+            var names = await _context.Manufacturers.Select(m => m.name).ToListAsync();
+            return Ok(names);
+        }
+
+        [HttpGet("filter/countries")]
+        public async Task<ActionResult<IEnumerable<string>>> GetManufacturerCountries()
+        {
+            var countries = await _context.Manufacturers
+                .Where(m => m.country != null)
+                .Select(m => m.country)
+                .Distinct()
+                .ToListAsync();
+            return Ok(countries);
+        }
     }
 }

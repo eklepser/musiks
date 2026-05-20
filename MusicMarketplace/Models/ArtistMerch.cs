@@ -7,5 +7,6 @@ namespace MusicMarketplace.Models
     {
         public int artist_id { get; set; }
         public int merch_id { get; set; }
+        public virtual Merch merch { get; set; }
     }
 }

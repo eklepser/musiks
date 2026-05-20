@@ -75,5 +75,32 @@ namespace MusicMarketplace.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+
+        [HttpGet("filter")]
+        public async Task<ActionResult<IEnumerable<Genre>>> GetGenresFiltered(
+            [FromQuery] string? searchName = null,
+            [FromQuery] string? sortBy = null)
+        {
+            var query = _context.Genres.AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchName))
+                query = query.Where(g => g.name.ToLower().Contains(searchName.ToLower()));
+
+            query = sortBy switch
+            {
+                "name_asc" => query.OrderBy(g => g.name),
+                "name_desc" => query.OrderByDescending(g => g.name),
+                _ => query.OrderBy(g => g.genre_id)
+            };
+
+            return Ok(await query.ToListAsync());
+        }
+
+        [HttpGet("filter/names")]
+        public async Task<ActionResult<IEnumerable<string>>> GetGenreNames()
+        {
+            var names = await _context.Genres.Select(g => g.name).ToListAsync();
+            return Ok(names);
+        }
     }
 }

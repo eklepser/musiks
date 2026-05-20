@@ -1,17 +1,27 @@
 ﻿let manufacturerEditId = null;
 
 async function loadManufacturersTable() {
+    const searchName = document.getElementById('manufacturer-search-name').value.trim();
+    const searchCountry = document.getElementById('manufacturer-search-country').value.trim();
+    const sortBy = document.getElementById('manufacturer-sort').value;
+
+    let url = `https://localhost:7062/api/Manufacturers/filter?`;
+    if (searchName) url += `searchName=${encodeURIComponent(searchName)}&`;
+    if (searchCountry) url += `searchCountry=${encodeURIComponent(searchCountry)}&`;
+    if (sortBy) url += `sortBy=${sortBy}&`;
+
     try {
-        const resp = await fetch(MANUFACTURERS_URL);
+        const resp = await fetch(url);
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         let items = await resp.json();
-        items.sort((a, b) => a.manufacturer_id - b.manufacturer_id);
         const tbody = document.getElementById('manufacturers-tbody');
         tbody.innerHTML = '';
         if (items.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5">Нет данных';
+            document.getElementById('manufacturer-found-count').innerText = '0';
             return;
         }
+        document.getElementById('manufacturer-found-count').innerText = items.length;
         items.forEach(item => {
             const row = tbody.insertRow();
             row.insertCell(0).textContent = item.manufacturer_id;
@@ -22,7 +32,6 @@ async function loadManufacturersTable() {
             const editBtn = document.createElement('button');
             editBtn.textContent = 'Ред.';
             editBtn.className = 'edit-btn';
-            editBtn.style.marginRight = '5px';
             editBtn.onclick = () => fillManufacturerForm(item);
             const delBtn = document.createElement('button');
             delBtn.textContent = 'Удалить';
@@ -31,7 +40,8 @@ async function loadManufacturersTable() {
             actions.append(editBtn, delBtn);
         });
     } catch (err) {
-        document.getElementById('manufacturers-tbody').innerHTML = '</table><td colspan="5">Ошибка загрузки';
+        document.getElementById('manufacturers-tbody').innerHTML = '<tr><td colspan="5">Ошибка загрузки';
+        document.getElementById('manufacturer-found-count').innerText = '0';
     }
 }
 
@@ -77,7 +87,6 @@ async function saveManufacturer() {
         contact_info: contact,
         country: country
     };
-
     let url = MANUFACTURERS_URL, method = 'POST', isUpdate = false;
     if (id) {
         data.manufacturer_id = parseInt(id);
@@ -128,3 +137,11 @@ async function deleteManufacturer(id, name) {
         showToast('Ошибка удаления', 'error');
     }
 }
+
+document.getElementById('manufacturer-apply-filters').addEventListener('click', () => loadManufacturersTable());
+document.getElementById('manufacturer-clear-filters').addEventListener('click', () => {
+    document.getElementById('manufacturer-search-name').value = '';
+    document.getElementById('manufacturer-search-country').value = '';
+    document.getElementById('manufacturer-sort').value = '';
+    loadManufacturersTable();
+});

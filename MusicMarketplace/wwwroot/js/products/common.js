@@ -7,6 +7,7 @@ const GENRES_URL = 'https://localhost:7062/api/Genres';
 const PRODUCT_GENRES_URL = 'https://localhost:7062/api/ProductGenres';
 const ARTISTS_URL = 'https://localhost:7062/api/Artists';
 const ARTIST_MERCH_URL = 'https://localhost:7062/api/ArtistMerches';
+const PRODUCTS_FILTER_URL = 'https://localhost:7062/api/Products/filter';
 
 let manufacturers = [];
 let allProducts = [];
@@ -72,7 +73,7 @@ async function loadManufacturersForSelect(selectId) {
         manufacturers = await resp.json();
         const select = document.getElementById(selectId);
         if (select) {
-            select.innerHTML = '<option value="">Выберите производителя</option>';
+            select.innerHTML = '<option value="">Все производители</option>';
             manufacturers.forEach(m => {
                 const opt = document.createElement('option');
                 opt.value = m.manufacturer_id;
@@ -118,36 +119,30 @@ async function loadGenresAndLinks() {
                 productGenres[link.product_id].push(link.genre_id);
             });
         }
-        renderGenreCheckboxes();
+        renderGenreSelect();
     } catch (err) { console.error(err); }
 }
 
-function renderGenreCheckboxes() {
+function renderGenreSelect() {
     const container = document.getElementById('genres-filter-container');
     if (!container) return;
-    container.innerHTML = '<strong>Жанры:</strong>';
+    const select = document.getElementById('genre-select');
+    if (!select) return;
+    select.innerHTML = '';
     const sortedGenres = [...genres].sort((a, b) => a.name.localeCompare(b.name));
     sortedGenres.forEach(genre => {
-        const label = document.createElement('label');
-        label.style.display = 'flex';
-        label.style.alignItems = 'center';
-        label.style.gap = '3px';
-        label.style.marginRight = '15px';
-        const cb = document.createElement('input');
-        cb.type = 'checkbox';
-        cb.value = genre.genre_id;
-        cb.className = 'genre-checkbox';
-        const span = document.createElement('span');
-        span.textContent = genre.name;
-        label.appendChild(cb);
-        label.appendChild(span);
-        container.appendChild(label);
+        const option = document.createElement('option');
+        option.value = genre.genre_id;
+        option.textContent = genre.name;
+        select.appendChild(option);
     });
 }
 
 function getSelectedGenres() {
-    const checkboxes = document.querySelectorAll('.genre-checkbox:checked');
-    return Array.from(checkboxes).map(cb => parseInt(cb.value));
+    const select = document.getElementById('genre-select');
+    if (!select) return [];
+    const selectedOptions = Array.from(select.selectedOptions);
+    return selectedOptions.map(opt => parseInt(opt.value));
 }
 
 function validateTicket() {
