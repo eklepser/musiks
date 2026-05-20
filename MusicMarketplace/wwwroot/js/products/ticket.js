@@ -7,9 +7,8 @@ function clearTicketForm() {
     document.getElementById('ticket-stock').value = '';
     document.getElementById('ticket-manufacturer-id').value = '';
     document.getElementById('ticket-concert-id').value = '';
-    document.getElementById('ticket-seat-row').value = '';
-    document.getElementById('ticket-seat-number').value = '';
     document.getElementById('ticket-price-category').value = '';
+    document.getElementById('ticket-quantity').value = '';
     document.getElementById('ticket-edit-id').value = '';
     ticketEditId = null;
     document.getElementById('ticket-submit').innerText = 'Добавить';
@@ -25,13 +24,12 @@ function fillEditTicketForm(t) {
     document.getElementById('edit-ticket-stock').value = t.stock;
     document.getElementById('edit-ticket-manufacturer-id').value = t.manufacturer_id || '';
     document.getElementById('edit-ticket-concert-id').value = t.concert_id;
-    document.getElementById('edit-ticket-seat-row').value = t.seat_row || '';
-    document.getElementById('edit-ticket-seat-number').value = t.seat_number || '';
     document.getElementById('edit-ticket-price-category').value = t.price_category || '';
+    document.getElementById('edit-ticket-quantity').value = t.quantity || 1;
     document.getElementById('edit-ticket-form').style.display = 'block';
 }
 
-function validateTicketFields(name, price, concertId, stock, isEdit = false) {
+function validateTicketFields(name, price, concertId, stock, quantity) {
     if (!name || name.trim() === '') return 'Название обязательно.';
     if (name.length > 100) return 'Название не может быть длиннее 100 символов.';
     if (isNaN(price) || price === '') return 'Цена должна быть числом.';
@@ -39,6 +37,7 @@ function validateTicketFields(name, price, concertId, stock, isEdit = false) {
     if (price > 1000000) return 'Цена не может превышать 1 000 000 руб.';
     if (!concertId) return 'Выберите концерт.';
     if (stock !== undefined && stock !== null && stock < 0) return 'Остаток не может быть отрицательным.';
+    if (quantity !== undefined && quantity !== null && quantity <= 0) return 'Количество билетов должно быть больше нуля.';
     return null;
 }
 
@@ -53,7 +52,8 @@ async function saveEditTicket() {
     const price = parseFloat(document.getElementById('edit-ticket-price').value);
     const concertId = document.getElementById('edit-ticket-concert-id').value;
     const stock = parseInt(document.getElementById('edit-ticket-stock').value) || 0;
-    const validationError = validateTicketFields(name, price, concertId, stock, true);
+    const quantity = parseInt(document.getElementById('edit-ticket-quantity').value) || 1;
+    const validationError = validateTicketFields(name, price, concertId, stock, quantity);
     if (validationError) {
         showToast(validationError, 'error');
         return;
@@ -65,9 +65,8 @@ async function saveEditTicket() {
         description: document.getElementById('edit-ticket-description').value.trim(),
         stock: stock,
         concert_id: parseInt(concertId),
-        seat_row: document.getElementById('edit-ticket-seat-row').value.trim(),
-        seat_number: document.getElementById('edit-ticket-seat-number').value.trim(),
         price_category: document.getElementById('edit-ticket-price-category').value.trim(),
+        quantity: quantity,
         manufacturer_id: manufacturerId
     };
     try {
@@ -103,7 +102,8 @@ async function saveTicket() {
     const price = parseFloat(document.getElementById('ticket-price').value);
     const concertId = document.getElementById('ticket-concert-id').value;
     const stock = parseInt(document.getElementById('ticket-stock').value) || 0;
-    const validationError = validateTicketFields(name, price, concertId, stock, false);
+    const quantity = parseInt(document.getElementById('ticket-quantity').value) || 1;
+    const validationError = validateTicketFields(name, price, concertId, stock, quantity);
     if (validationError) {
         showToast(validationError, 'error');
         return;
@@ -115,9 +115,8 @@ async function saveTicket() {
         description: document.getElementById('ticket-description').value.trim(),
         stock: stock,
         concert_id: parseInt(concertId),
-        seat_row: document.getElementById('ticket-seat-row').value.trim(),
-        seat_number: document.getElementById('ticket-seat-number').value.trim(),
         price_category: document.getElementById('ticket-price-category').value.trim(),
+        quantity: quantity,
         manufacturer_id: parseInt(document.getElementById('ticket-manufacturer-id').value) || null
     };
     let url = TICKETS_URL, method = 'POST';

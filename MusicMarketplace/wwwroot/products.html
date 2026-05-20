@@ -64,9 +64,8 @@
                             <select id="edit-ticket-manufacturer-id" required><option value="">Производитель*</option></select>
                             <input type="number" id="edit-ticket-stock" placeholder="Остаток">
                             <select id="edit-ticket-concert-id" required><option value="">Концерт*</option></select>
-                            <input type="text" id="edit-ticket-seat-row" placeholder="Ряд">
-                            <input type="text" id="edit-ticket-seat-number" placeholder="Место">
-                            <input type="text" id="edit-ticket-price-category" placeholder="Категория">
+                            <input type="text" id="edit-ticket-price-category" placeholder="Тип места (VIP, Партер и т.д.)">
+                            <input type="number" id="edit-ticket-quantity" placeholder="Количество билетов" min="1">
                             <button id="edit-ticket-submit">Сохранить</button>
                             <button id="edit-ticket-cancel">Отмена</button>
                         </div>
@@ -154,9 +153,8 @@
                         <select id="ticket-manufacturer-id" required><option value="">Производитель*</option></select>
                         <input type="number" id="ticket-stock" placeholder="Остаток">
                         <select id="ticket-concert-id" required><option value="">Концерт*</option></select>
-                        <input type="text" id="ticket-seat-row" placeholder="Ряд">
-                        <input type="text" id="ticket-seat-number" placeholder="Место">
-                        <input type="text" id="ticket-price-category" placeholder="Категория">
+                        <input type="text" id="ticket-price-category" placeholder="Тип места (VIP, Партер и т.д.)">
+                        <input type="number" id="ticket-quantity" placeholder="Количество билетов" value="1" min="1">
                         <button id="ticket-submit">Добавить</button>
                         <button id="ticket-cancel" style="display:none;">Отмена</button>
                     </div>

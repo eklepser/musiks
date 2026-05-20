@@ -6,11 +6,10 @@ namespace MusicMarketplace.Models
     public class Ticket
     {
         public int ticket_id { get; set; }
-        public int product_id { get; set; }
         public int concert_id { get; set; }
-        public string seat_row { get; set; }
-        public string seat_number { get; set; }
+        public int product_id { get; set; }
         public string price_category { get; set; }
+        public int quantity { get; set; }
 
         public virtual Concert concert { get; set; }
         public virtual Product product { get; set; }
