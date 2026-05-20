@@ -33,7 +33,7 @@ async function renderCatalog() {
         const tbody = document.getElementById('catalog-tbody');
         tbody.innerHTML = '';
         if (items.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8">Нет данных';
+            tbody.innerHTML = '<table><td colspan="8" class="centered-message">Нет данных</tbody>';
             return;
         }
         items.forEach(item => {
@@ -74,7 +74,6 @@ async function renderCatalog() {
             const inWishlist = userWishlistIds.includes(item.product_id);
             const wishBtn = document.createElement('button');
             wishBtn.textContent = '❤️';
-            wishBtn.style.marginRight = '5px';
             if (inWishlist) {
                 wishBtn.style.background = '#dc3545';
                 wishBtn.title = 'Удалить из вишлиста';
@@ -88,7 +87,6 @@ async function renderCatalog() {
             const inCart = userCartIds.includes(item.product_id);
             const cartBtn = document.createElement('button');
             cartBtn.textContent = '🛒';
-            cartBtn.style.marginRight = '5px';
             if (inCart) {
                 cartBtn.style.background = '#28a745';
                 cartBtn.title = 'Удалить из корзины';
@@ -107,7 +105,6 @@ async function renderCatalog() {
             const editBtn = document.createElement('button');
             editBtn.textContent = 'Ред.';
             editBtn.className = 'edit-btn';
-            editBtn.style.marginRight = '5px';
             editBtn.onclick = () => {
                 if (item.type === 'ticket') fillEditTicketForm(item);
                 else if (item.type === 'clothing') fillEditClothingForm(item);
@@ -128,7 +125,7 @@ async function renderCatalog() {
         });
     } catch (err) {
         console.error(err);
-        document.getElementById('catalog-tbody').innerHTML = '<tr><td colspan="8">Ошибка загрузки';
+        document.getElementById('catalog-tbody').innerHTML = '</table><td colspan="8" class="centered-message">Ошибка загрузки</tbody>';
     }
 }
 
@@ -176,6 +173,19 @@ async function loadArtistsForSelect() {
         }
     }
 }
+
+document.getElementById('clear-filters').addEventListener('click', () => {
+    document.getElementById('search-name').value = '';
+    document.getElementById('filter-type').value = '';
+    document.getElementById('filter-manufacturer').value = '';
+    document.getElementById('filter-artist').value = '';
+    document.getElementById('filter-in-stock').checked = false;
+    document.getElementById('price-min').value = '';
+    document.getElementById('price-max').value = '';
+    document.getElementById('genre-select').value = '';
+    document.getElementById('sort-by').value = '';
+    renderCatalog();
+});
 
 loadProductNameDatalist();
 loadArtistsForSelect();

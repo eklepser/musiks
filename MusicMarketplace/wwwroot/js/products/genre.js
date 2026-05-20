@@ -15,7 +15,7 @@ async function loadGenresTable() {
         const tbody = document.getElementById('genres-tbody');
         tbody.innerHTML = '';
         if (items.length === 0) {
-            tbody.innerHTML = '<td><td colspan="4">Нет данных';
+            tbody.innerHTML = '<tr><td colspan="4" class="centered-message">Нет данных</tbody>';
             document.getElementById('genre-found-count').innerText = '0';
             return;
         }
@@ -26,6 +26,8 @@ async function loadGenresTable() {
             row.insertCell(1).textContent = item.name;
             row.insertCell(2).textContent = item.description || '';
             const actions = row.insertCell(3);
+            const btnRow = document.createElement('div');
+            btnRow.className = 'action-buttons-row';
             const editBtn = document.createElement('button');
             editBtn.textContent = 'Ред.';
             editBtn.className = 'edit-btn';
@@ -34,10 +36,11 @@ async function loadGenresTable() {
             delBtn.textContent = 'Удалить';
             delBtn.className = 'delete-btn';
             delBtn.onclick = () => deleteGenre(item.genre_id, item.name);
-            actions.append(editBtn, delBtn);
+            btnRow.append(editBtn, delBtn);
+            actions.appendChild(btnRow);
         });
     } catch (err) {
-        document.getElementById('genres-tbody').innerHTML = '<tr><td colspan="4">Ошибка загрузки';
+        document.getElementById('genres-tbody').innerHTML = '<tr><td colspan="4" class="centered-message">Ошибка загрузки</tbody>';
         document.getElementById('genre-found-count').innerText = '0';
     }
 }
@@ -118,6 +121,6 @@ async function deleteGenre(id, name) {
 document.getElementById('genre-apply-filters').addEventListener('click', () => loadGenresTable());
 document.getElementById('genre-clear-filters').addEventListener('click', () => {
     document.getElementById('genre-search-name').value = '';
-    document.getElementById('genre-sort').value = '';
+    document.getElementById('genre-sort').value = 'name_asc';
     loadGenresTable();
 });

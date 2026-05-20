@@ -17,7 +17,7 @@ async function loadManufacturersTable() {
         const tbody = document.getElementById('manufacturers-tbody');
         tbody.innerHTML = '';
         if (items.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5">Нет данных';
+            tbody.innerHTML = '<td><td colspan="5" class="centered-message">Нет данных</tbody>';
             document.getElementById('manufacturer-found-count').innerText = '0';
             return;
         }
@@ -29,6 +29,8 @@ async function loadManufacturersTable() {
             row.insertCell(2).textContent = item.contact_info || '';
             row.insertCell(3).textContent = item.country || '';
             const actions = row.insertCell(4);
+            const btnRow = document.createElement('div');
+            btnRow.className = 'action-buttons-row';
             const editBtn = document.createElement('button');
             editBtn.textContent = 'Ред.';
             editBtn.className = 'edit-btn';
@@ -37,10 +39,11 @@ async function loadManufacturersTable() {
             delBtn.textContent = 'Удалить';
             delBtn.className = 'delete-btn';
             delBtn.onclick = () => deleteManufacturer(item.manufacturer_id, item.name);
-            actions.append(editBtn, delBtn);
+            btnRow.append(editBtn, delBtn);
+            actions.appendChild(btnRow);
         });
     } catch (err) {
-        document.getElementById('manufacturers-tbody').innerHTML = '<tr><td colspan="5">Ошибка загрузки';
+        document.getElementById('manufacturers-tbody').innerHTML = '<tr><td colspan="5" class="centered-message">Ошибка загрузки</tbody>';
         document.getElementById('manufacturer-found-count').innerText = '0';
     }
 }
@@ -142,6 +145,6 @@ document.getElementById('manufacturer-apply-filters').addEventListener('click', 
 document.getElementById('manufacturer-clear-filters').addEventListener('click', () => {
     document.getElementById('manufacturer-search-name').value = '';
     document.getElementById('manufacturer-search-country').value = '';
-    document.getElementById('manufacturer-sort').value = '';
+    document.getElementById('manufacturer-sort').value = 'name_asc';
     loadManufacturersTable();
 });

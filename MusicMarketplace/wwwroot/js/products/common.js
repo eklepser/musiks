@@ -124,25 +124,70 @@ async function loadGenresAndLinks() {
 }
 
 function renderGenreSelect() {
-    const container = document.getElementById('genres-filter-container');
+    const container = document.getElementById('genre-select');
     if (!container) return;
-    const select = document.getElementById('genre-select');
-    if (!select) return;
-    select.innerHTML = '';
+    container.innerHTML = '<option value="">Все жанры</option>';
     const sortedGenres = [...genres].sort((a, b) => a.name.localeCompare(b.name));
     sortedGenres.forEach(genre => {
         const option = document.createElement('option');
         option.value = genre.genre_id;
         option.textContent = genre.name;
-        select.appendChild(option);
+        container.appendChild(option);
     });
 }
 
 function getSelectedGenres() {
     const select = document.getElementById('genre-select');
-    if (!select) return [];
-    const selectedOptions = Array.from(select.selectedOptions);
-    return selectedOptions.map(opt => parseInt(opt.value));
+    if (!select || !select.value) return [];
+    return [parseInt(select.value)];
+}
+
+async function loadManufacturerNameDatalist() {
+    const resp = await fetch('https://localhost:7062/api/Manufacturers/filter/names');
+    if (resp.ok) {
+        const names = await resp.json();
+        const datalist = document.getElementById('manufacturer-name-datalist');
+        if (datalist) {
+            datalist.innerHTML = '';
+            names.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                datalist.appendChild(option);
+            });
+        }
+    }
+}
+
+async function loadManufacturerCountryDatalist() {
+    const resp = await fetch('https://localhost:7062/api/Manufacturers/filter/countries');
+    if (resp.ok) {
+        const countries = await resp.json();
+        const datalist = document.getElementById('manufacturer-country-datalist');
+        if (datalist) {
+            datalist.innerHTML = '';
+            countries.forEach(country => {
+                const option = document.createElement('option');
+                option.value = country;
+                datalist.appendChild(option);
+            });
+        }
+    }
+}
+
+async function loadGenreNameDatalist() {
+    const resp = await fetch('https://localhost:7062/api/Genres/filter/names');
+    if (resp.ok) {
+        const names = await resp.json();
+        const datalist = document.getElementById('genre-name-datalist');
+        if (datalist) {
+            datalist.innerHTML = '';
+            names.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                datalist.appendChild(option);
+            });
+        }
+    }
 }
 
 function validateTicket() {
@@ -235,3 +280,8 @@ function hideReviewModal() {
     if (modal) modal.style.display = 'none';
     currentProductForReview = null;
 }
+
+// Загрузка подсказок для страниц
+loadManufacturerNameDatalist();
+loadManufacturerCountryDatalist();
+loadGenreNameDatalist();

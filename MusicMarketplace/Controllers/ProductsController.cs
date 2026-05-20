@@ -88,21 +88,22 @@ namespace MusicMarketplace.Controllers
 
         [HttpGet("filter")]
         public async Task<ActionResult<IEnumerable<object>>> GetProductsFiltered(
-            [FromQuery] string? searchName = null,
-            [FromQuery] string? type = null,
-            [FromQuery] int? manufacturerId = null,
-            [FromQuery] int? artistId = null,
-            [FromQuery] bool inStock = false,
-            [FromQuery] decimal? priceMin = null,
-            [FromQuery] decimal? priceMax = null,
-            [FromQuery] string? sortBy = null,
-            [FromQuery] string? selectedGenres = null)
+        [FromQuery] string? searchName = null,
+        [FromQuery] string? type = null,
+        [FromQuery] int? manufacturerId = null,
+        [FromQuery] int? artistId = null,
+        [FromQuery] bool inStock = false,
+        [FromQuery] decimal? priceMin = null,
+        [FromQuery] decimal? priceMax = null,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] string? selectedGenres = null)
         {
             var ticketsQuery = _context.Tickets
                 .Include(t => t.concert)
                 .Include(t => t.product)
                 .Select(t => new
                 {
+                    ticket_id = t.ticket_id,
                     product_id = t.product_id,
                     name = t.product.name,
                     price = t.product.price,
@@ -122,6 +123,7 @@ namespace MusicMarketplace.Controllers
                 .ThenInclude(m => m.Product)
                 .Select(c => new
                 {
+                    clothing_id = c.clothing_id,
                     product_id = c.Merch.Product.product_id,
                     name = c.Merch.Product.name,
                     price = c.Merch.Product.price,
@@ -141,6 +143,7 @@ namespace MusicMarketplace.Controllers
                 .ThenInclude(m => m.Product)
                 .Select(a => new
                 {
+                    accessory_id = a.accessory_id,
                     product_id = a.Merch.Product.product_id,
                     name = a.Merch.Product.name,
                     price = a.Merch.Product.price,
