@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MusicMarketplace.DTOs;
 using MusicMarketplace.Models;
-
 namespace MusicMarketplace.Services
 {
     public class ArtistsService
@@ -11,105 +10,60 @@ namespace MusicMarketplace.Services
 
         public async Task<List<ArtistDto>> GetAllAsync()
         {
-            return await _context.Artists
-                .Select(a => new ArtistDto
-                {
-                    artist_id = a.artist_id,
-                    name = a.name,
-                    country = a.country,
-                    debut_year = a.debut_year,
-                    language = a.language
-                })
-                .ToListAsync();
+            var sql = "SELECT * FROM get_all_artists()";
+            return await _context.Database.SqlQueryRaw<ArtistDto>(sql).ToListAsync();
         }
 
         public async Task<ArtistDto?> GetByIdAsync(int id)
         {
-            var artist = await _context.Artists.FindAsync(id);
-            if (artist == null) return null;
-            return new ArtistDto
-            {
-                artist_id = artist.artist_id,
-                name = artist.name,
-                country = artist.country,
-                debut_year = artist.debut_year,
-                language = artist.language
-            };
+            var sql = "SELECT * FROM get_artist_by_id({0})";
+            return await _context.Database.SqlQueryRaw<ArtistDto>(sql, id).FirstOrDefaultAsync();
         }
 
         public async Task<Artist> CreateAsync(ArtistDto dto)
         {
-            if (await _context.Artists.AnyAsync(a => a.name == dto.name))
-                throw new InvalidOperationException("Исполнитель с таким именем уже существует");
-
-            var artist = new Artist
-            {
-                name = dto.name,
-                country = dto.country,
-                debut_year = dto.debut_year,
-                language = dto.language
-            };
-            _context.Artists.Add(artist);
-            await _context.SaveChangesAsync();
-            return artist;
+            var sql = "SELECT * FROM create_artist({0}, {1}, {2}, {3})";
+            var result = await _context.Set<Artist>().FromSqlRaw(
+                sql,
+                dto.name,
+                dto.country ?? (object)DBNull.Value,
+                dto.debut_year ?? (object)DBNull.Value,
+                dto.language ?? (object)DBNull.Value
+            ).FirstOrDefaultAsync();
+            return result;
         }
 
-        public async Task UpdateAsync(int id, ArtistDto dto)
+        public async Task<bool> UpdateAsync(int id, ArtistDto dto)
         {
-            if (id != dto.artist_id) throw new ArgumentException("ID mismatch");
-
-            var artist = await _context.Artists.FindAsync(id);
-            if (artist == null) throw new KeyNotFoundException($"Artist with id {id} not found");
-
-            if (await _context.Artists.AnyAsync(a => a.name == dto.name && a.artist_id != id))
-                throw new InvalidOperationException("Исполнитель с таким именем уже существует");
-
-            artist.name = dto.name;
-            artist.country = dto.country;
-            artist.debut_year = dto.debut_year;
-            artist.language = dto.language;
-
-            await _context.SaveChangesAsync();
+            var sql = "SELECT update_artist({0}, {1}, {2}, {3}, {4})";
+            var result = await _context.Database.ExecuteSqlRawAsync(
+                sql,
+                id,
+                dto.name,
+                dto.country ?? (object)DBNull.Value,
+                dto.debut_year ?? (object)DBNull.Value,
+                dto.language ?? (object)DBNull.Value
+            );
+            return result > 0;
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id)
         {
-            var artist = await _context.Artists.FindAsync(id);
-            if (artist == null) throw new KeyNotFoundException($"Artist with id {id} not found");
-            _context.Artists.Remove(artist);
-            await _context.SaveChangesAsync();
+            var sql = "SELECT delete_artist({0})";
+            var result = await _context.Database.ExecuteSqlRawAsync(sql, id);
+            return result > 0;
         }
 
         public async Task<List<ArtistDto>> GetFilteredAsync(string? searchName, string? searchCountry, string? searchLanguage, string? sortBy)
         {
-            var query = _context.Artists.AsQueryable();
-
-            if (!string.IsNullOrEmpty(searchName))
-                query = query.Where(a => a.name.ToLower().Contains(searchName.ToLower()));
-
-            if (!string.IsNullOrEmpty(searchCountry))
-                query = query.Where(a => a.country != null && a.country.ToLower().Contains(searchCountry.ToLower()));
-
-            if (searchLanguage == "Instrumental")
-                query = query.Where(a => a.language == null);
-            else if (!string.IsNullOrEmpty(searchLanguage))
-                query = query.Where(a => a.language != null && a.language.ToLower().Contains(searchLanguage.ToLower()));
-
-            query = sortBy switch
-            {
-                "name_asc" => query.OrderBy(a => a.name),
-                "name_desc" => query.OrderByDescending(a => a.name),
-                _ => query.OrderBy(a => a.name)
-            };
-
-            return await query.Select(a => new ArtistDto
-            {
-                artist_id = a.artist_id,
-                name = a.name,
-                country = a.country,
-                debut_year = a.debut_year,
-                language = a.language
-            }).ToListAsync();
+            var sql = "SELECT * FROM get_filtered_artists({0}, {1}, {2}, {3})";
+            return await _context.Database.SqlQueryRaw<ArtistDto>(
+                sql,
+                searchName ?? (object)DBNull.Value,
+                searchCountry ?? (object)DBNull.Value,
+                searchLanguage ?? (object)DBNull.Value,
+                sortBy ?? (object)DBNull.Value
+            ).ToListAsync();
         }
     }
 }

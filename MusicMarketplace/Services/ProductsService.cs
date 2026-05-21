@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using MusicMarketplace.DTOs;
 using MusicMarketplace.Models;
 
@@ -11,227 +12,73 @@ namespace MusicMarketplace.Services
 
         public async Task<List<Product>> GetAllAsync()
         {
-            return await _context.Products.ToListAsync();
+            var sql = "SELECT * FROM get_all_products()";
+            return await _context.Set<Product>().FromSqlRaw(sql).ToListAsync();
         }
 
         public async Task<Product?> GetByIdAsync(int id)
         {
-            return await _context.Products.FindAsync(id);
+            var sql = "SELECT * FROM get_product_by_id({0})";
+            return await _context.Set<Product>().FromSqlRaw(sql, id).FirstOrDefaultAsync();
         }
 
         public async Task<Product> CreateAsync(ProductDto dto)
         {
-            if (string.IsNullOrWhiteSpace(dto.name))
-                throw new ArgumentException("Название товара обязательно");
-            if (dto.manufacturer_id == 0)
-                throw new ArgumentException("Производитель обязателен");
-            if (await _context.Products.AnyAsync(p => p.name == dto.name))
-                throw new InvalidOperationException("Товар с таким названием уже существует");
-
-            var product = new Product
-            {
-                name = dto.name,
-                price = dto.price,
-                description = dto.description,
-                stock = dto.stock,
-                manufacturer_id = dto.manufacturer_id
-            };
-            _context.Products.Add(product);
-            await _context.SaveChangesAsync();
-            return product;
+            var sql = "SELECT * FROM create_product({0}, {1}, {2}, {3}, {4})";
+            var result = await _context.Set<Product>().FromSqlRaw(
+                sql,
+                dto.name,
+                dto.price,
+                dto.description ?? (object)DBNull.Value,
+                dto.stock,
+                dto.manufacturer_id
+            ).FirstOrDefaultAsync();
+            return result;
         }
 
-        public async Task UpdateAsync(int id, ProductDto dto)
+        public async Task<bool> UpdateAsync(int id, ProductDto dto)
         {
-            if (id != dto.product_id) throw new ArgumentException("ID mismatch");
-            if (string.IsNullOrWhiteSpace(dto.name))
-                throw new ArgumentException("Название товара обязательно");
-            if (dto.manufacturer_id == 0)
-                throw new ArgumentException("Производитель обязателен");
-
-            var product = await _context.Products.FindAsync(id);
-            if (product == null) throw new KeyNotFoundException($"Product with id {id} not found");
-
-            if (await _context.Products.AnyAsync(p => p.name == dto.name && p.product_id != id))
-                throw new InvalidOperationException("Товар с таким названием уже существует");
-
-            product.name = dto.name;
-            product.price = dto.price;
-            product.description = dto.description;
-            product.stock = dto.stock;
-            product.manufacturer_id = dto.manufacturer_id;
-
-            await _context.SaveChangesAsync();
+            var sql = "SELECT update_product({0}, {1}, {2}, {3}, {4}, {5})";
+            var result = await _context.Database.ExecuteSqlRawAsync(
+                sql,
+                id,
+                dto.name,
+                dto.price,
+                dto.description ?? (object)DBNull.Value,
+                dto.stock,
+                dto.manufacturer_id
+            );
+            return result > 0;
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id)
         {
-            var product = await _context.Products.FindAsync(id);
-            if (product == null) throw new KeyNotFoundException($"Product with id {id} not found");
-            _context.Products.Remove(product);
-            await _context.SaveChangesAsync();
+            var sql = "SELECT delete_product({0})";
+            var result = await _context.Database.ExecuteSqlRawAsync(sql, id);
+            return result > 0;
         }
 
         public async Task<List<object>> GetFilteredAsync(
             string? searchName, string? type, int? manufacturerId, int? artistId,
             bool inStock, decimal? priceMin, decimal? priceMax, string? sortBy, string? selectedGenres)
         {
-            var ticketsQuery = _context.Tickets
-                .Include(t => t.concert)
-                .Include(t => t.product)
-                .Select(t => new
-                {
-                    ticket_id = t.ticket_id,
-                    product_id = t.product_id,
-                    name = t.product.name,
-                    price = t.product.price,
-                    description = t.product.description,
-                    stock = t.product.stock,
-                    manufacturer_id = t.product.manufacturer_id,
-                    type = "ticket",
-                    typeName = "Билет",
-                    concert_id = t.concert_id,
-                    concert_title = t.concert.title,
-                    price_category = t.price_category,
-                    quantity = t.quantity
-                });
-
-            var clothingsQuery = _context.Clothings
-                .Include(c => c.Merch)
-                .ThenInclude(m => m.Product)
-                .Select(c => new
-                {
-                    clothing_id = c.clothing_id,
-                    product_id = c.Merch.Product.product_id,
-                    name = c.Merch.Product.name,
-                    price = c.Merch.Product.price,
-                    description = c.Merch.Product.description,
-                    stock = c.Merch.Product.stock,
-                    manufacturer_id = c.Merch.Product.manufacturer_id,
-                    type = "clothing",
-                    typeName = "Одежда",
-                    material = c.Merch.material,
-                    color = c.Merch.color,
-                    size = c.size,
-                    gender = c.gender,
-                    artistIds = _context.ArtistMerches
-                        .Where(am => am.merch_id == c.merch_id)
-                        .Select(am => am.artist_id)
-                        .ToList(),
-                    artistNames = _context.ArtistMerches
-                        .Where(am => am.merch_id == c.merch_id)
-                        .Join(_context.Artists,
-                              am => am.artist_id,
-                              a => a.artist_id,
-                              (am, a) => a.name)
-                        .ToList()
-                });
-
-            var accessoriesQuery = _context.Accessories
-                .Include(a => a.Merch)
-                .ThenInclude(m => m.Product)
-                .Select(a => new
-                {
-                    accessory_id = a.accessory_id,
-                    product_id = a.Merch.Product.product_id,
-                    name = a.Merch.Product.name,
-                    price = a.Merch.Product.price,
-                    description = a.Merch.Product.description,
-                    stock = a.Merch.Product.stock,
-                    manufacturer_id = a.Merch.Product.manufacturer_id,
-                    type = "accessory",
-                    typeName = "Аксессуар",
-                    material = a.Merch.material,
-                    color = a.Merch.color,
-                    accessory_type = a.accessory_type,
-                    weight = a.weight,
-                    artistIds = _context.ArtistMerches
-                        .Where(am => am.merch_id == a.merch_id)
-                        .Select(am => am.artist_id)
-                        .ToList(),
-                    artistNames = _context.ArtistMerches
-                        .Where(am => am.merch_id == a.merch_id)
-                        .Join(_context.Artists,
-                              am => am.artist_id,
-                              a => a.artist_id,
-                              (am, a) => a.name)
-                        .ToList()
-                });
-
-            if (!string.IsNullOrEmpty(searchName))
-            {
-                ticketsQuery = ticketsQuery.Where(t => t.name.ToLower().Contains(searchName.ToLower()));
-                clothingsQuery = clothingsQuery.Where(c => c.name.ToLower().Contains(searchName.ToLower()));
-                accessoriesQuery = accessoriesQuery.Where(a => a.name.ToLower().Contains(searchName.ToLower()));
-            }
-
-            if (manufacturerId.HasValue)
-            {
-                ticketsQuery = ticketsQuery.Where(t => t.manufacturer_id == manufacturerId.Value);
-                clothingsQuery = clothingsQuery.Where(c => c.manufacturer_id == manufacturerId.Value);
-                accessoriesQuery = accessoriesQuery.Where(a => a.manufacturer_id == manufacturerId.Value);
-            }
-
-            if (inStock)
-            {
-                ticketsQuery = ticketsQuery.Where(t => t.stock > 0);
-                clothingsQuery = clothingsQuery.Where(c => c.stock > 0);
-                accessoriesQuery = accessoriesQuery.Where(a => a.stock > 0);
-            }
-
-            if (priceMin.HasValue)
-            {
-                ticketsQuery = ticketsQuery.Where(t => t.price >= priceMin.Value);
-                clothingsQuery = clothingsQuery.Where(c => c.price >= priceMin.Value);
-                accessoriesQuery = accessoriesQuery.Where(a => a.price >= priceMin.Value);
-            }
-
-            if (priceMax.HasValue)
-            {
-                ticketsQuery = ticketsQuery.Where(t => t.price <= priceMax.Value);
-                clothingsQuery = clothingsQuery.Where(c => c.price <= priceMax.Value);
-                accessoriesQuery = accessoriesQuery.Where(a => a.price <= priceMax.Value);
-            }
-
-            List<int> productIdsWithArtist = null;
-            if (artistId.HasValue)
-            {
-                productIdsWithArtist = await _context.ArtistMerches
-                    .Where(am => am.artist_id == artistId.Value)
-                    .Join(_context.Merches,
-                          am => am.merch_id,
-                          m => m.merch_id,
-                          (am, m) => m.product_id)
-                    .ToListAsync();
-                ticketsQuery = ticketsQuery.Where(t => productIdsWithArtist.Contains(t.product_id));
-                clothingsQuery = clothingsQuery.Where(c => productIdsWithArtist.Contains(c.product_id));
-                accessoriesQuery = accessoriesQuery.Where(a => productIdsWithArtist.Contains(a.product_id));
-            }
-
-            List<int> productIdsWithGenre = null;
-            if (!string.IsNullOrEmpty(selectedGenres))
-            {
-                var genreIds = selectedGenres.Split(',').Select(int.Parse).ToList();
-                productIdsWithGenre = await _context.ProductGenres
-                    .Where(pg => genreIds.Contains(pg.genre_id))
-                    .Select(pg => pg.product_id)
-                    .ToListAsync();
-                ticketsQuery = ticketsQuery.Where(t => productIdsWithGenre.Contains(t.product_id));
-                clothingsQuery = clothingsQuery.Where(c => productIdsWithGenre.Contains(c.product_id));
-                accessoriesQuery = accessoriesQuery.Where(a => productIdsWithGenre.Contains(a.product_id));
-            }
-
-            var tickets = await ticketsQuery.ToListAsync();
-            var clothings = await clothingsQuery.ToListAsync();
-            var accessories = await accessoriesQuery.ToListAsync();
-
             var result = new List<object>();
+
             if (string.IsNullOrEmpty(type) || type == "ticket")
+            {
+                var tickets = await GetFilteredTicketsAsync(searchName, manufacturerId, artistId, inStock, priceMin, priceMax, selectedGenres);
                 result.AddRange(tickets);
+            }
             if (string.IsNullOrEmpty(type) || type == "clothing")
+            {
+                var clothings = await GetFilteredClothingsAsync(searchName, manufacturerId, artistId, inStock, priceMin, priceMax, selectedGenres);
                 result.AddRange(clothings);
+            }
             if (string.IsNullOrEmpty(type) || type == "accessory")
+            {
+                var accessories = await GetFilteredAccessoriesAsync(searchName, manufacturerId, artistId, inStock, priceMin, priceMax, selectedGenres);
                 result.AddRange(accessories);
+            }
 
             result = sortBy switch
             {
@@ -245,9 +92,121 @@ namespace MusicMarketplace.Services
             return result;
         }
 
+        private async Task<List<TicketFilterResult>> GetFilteredTicketsAsync(
+            string? searchName, int? manufacturerId, int? artistId, bool inStock,
+            decimal? priceMin, decimal? priceMax, string? selectedGenres)
+        {
+            var sql = "SELECT * FROM get_filtered_tickets({0}, {1}, {2}, {3}, {4}, {5}, {6})";
+            return await _context.Database.SqlQueryRaw<TicketFilterResult>(
+                sql,
+                searchName ?? (object)DBNull.Value,
+                manufacturerId ?? (object)DBNull.Value,
+                artistId ?? (object)DBNull.Value,
+                inStock,
+                priceMin ?? (object)DBNull.Value,
+                priceMax ?? (object)DBNull.Value,
+                selectedGenres ?? (object)DBNull.Value
+            ).ToListAsync();
+        }
+
+        private async Task<List<ClothingFilterResult>> GetFilteredClothingsAsync(
+            string? searchName, int? manufacturerId, int? artistId, bool inStock,
+            decimal? priceMin, decimal? priceMax, string? selectedGenres)
+        {
+            var sql = "SELECT * FROM get_filtered_clothings({0}, {1}, {2}, {3}, {4}, {5}, {6})";
+            return await _context.Database.SqlQueryRaw<ClothingFilterResult>(
+                sql,
+                searchName ?? (object)DBNull.Value,
+                manufacturerId ?? (object)DBNull.Value,
+                artistId ?? (object)DBNull.Value,
+                inStock,
+                priceMin ?? (object)DBNull.Value,
+                priceMax ?? (object)DBNull.Value,
+                selectedGenres ?? (object)DBNull.Value
+            ).ToListAsync();
+        }
+
+        private async Task<List<AccessoryFilterResult>> GetFilteredAccessoriesAsync(
+            string? searchName, int? manufacturerId, int? artistId, bool inStock,
+            decimal? priceMin, decimal? priceMax, string? selectedGenres)
+        {
+            var sql = "SELECT * FROM get_filtered_accessories({0}, {1}, {2}, {3}, {4}, {5}, {6})";
+            return await _context.Database.SqlQueryRaw<AccessoryFilterResult>(
+                sql,
+                searchName ?? (object)DBNull.Value,
+                manufacturerId ?? (object)DBNull.Value,
+                artistId ?? (object)DBNull.Value,
+                inStock,
+                priceMin ?? (object)DBNull.Value,
+                priceMax ?? (object)DBNull.Value,
+                selectedGenres ?? (object)DBNull.Value
+            ).ToListAsync();
+        }
+
         public async Task<List<string>> GetNamesAsync()
         {
-            return await _context.Products.Select(p => p.name).ToListAsync();
+            var sql = "SELECT * FROM get_product_names()";
+            var result = await _context.Database.SqlQueryRaw<NameResult>(sql).ToListAsync();
+            return result.Select(r => r.name).ToList();
         }
+
+        private class NameResult { public string name { get; set; } }
+    }
+
+    public class TicketFilterResult
+    {
+        public int ticket_id { get; set; }
+        public int product_id { get; set; }
+        public string name { get; set; }
+        public decimal price { get; set; }
+        public string description { get; set; }
+        public int stock { get; set; }
+        public int manufacturer_id { get; set; }
+        public string type { get; set; }
+        public string typeName { get; set; }
+        public int concert_id { get; set; }
+        public string concert_title { get; set; }
+        public string price_category { get; set; }
+        public int quantity { get; set; }
+        public string artistNames { get; set; }
+        public string artistIds { get; set; }
+    }
+
+    public class ClothingFilterResult
+    {
+        public int clothing_id { get; set; }
+        public int product_id { get; set; }
+        public string name { get; set; }
+        public decimal price { get; set; }
+        public string description { get; set; }
+        public int stock { get; set; }
+        public int manufacturer_id { get; set; }
+        public string type { get; set; }
+        public string typeName { get; set; }
+        public string material { get; set; }
+        public string color { get; set; }
+        public string size { get; set; }
+        public string gender { get; set; }
+        public string artistNames { get; set; }
+        public string artistIds { get; set; }
+    }
+
+    public class AccessoryFilterResult
+    {
+        public int accessory_id { get; set; }
+        public int product_id { get; set; }
+        public string name { get; set; }
+        public decimal price { get; set; }
+        public string description { get; set; }
+        public int stock { get; set; }
+        public int manufacturer_id { get; set; }
+        public string type { get; set; }
+        public string typeName { get; set; }
+        public string material { get; set; }
+        public string color { get; set; }
+        public string accessory_type { get; set; }
+        public decimal? weight { get; set; }
+        public string artistNames { get; set; }
+        public string artistIds { get; set; }
     }
 }

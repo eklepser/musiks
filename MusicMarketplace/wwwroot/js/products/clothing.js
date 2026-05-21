@@ -1,10 +1,25 @@
 ﻿let clothingEditId = null;
 let selectedArtistsForClothing = [];
 
+// Вспомогательная функция для преобразования artistIds в массив
+function ensureArtistIdsArray(artistIds) {
+    if (Array.isArray(artistIds)) return artistIds;
+    if (typeof artistIds === 'string') {
+        try {
+            const parsed = JSON.parse(artistIds);
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+            return [];
+        }
+    }
+    if (artistIds === null || artistIds === undefined) return [];
+    return [artistIds];
+}
+
 function renderClothingSelectedArtists() {
     const container = document.getElementById('clothing-selected-artists-list');
     if (!container) return;
-    if (selectedArtistsForClothing.length === 0) {
+    if (!selectedArtistsForClothing.length) {
         container.innerHTML = '<span style="color: #999;">Исполнители не выбраны</span>';
         return;
     }
@@ -18,7 +33,7 @@ function renderClothingSelectedArtists() {
 function renderEditClothingSelectedArtists() {
     const container = document.getElementById('edit-clothing-selected-artists-list');
     if (!container) return;
-    if (selectedArtistsForClothing.length === 0) {
+    if (!selectedArtistsForClothing.length) {
         container.innerHTML = '<span style="color: #999;">Исполнители не выбраны</span>';
         return;
     }
@@ -60,7 +75,8 @@ function fillEditClothingForm(c) {
     document.getElementById('edit-clothing-size').value = c.size || 'M';
     document.getElementById('edit-clothing-gender').value = c.gender || 'unisex';
     document.getElementById('edit-clothing-form').style.display = 'block';
-    selectedArtistsForClothing = c.artistIds || [];
+    // Преобразуем artistIds в массив
+    selectedArtistsForClothing = ensureArtistIdsArray(c.artistIds);
     renderEditClothingSelectedArtists();
 }
 
@@ -88,7 +104,7 @@ async function saveEditClothing() {
         color: document.getElementById('edit-clothing-color').value.trim(),
         size: document.getElementById('edit-clothing-size').value,
         gender: document.getElementById('edit-clothing-gender').value,
-        artistIds: selectedArtistsForClothing
+        artistIds: selectedArtistsForClothing  // уже массив
     };
     if (!data.name) {
         showToast('Заполните название', 'error');

@@ -11,33 +11,21 @@ namespace MusicMarketplace.Services
 
         public async Task<List<ArtistConcertDto>> GetAllAsync()
         {
-            var data = await _context.ArtistConcerts
-                .Join(_context.Artists, ac => ac.artist_id, a => a.artist_id, (ac, a) => new { ac, artist_name = a.name })
-                .Join(_context.Concerts, x => x.ac.concert_id, c => c.concert_id, (x, c) => new ArtistConcertDto
-                {
-                    artist_id = x.ac.artist_id,
-                    concert_id = x.ac.concert_id,
-                    artist_name = x.artist_name,
-                    concert_title = c.title
-                })
-                .ToListAsync();
-            return data;
+            var sql = "SELECT * FROM get_all_artist_concerts()";
+            return await _context.Database.SqlQueryRaw<ArtistConcertDto>(sql).ToListAsync();
         }
 
         public async Task<ArtistConcert> CreateAsync(ArtistConcert dto)
         {
-            _context.ArtistConcerts.Add(dto);
-            await _context.SaveChangesAsync();
-            return dto;
+            var sql = "SELECT * FROM create_artist_concert({0}, {1})";
+            return await _context.Set<ArtistConcert>().FromSqlRaw(sql, dto.artist_id, dto.concert_id).FirstOrDefaultAsync();
         }
 
         public async Task<bool> DeleteAsync(int artistId, int concertId)
         {
-            var entity = await _context.ArtistConcerts.FindAsync(artistId, concertId);
-            if (entity == null) return false;
-            _context.ArtistConcerts.Remove(entity);
-            await _context.SaveChangesAsync();
-            return true;
+            var sql = "SELECT delete_artist_concert({0}, {1})";
+            var result = await _context.Database.ExecuteSqlRawAsync(sql, artistId, concertId);
+            return result > 0;
         }
     }
 }

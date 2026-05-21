@@ -18,7 +18,7 @@ public class OrderWithItemsDto
     public DateTime order_date { get; set; }
     public string status { get; set; }
     public decimal total_amount { get; set; }
-    public List<OrderItemDetailDto> items { get; set; }
+    public string items_json { get; set; }
 }
 
 public class OrderItemDetailDto

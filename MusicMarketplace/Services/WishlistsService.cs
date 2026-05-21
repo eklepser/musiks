@@ -11,75 +11,46 @@ namespace MusicMarketplace.Services
 
         public async Task<List<Wishlist>> GetAllAsync()
         {
-            return await _context.Wishlists.ToListAsync();
+            var sql = "SELECT * FROM get_all_wishlists()";
+            return await _context.Set<Wishlist>().FromSqlRaw(sql).ToListAsync();
         }
 
         public async Task<List<WishlistDto>> GetByUserAsync(int userId)
         {
-            return await _context.Wishlists
-                .Where(w => w.user_id == userId)
-                .Join(_context.Products, w => w.product_id, p => p.product_id, (w, p) => new WishlistDto
-                {
-                    product_id = w.product_id,
-                    name = p.name,
-                    price = p.price,
-                    added_date = w.added_date
-                })
-                .ToListAsync();
+            var sql = "SELECT * FROM get_wishlist_by_user({0})";
+            return await _context.Database.SqlQueryRaw<WishlistDto>(sql, userId).ToListAsync();
         }
 
         public async Task CreateAsync(WishlistCreateDto dto)
         {
-            var exists = await _context.Wishlists
-                .AnyAsync(w => w.user_id == dto.user_id && w.product_id == dto.product_id);
-            if (exists) throw new InvalidOperationException("Товар уже в вишлисте");
-
-            var wishlist = new Wishlist
-            {
-                user_id = dto.user_id,
-                product_id = dto.product_id,
-                added_date = DateTime.UtcNow
-            };
-            _context.Wishlists.Add(wishlist);
-            await _context.SaveChangesAsync();
+            var sql = "SELECT create_wishlist({0}, {1})";
+            await _context.Database.ExecuteSqlRawAsync(sql, dto.user_id, dto.product_id);
         }
 
-        public async Task DeleteAsync(int userId, int productId)
+        public async Task<bool> DeleteAsync(int userId, int productId)
         {
-            var wishlist = await _context.Wishlists
-                .FirstOrDefaultAsync(w => w.user_id == userId && w.product_id == productId);
-            if (wishlist == null) throw new KeyNotFoundException("Wishlist item not found");
-            _context.Wishlists.Remove(wishlist);
-            await _context.SaveChangesAsync();
+            var sql = "SELECT delete_wishlist({0}, {1})";
+            var result = await _context.Database.ExecuteSqlRawAsync(sql, userId, productId);
+            return result > 0;
         }
 
-        public async Task<List<object>> GetWishlistFilteredAsync(int userId, string? searchName, string? sortBy)
+        public async Task<List<WishlistFilterResult>> GetWishlistFilteredAsync(int userId, string? searchName, string? sortBy)
         {
-            var query = _context.Wishlists
-                .Where(w => w.user_id == userId)
-                .Join(_context.Products, w => w.product_id, p => p.product_id, (w, p) => new { Wishlist = w, Product = p });
-
-            if (!string.IsNullOrEmpty(searchName))
-                query = query.Where(i => i.Product.name.ToLower().Contains(searchName.ToLower()));
-
-            var list = await query.Select(i => new
-            {
-                product_id = i.Product.product_id,
-                name = i.Product.name,
-                price = i.Product.price,
-                added_date = i.Wishlist.added_date
-            }).ToListAsync();
-
-            list = sortBy switch
-            {
-                "price_asc" => list.OrderBy(i => i.price).ToList(),
-                "price_desc" => list.OrderByDescending(i => i.price).ToList(),
-                "date_asc" => list.OrderBy(i => i.added_date).ToList(),
-                "date_desc" => list.OrderByDescending(i => i.added_date).ToList(),
-                _ => list.OrderByDescending(i => i.added_date).ToList()
-            };
-
-            return list.Cast<object>().ToList();
+            var sql = "SELECT * FROM get_filtered_wishlist({0}, {1}, {2})";
+            return await _context.Database.SqlQueryRaw<WishlistFilterResult>(
+                sql,
+                userId,
+                searchName ?? (object)DBNull.Value,
+                sortBy ?? (object)DBNull.Value
+            ).ToListAsync();
         }
+    }
+
+    public class WishlistFilterResult
+    {
+        public int product_id { get; set; }
+        public string name { get; set; }
+        public decimal price { get; set; }
+        public DateTime added_date { get; set; }
     }
 }

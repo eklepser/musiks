@@ -11,31 +11,25 @@ namespace MusicMarketplace.Services
 
         public async Task<List<ProductGenreDto>> GetAllAsync()
         {
-            return await _context.ProductGenres
-                .Join(_context.Products, pg => pg.product_id, p => p.product_id, (pg, p) => new { pg, product_name = p.name })
-                .Join(_context.Genres, x => x.pg.genre_id, g => g.genre_id, (x, g) => new ProductGenreDto
-                {
-                    product_id = x.pg.product_id,
-                    genre_id = x.pg.genre_id,
-                    product_name = x.product_name,
-                    genre_name = g.name
-                })
-                .ToListAsync();
+            var sql = "SELECT * FROM get_all_product_genres()";
+            return await _context.Database.SqlQueryRaw<ProductGenreDto>(sql).ToListAsync();
         }
 
         public async Task<ProductGenre> CreateAsync(ProductGenre dto)
         {
-            _context.ProductGenres.Add(dto);
-            await _context.SaveChangesAsync();
-            return dto;
+            var sql = "SELECT * FROM create_product_genre({0}, {1})";
+            return await _context.Database.SqlQueryRaw<ProductGenre>(
+                sql,
+                dto.product_id,
+                dto.genre_id
+            ).FirstOrDefaultAsync();
         }
 
-        public async Task DeleteAsync(int product_id, int genre_id)
+        public async Task<bool> DeleteAsync(int product_id, int genre_id)
         {
-            var entity = await _context.ProductGenres.FindAsync(product_id, genre_id);
-            if (entity == null) throw new KeyNotFoundException($"ProductGenre with product_id={product_id}, genre_id={genre_id} not found");
-            _context.ProductGenres.Remove(entity);
-            await _context.SaveChangesAsync();
+            var sql = "SELECT delete_product_genre({0}, {1})";
+            var result = await _context.Database.ExecuteSqlRawAsync(sql, product_id, genre_id);
+            return result > 0;
         }
     }
 }

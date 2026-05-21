@@ -8,75 +8,59 @@ namespace MusicMarketplace.Services
     {
         private readonly MusicMarketplaceContext _context;
         public OrderItemsService(MusicMarketplaceContext context) => _context = context;
+
         public async Task<List<OrderItem>> GetAllAsync()
         {
-            return await _context.OrderItems.ToListAsync();
+            var sql = "SELECT * FROM get_all_order_items()";
+            return await _context.Database.SqlQueryRaw<OrderItem>(sql).ToListAsync();
         }
 
         public async Task<OrderItem?> GetByIdAsync(int id)
         {
-            return await _context.OrderItems.FindAsync(id);
+            var sql = "SELECT * FROM get_order_item_by_id({0})";
+            return await _context.Database.SqlQueryRaw<OrderItem>(sql, id).FirstOrDefaultAsync();
         }
 
         public async Task<OrderItem> CreateAsync(OrderItem orderItem)
         {
-            _context.OrderItems.Add(orderItem);
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
-            {
-                if (await _context.OrderItems.AnyAsync(oi => oi.order_id == orderItem.order_id && oi.product_id == orderItem.product_id))
-                    throw new InvalidOperationException("OrderItem already exists");
-                throw;
-            }
-            return orderItem;
+            var sql = "SELECT * FROM create_order_item({0}, {1}, {2}, {3})";
+            return await _context.Database.SqlQueryRaw<OrderItem>(
+                sql,
+                orderItem.order_id,
+                orderItem.product_id,
+                orderItem.quantity,
+                orderItem.unit_price
+            ).FirstOrDefaultAsync();
         }
 
-        public async Task UpdateAsync(int id, OrderItem orderItem)
+        public async Task<bool> UpdateAsync(int id, OrderItem orderItem)
         {
-            if (id != orderItem.order_id) throw new ArgumentException("ID mismatch");
-            _context.Entry(orderItem).State = EntityState.Modified;
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!await _context.OrderItems.AnyAsync(oi => oi.order_id == id && oi.product_id == orderItem.product_id))
-                    throw new KeyNotFoundException($"OrderItem with order_id {id} not found");
-                throw;
-            }
+            var sql = "SELECT update_order_item({0}, {1}, {2}, {3}, {4})";
+            var result = await _context.Database.ExecuteSqlRawAsync(
+                sql,
+                id,
+                orderItem.order_id,
+                orderItem.product_id,
+                orderItem.quantity,
+                orderItem.unit_price
+            );
+            return result > 0;
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id)
         {
-            var orderItem = await _context.OrderItems.FindAsync(id);
-            if (orderItem == null) throw new KeyNotFoundException($"OrderItem with id {id} not found");
-            _context.OrderItems.Remove(orderItem);
-            await _context.SaveChangesAsync();
+            var sql = "SELECT delete_order_item({0})";
+            var result = await _context.Database.ExecuteSqlRawAsync(sql, id);
+            return result > 0;
         }
 
         public async Task<List<OrderItemDto>> GetByOrderAsync(int orderId)
         {
-            var orderItems = await _context.OrderItems
-                .Where(oi => oi.order_id == orderId)
-                .Include(oi => oi.product)
-                .Select(oi => new OrderItemDto
-                {
-                    product_id = oi.product_id,
-                    product_name = oi.product.name,
-                    quantity = oi.quantity,
-                    unit_price = oi.unit_price,
-                    total_price = oi.quantity * oi.unit_price
-                })
-                .ToListAsync();
-
-            if (orderItems == null || !orderItems.Any())
+            var sql = "SELECT * FROM get_order_items_by_order({0})";
+            var result = await _context.Database.SqlQueryRaw<OrderItemDto>(sql, orderId).ToListAsync();
+            if (result == null || !result.Any())
                 throw new KeyNotFoundException($"OrderItems for order {orderId} not found");
-
-            return orderItems;
+            return result;
         }
     }
 }

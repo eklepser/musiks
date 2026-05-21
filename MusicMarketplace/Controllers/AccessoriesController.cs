@@ -36,9 +36,19 @@ namespace MusicMarketplace.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutAccessory(int id, AccessoryCreateUpdateDto dto)
         {
-            var updated = await _service.UpdateAsync(id, dto);
-            if (!updated) return NotFound();
-            return NoContent();
+            try
+            {
+                await _service.UpdateAsync(id, dto);
+                return NoContent();
+            }
+            catch (ArgumentException)
+            {
+                return BadRequest();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
 
         [HttpDelete("{id}")]

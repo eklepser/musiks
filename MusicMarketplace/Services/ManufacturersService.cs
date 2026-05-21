@@ -8,88 +8,77 @@ namespace MusicMarketplace.Services
     {
         private readonly MusicMarketplaceContext _context;
         public ManufacturersService(MusicMarketplaceContext context) => _context = context;
+
         public async Task<List<Manufacturer>> GetAllAsync()
         {
-            return await _context.Manufacturers.ToListAsync();
+            var sql = "SELECT * FROM get_all_manufacturers()";
+            return await _context.Set<Manufacturer>().FromSqlRaw(sql).ToListAsync();
         }
 
         public async Task<Manufacturer?> GetByIdAsync(int id)
         {
-            return await _context.Manufacturers.FindAsync(id);
+            var sql = "SELECT * FROM get_manufacturer_by_id({0})";
+            return await _context.Set<Manufacturer>().FromSqlRaw(sql, id).FirstOrDefaultAsync();
         }
 
         public async Task<Manufacturer> CreateAsync(ManufacturerDto dto)
         {
-            if (await _context.Manufacturers.AnyAsync(m => m.name == dto.name))
-                throw new InvalidOperationException("Производитель с таким названием уже существует");
-
-            var manufacturer = new Manufacturer
-            {
-                name = dto.name,
-                contact_info = dto.contact_info,
-                country = dto.country
-            };
-            _context.Manufacturers.Add(manufacturer);
-            await _context.SaveChangesAsync();
-            return manufacturer;
+            var sql = "SELECT * FROM create_manufacturer({0}, {1}, {2})";
+            var result = await _context.Set<Manufacturer>().FromSqlRaw(
+                sql,
+                dto.name,
+                dto.contact_info ?? (object)DBNull.Value,
+                dto.country ?? (object)DBNull.Value
+            ).FirstOrDefaultAsync();
+            return result;
         }
 
-        public async Task UpdateAsync(int id, ManufacturerDto dto)
+        public async Task<bool> UpdateAsync(int id, ManufacturerDto dto)
         {
-            if (id != dto.manufacturer_id) throw new ArgumentException("ID mismatch");
-
-            var manufacturer = await _context.Manufacturers.FindAsync(id);
-            if (manufacturer == null) throw new KeyNotFoundException($"Manufacturer with id {id} not found");
-
-            if (await _context.Manufacturers.AnyAsync(m => m.name == dto.name && m.manufacturer_id != id))
-                throw new InvalidOperationException("Производитель с таким названием уже существует");
-
-            manufacturer.name = dto.name;
-            manufacturer.contact_info = dto.contact_info;
-            manufacturer.country = dto.country;
-            await _context.SaveChangesAsync();
+            var sql = "SELECT update_manufacturer({0}, {1}, {2}, {3})";
+            var result = await _context.Database.ExecuteSqlRawAsync(
+                sql,
+                id,
+                dto.name,
+                dto.contact_info ?? (object)DBNull.Value,
+                dto.country ?? (object)DBNull.Value
+            );
+            return result > 0;
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id)
         {
-            var manufacturer = await _context.Manufacturers.FindAsync(id);
-            if (manufacturer == null) throw new KeyNotFoundException($"Manufacturer with id {id} not found");
-            _context.Manufacturers.Remove(manufacturer);
-            await _context.SaveChangesAsync();
+            var sql = "SELECT delete_manufacturer({0})";
+            var result = await _context.Database.ExecuteSqlRawAsync(sql, id);
+            return result > 0;
         }
 
         public async Task<List<Manufacturer>> GetFilteredAsync(string? searchName, string? searchCountry, string? sortBy)
         {
-            var query = _context.Manufacturers.AsQueryable();
-
-            if (!string.IsNullOrEmpty(searchName))
-                query = query.Where(m => m.name.ToLower().Contains(searchName.ToLower()));
-
-            if (!string.IsNullOrEmpty(searchCountry))
-                query = query.Where(m => m.country != null && m.country.ToLower().Contains(searchCountry.ToLower()));
-
-            query = sortBy switch
-            {
-                "name_asc" => query.OrderBy(m => m.name),
-                "name_desc" => query.OrderByDescending(m => m.name),
-                _ => query.OrderBy(m => m.manufacturer_id)
-            };
-
-            return await query.ToListAsync();
+            var sql = "SELECT * FROM get_filtered_manufacturers({0}, {1}, {2})";
+            return await _context.Set<Manufacturer>().FromSqlRaw(
+                sql,
+                searchName ?? (object)DBNull.Value,
+                searchCountry ?? (object)DBNull.Value,
+                sortBy ?? (object)DBNull.Value
+            ).ToListAsync();
         }
 
         public async Task<List<string>> GetNamesAsync()
         {
-            return await _context.Manufacturers.Select(m => m.name).ToListAsync();
+            var sql = "SELECT * FROM get_manufacturer_names()";
+            var result = await _context.Database.SqlQueryRaw<NameResult>(sql).ToListAsync();
+            return result.Select(r => r.name).ToList();
         }
 
         public async Task<List<string>> GetCountriesAsync()
         {
-            return await _context.Manufacturers
-                .Where(m => m.country != null)
-                .Select(m => m.country)
-                .Distinct()
-                .ToListAsync();
+            var sql = "SELECT * FROM get_manufacturer_countries()";
+            var result = await _context.Database.SqlQueryRaw<CountryResult>(sql).ToListAsync();
+            return result.Select(r => r.country).ToList();
         }
+
+        private class NameResult { public string name { get; set; } }
+        private class CountryResult { public string country { get; set; } }
     }
 }

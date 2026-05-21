@@ -10,43 +10,46 @@ namespace MusicMarketplace.Services
 
         public async Task<List<Merch>> GetAllAsync()
         {
-            return await _context.Merches.ToListAsync();
+            var sql = "SELECT * FROM get_all_merches()";
+            return await _context.Set<Merch>().FromSqlRaw(sql).ToListAsync();
         }
 
         public async Task<Merch?> GetByIdAsync(int id)
         {
-            return await _context.Merches.FindAsync(id);
+            var sql = "SELECT * FROM get_merch_by_id({0})";
+            return await _context.Set<Merch>().FromSqlRaw(sql, id).FirstOrDefaultAsync();
         }
 
         public async Task<Merch> CreateAsync(Merch merch)
         {
-            _context.Merches.Add(merch);
-            await _context.SaveChangesAsync();
-            return merch;
+            var sql = "SELECT * FROM create_merch({0}, {1}, {2})";
+            var result = await _context.Set<Merch>().FromSqlRaw(
+                sql,
+                merch.product_id,
+                merch.material ?? (object)DBNull.Value,
+                merch.color ?? (object)DBNull.Value
+            ).FirstOrDefaultAsync();
+            return result;
         }
 
-        public async Task UpdateAsync(int id, Merch merch)
+        public async Task<bool> UpdateAsync(int id, Merch merch)
         {
-            if (id != merch.merch_id) throw new ArgumentException("ID mismatch");
-            _context.Entry(merch).State = EntityState.Modified;
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!await _context.Merches.AnyAsync(m => m.merch_id == id))
-                    throw new KeyNotFoundException($"Merch with id {id} not found");
-                throw;
-            }
+            var sql = "SELECT update_merch({0}, {1}, {2}, {3})";
+            var result = await _context.Database.ExecuteSqlRawAsync(
+                sql,
+                id,
+                merch.product_id,
+                merch.material ?? (object)DBNull.Value,
+                merch.color ?? (object)DBNull.Value
+            );
+            return result > 0;
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id)
         {
-            var merch = await _context.Merches.FindAsync(id);
-            if (merch == null) throw new KeyNotFoundException($"Merch with id {id} not found");
-            _context.Merches.Remove(merch);
-            await _context.SaveChangesAsync();
+            var sql = "SELECT delete_merch({0})";
+            var result = await _context.Database.ExecuteSqlRawAsync(sql, id);
+            return result > 0;
         }
     }
 }

@@ -11,72 +11,66 @@ namespace MusicMarketplace.Services
 
         public async Task<List<Genre>> GetAllAsync()
         {
-            return await _context.Genres.ToListAsync();
+            var sql = "SELECT * FROM get_all_genres()";
+            return await _context.Set<Genre>().FromSqlRaw(sql).ToListAsync();
         }
 
         public async Task<Genre?> GetByIdAsync(int id)
         {
-            return await _context.Genres.FindAsync(id);
+            var sql = "SELECT * FROM get_genre_by_id({0})";
+            return await _context.Set<Genre>().FromSqlRaw(sql, id).FirstOrDefaultAsync();
         }
 
         public async Task<Genre> CreateAsync(GenreDto dto)
         {
-            if (await _context.Genres.AnyAsync(g => g.name == dto.name))
-                throw new InvalidOperationException("Жанр с таким названием уже существует");
-
-            var genre = new Genre
-            {
-                name = dto.name,
-                description = dto.description
-            };
-            _context.Genres.Add(genre);
-            await _context.SaveChangesAsync();
-            return genre;
+            var sql = "SELECT * FROM create_genre({0}, {1})";
+            var result = await _context.Set<Genre>().FromSqlRaw(
+                sql,
+                dto.name,
+                dto.description ?? (object)DBNull.Value
+            ).FirstOrDefaultAsync();
+            return result;
         }
 
-        public async Task UpdateAsync(int id, GenreDto dto)
+        public async Task<bool> UpdateAsync(int id, GenreDto dto)
         {
-            if (id != dto.genre_id) throw new ArgumentException("ID mismatch");
-
-            var genre = await _context.Genres.FindAsync(id);
-            if (genre == null) throw new KeyNotFoundException($"Genre with id {id} not found");
-
-            if (await _context.Genres.AnyAsync(g => g.name == dto.name && g.genre_id != id))
-                throw new InvalidOperationException("Жанр с таким названием уже существует");
-
-            genre.name = dto.name;
-            genre.description = dto.description;
-            await _context.SaveChangesAsync();
+            var sql = "SELECT update_genre({0}, {1}, {2})";
+            var result = await _context.Database.ExecuteSqlRawAsync(
+                sql,
+                id,
+                dto.name,
+                dto.description ?? (object)DBNull.Value
+            );
+            return result > 0;
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id)
         {
-            var genre = await _context.Genres.FindAsync(id);
-            if (genre == null) throw new KeyNotFoundException($"Genre with id {id} not found");
-            _context.Genres.Remove(genre);
-            await _context.SaveChangesAsync();
+            var sql = "SELECT delete_genre({0})";
+            var result = await _context.Database.ExecuteSqlRawAsync(sql, id);
+            return result > 0;
         }
 
         public async Task<List<Genre>> GetFilteredAsync(string? searchName, string? sortBy)
         {
-            var query = _context.Genres.AsQueryable();
-
-            if (!string.IsNullOrEmpty(searchName))
-                query = query.Where(g => g.name.ToLower().Contains(searchName.ToLower()));
-
-            query = sortBy switch
-            {
-                "name_asc" => query.OrderBy(g => g.name),
-                "name_desc" => query.OrderByDescending(g => g.name),
-                _ => query.OrderBy(g => g.genre_id)
-            };
-
-            return await query.ToListAsync();
+            var sql = "SELECT * FROM get_filtered_genres({0}, {1})";
+            return await _context.Set<Genre>().FromSqlRaw(
+                sql,
+                searchName ?? (object)DBNull.Value,
+                sortBy ?? (object)DBNull.Value
+            ).ToListAsync();
         }
 
         public async Task<List<string>> GetNamesAsync()
         {
-            return await _context.Genres.Select(g => g.name).ToListAsync();
+            var sql = "SELECT * FROM get_genre_names()";
+            var result = await _context.Database.SqlQueryRaw<GenreNameResult>(sql).ToListAsync();
+            return result.Select(r => r.name).ToList();
         }
+    }
+
+    public class GenreNameResult
+    {
+        public string name { get; set; }
     }
 }

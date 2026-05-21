@@ -1,10 +1,24 @@
 ﻿let accessoryEditId = null;
 let selectedArtistsForAccessory = [];
 
+function ensureArtistIdsArray(artistIds) {
+    if (Array.isArray(artistIds)) return artistIds;
+    if (typeof artistIds === 'string') {
+        try {
+            const parsed = JSON.parse(artistIds);
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+            return [];
+        }
+    }
+    if (artistIds === null || artistIds === undefined) return [];
+    return [artistIds];
+}
+
 function renderAccessorySelectedArtists() {
     const container = document.getElementById('accessory-selected-artists-list');
     if (!container) return;
-    if (selectedArtistsForAccessory.length === 0) {
+    if (!selectedArtistsForAccessory.length) {
         container.innerHTML = '<span style="color: #999;">Исполнители не выбраны</span>';
         return;
     }
@@ -18,7 +32,7 @@ function renderAccessorySelectedArtists() {
 function renderEditAccessorySelectedArtists() {
     const container = document.getElementById('edit-accessory-selected-artists-list');
     if (!container) return;
-    if (selectedArtistsForAccessory.length === 0) {
+    if (!selectedArtistsForAccessory.length) {
         container.innerHTML = '<span style="color: #999;">Исполнители не выбраны</span>';
         return;
     }
@@ -60,7 +74,7 @@ function fillEditAccessoryForm(a) {
     document.getElementById('edit-accessory-type').value = a.accessory_type || '';
     document.getElementById('edit-accessory-weight').value = a.weight || '';
     document.getElementById('edit-accessory-form').style.display = 'block';
-    selectedArtistsForAccessory = a.artistIds || [];
+    selectedArtistsForAccessory = ensureArtistIdsArray(a.artistIds);
     renderEditAccessorySelectedArtists();
 }
 

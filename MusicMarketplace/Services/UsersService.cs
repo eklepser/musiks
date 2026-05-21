@@ -8,69 +8,37 @@ namespace MusicMarketplace.Services
     {
         private readonly MusicMarketplaceContext _context;
         public UsersService(MusicMarketplaceContext context) => _context = context;
+
         public async Task<List<User>> GetAllAsync()
         {
-            return await _context.Users.ToListAsync();
+            var sql = "SELECT * FROM get_all_users()";
+            return await _context.Set<User>().FromSqlRaw(sql).ToListAsync();
         }
 
         public async Task<User?> GetByIdAsync(int id)
         {
-            return await _context.Users.FindAsync(id);
+            var sql = "SELECT * FROM get_user_by_id({0})";
+            return await _context.Set<User>().FromSqlRaw(sql, id).FirstOrDefaultAsync();
         }
 
         public async Task<User> CreateAsync(UserDto dto)
         {
-            if (string.IsNullOrWhiteSpace(dto.password))
-                throw new ArgumentException("Пароль обязателен при создании");
-
-            if (await _context.Users.AnyAsync(u => u.login == dto.login))
-                throw new InvalidOperationException("Логин уже существует");
-
-            if (await _context.Users.AnyAsync(u => u.email == dto.email))
-                throw new InvalidOperationException("Email уже существует");
-
-            var user = new User
-            {
-                login = dto.login,
-                email = dto.email,
-                full_name = dto.full_name,
-                registration_date = DateTime.UtcNow,
-                password_hash = dto.password
-            };
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-            return user;
+            var sql = "SELECT * FROM create_user({0}, {1}, {2}, {3})";
+            return await _context.Set<User>().FromSqlRaw(sql, dto.login, dto.email, dto.full_name, dto.password).FirstOrDefaultAsync();
         }
 
-        public async Task UpdateAsync(int id, UserDto dto)
+        public async Task<bool> UpdateAsync(int id, UserDto dto)
         {
-            if (id != dto.user_id) throw new ArgumentException("ID mismatch");
-
-            var user = await _context.Users.FindAsync(id);
-            if (user == null) throw new KeyNotFoundException($"User with id {id} not found");
-
-            if (await _context.Users.AnyAsync(u => u.login == dto.login && u.user_id != id))
-                throw new InvalidOperationException("Логин уже занят другим пользователем");
-
-            if (await _context.Users.AnyAsync(u => u.email == dto.email && u.user_id != id))
-                throw new InvalidOperationException("Email уже занят другим пользователем");
-
-            user.login = dto.login;
-            user.email = dto.email;
-            user.full_name = dto.full_name;
-
-            if (!string.IsNullOrWhiteSpace(dto.password))
-                user.password_hash = dto.password;
-
-            await _context.SaveChangesAsync();
+            var sql = "SELECT update_user({0}, {1}, {2}, {3}, {4})";
+            var result = await _context.Database.ExecuteSqlRawAsync(sql, id, dto.login, dto.email, dto.full_name, dto.password ?? (object)DBNull.Value);
+            return result > 0;
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id)
         {
-            var user = await _context.Users.FindAsync(id);
-            if (user == null) throw new KeyNotFoundException($"User with id {id} not found");
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
+            var sql = "SELECT delete_user({0})";
+            var result = await _context.Database.ExecuteSqlRawAsync(sql, id);
+            return result > 0;
         }
     }
 }

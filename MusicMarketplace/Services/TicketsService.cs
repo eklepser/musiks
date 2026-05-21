@@ -11,129 +11,55 @@ namespace MusicMarketplace.Services
 
         public async Task<List<TicketDto>> GetAllAsync()
         {
-            return await _context.Tickets
-                .Include(t => t.concert)
-                .Include(t => t.product)
-                .Select(t => new TicketDto
-                {
-                    ticket_id = t.ticket_id,
-                    product_id = t.product_id,
-                    name = t.product.name,
-                    price = t.product.price,
-                    description = t.product.description,
-                    stock = t.product.stock,
-                    manufacturer_id = t.product.manufacturer_id,
-                    concert_id = t.concert_id,
-                    price_category = t.price_category,
-                    quantity = t.quantity
-                })
-                .ToListAsync();
+            var sql = "SELECT * FROM get_all_tickets()";
+            return await _context.Database.SqlQueryRaw<TicketDto>(sql).ToListAsync();
         }
 
         public async Task<TicketDto?> GetByIdAsync(int id)
         {
-            return await _context.Tickets
-                .Include(t => t.concert)
-                .Include(t => t.product)
-                .Where(t => t.ticket_id == id)
-                .Select(t => new TicketDto
-                {
-                    ticket_id = t.ticket_id,
-                    product_id = t.product_id,
-                    name = t.product.name,
-                    price = t.product.price,
-                    description = t.product.description,
-                    stock = t.product.stock,
-                    manufacturer_id = t.product.manufacturer_id,
-                    concert_id = t.concert_id,
-                    price_category = t.price_category,
-                    quantity = t.quantity
-                })
-                .FirstOrDefaultAsync();
+            var sql = "SELECT * FROM get_ticket_by_id({0})";
+            return await _context.Database.SqlQueryRaw<TicketDto>(sql, id).FirstOrDefaultAsync();
         }
 
         public async Task<TicketDto> CreateAsync(TicketDto dto)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            try
-            {
-                var product = new Product
-                {
-                    name = dto.name,
-                    price = dto.price,
-                    description = dto.description,
-                    stock = dto.stock,
-                    manufacturer_id = dto.manufacturer_id
-                };
-                _context.Products.Add(product);
-                await _context.SaveChangesAsync();
-
-                var ticket = new Ticket
-                {
-                    concert_id = dto.concert_id,
-                    product_id = product.product_id,
-                    price_category = dto.price_category,
-                    quantity = dto.quantity
-                };
-                _context.Tickets.Add(ticket);
-                await _context.SaveChangesAsync();
-
-                await transaction.CommitAsync();
-
-                return new TicketDto
-                {
-                    ticket_id = ticket.ticket_id,
-                    product_id = product.product_id,
-                    name = product.name,
-                    price = product.price,
-                    description = product.description,
-                    stock = product.stock,
-                    manufacturer_id = product.manufacturer_id,
-                    concert_id = ticket.concert_id,
-                    price_category = ticket.price_category,
-                    quantity = ticket.quantity
-                };
-            }
-            catch
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
+            var sql = "SELECT * FROM create_ticket({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})";
+            return await _context.Database.SqlQueryRaw<TicketDto>(
+                sql,
+                dto.name,
+                dto.price,
+                dto.description ?? (object)DBNull.Value,
+                dto.stock,
+                dto.manufacturer_id,
+                dto.concert_id,
+                dto.price_category ?? (object)DBNull.Value,
+                dto.quantity
+            ).FirstOrDefaultAsync();
         }
 
-        public async Task UpdateAsync(int id, TicketDto dto)
+        public async Task<bool> UpdateAsync(int id, TicketDto dto)
         {
-            if (id != dto.ticket_id) throw new ArgumentException("ID mismatch");
-
-            var existingTicket = await _context.Tickets
-                .Include(t => t.product)
-                .FirstOrDefaultAsync(t => t.ticket_id == id);
-            if (existingTicket == null) throw new KeyNotFoundException($"Ticket with id {id} not found");
-
-            existingTicket.concert_id = dto.concert_id;
-            existingTicket.price_category = dto.price_category;
-            existingTicket.quantity = dto.quantity;
-
-            var product = existingTicket.product;
-            product.name = dto.name;
-            product.price = dto.price;
-            product.description = dto.description;
-            product.stock = dto.stock;
-            product.manufacturer_id = dto.manufacturer_id;
-
-            await _context.SaveChangesAsync();
+            var sql = "SELECT update_ticket({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8})";
+            var result = await _context.Database.ExecuteSqlRawAsync(
+                sql,
+                id,
+                dto.name,
+                dto.price,
+                dto.description ?? (object)DBNull.Value,
+                dto.stock,
+                dto.manufacturer_id,
+                dto.concert_id,
+                dto.price_category ?? (object)DBNull.Value,
+                dto.quantity
+            );
+            return result > 0;
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id)
         {
-            var ticket = await _context.Tickets
-                .Include(t => t.product)
-                .FirstOrDefaultAsync(t => t.ticket_id == id);
-            if (ticket == null) throw new KeyNotFoundException($"Ticket with id {id} not found");
-
-            _context.Tickets.Remove(ticket);
-            _context.Products.Remove(ticket.product);
-            await _context.SaveChangesAsync();
+            var sql = "SELECT delete_ticket({0})";
+            var result = await _context.Database.ExecuteSqlRawAsync(sql, id);
+            return result > 0;
         }
     }
 }
