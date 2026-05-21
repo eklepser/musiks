@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MusicMarketplace.Services;
+using MusicMarketplace.DTOs;
 
 namespace MusicMarketplace.Controllers
 {
@@ -29,14 +30,14 @@ namespace MusicMarketplace.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostClothing(ClothingsService.ClothingCreateUpdateDto dto)
+        public async Task<IActionResult> PostClothing(ClothingCreateUpdateDto dto)
         {
             var result = await _clothingsService.CreateAsync(dto);
             return CreatedAtAction(nameof(GetClothing), new { id = result.clothing_id }, result);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutClothing(int id, ClothingsService.ClothingCreateUpdateDto dto)
+        public async Task<IActionResult> PutClothing(int id, ClothingCreateUpdateDto dto)
         {
             try
             {

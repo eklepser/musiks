@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MusicMarketplace.Services;
+using MusicMarketplace.DTOs;
 
 namespace MusicMarketplace.Controllers
 {
@@ -48,7 +49,7 @@ namespace MusicMarketplace.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostConcert(ConcertsService.ConcertDto dto)
+        public async Task<IActionResult> PostConcert(ConcertDto dto)
         {
             try
             {
@@ -62,7 +63,7 @@ namespace MusicMarketplace.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutConcert(int id, ConcertsService.ConcertDto dto)
+        public async Task<IActionResult> PutConcert(int id, ConcertDto dto)
         {
             try
             {

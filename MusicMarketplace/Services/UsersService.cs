@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MusicMarketplace.Models;
+using MusicMarketplace.DTOs;
 
 namespace MusicMarketplace.Services
 {
@@ -7,16 +8,6 @@ namespace MusicMarketplace.Services
     {
         private readonly MusicMarketplaceContext _context;
         public UsersService(MusicMarketplaceContext context) => _context = context;
-
-        public class UserDto
-        {
-            public int user_id { get; set; }
-            public string login { get; set; }
-            public string email { get; set; }
-            public string full_name { get; set; }
-            public string password { get; set; }
-        }
-
         public async Task<List<User>> GetAllAsync()
         {
             return await _context.Users.ToListAsync();

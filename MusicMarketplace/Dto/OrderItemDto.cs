@@ -1,4 +1,6 @@
-﻿public class OrderItemDto
+﻿namespace MusicMarketplace.DTOs;
+
+public class OrderItemDto
 {
     public int product_id { get; set; }
     public string product_name { get; set; }

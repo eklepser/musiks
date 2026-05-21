@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using MusicMarketplace.Models;
-using static MusicMarketplace.Controllers.AccessoriesController;
+using MusicMarketplace.DTOs;
 
 namespace MusicMarketplace.Services
 {

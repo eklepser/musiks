@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using MusicMarketplace.Models;
+using MusicMarketplace.DTOs;
 using MusicMarketplace.Services;
 using System.Threading.Tasks;
 

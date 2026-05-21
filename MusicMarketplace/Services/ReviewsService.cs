@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MusicMarketplace.Models;
+using MusicMarketplace.DTOs;
 
 namespace MusicMarketplace.Services
 {
@@ -7,23 +8,6 @@ namespace MusicMarketplace.Services
     {
         private readonly MusicMarketplaceContext _context;
         public ReviewsService(MusicMarketplaceContext context) => _context = context;
-
-        public class ReviewCreateDto
-        {
-            public int user_id { get; set; }
-            public int product_id { get; set; }
-            public int rating { get; set; }
-            public string review_text { get; set; }
-        }
-
-        public class ReviewDto
-        {
-            public int product_id { get; set; }
-            public string product_name { get; set; }
-            public int rating { get; set; }
-            public string review_text { get; set; }
-            public DateTime review_date { get; set; }
-        }
 
         public async Task<List<ReviewDto>> GetByUserAsync(int userId)
         {

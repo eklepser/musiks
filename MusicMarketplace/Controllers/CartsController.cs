@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MusicMarketplace.Services;
+using MusicMarketplace.DTOs;
 
 namespace MusicMarketplace.Controllers
 {
@@ -21,7 +22,7 @@ namespace MusicMarketplace.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostCart(CartsService.CartCreateDto dto)
+        public async Task<IActionResult> PostCart(CartCreateDto dto)
         {
             var newQuantity = await _cartsService.PostCartAsync(dto);
             return Ok(new { quantity = newQuantity });

@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MusicMarketplace.Models;
+using MusicMarketplace.DTOs;
 
 namespace MusicMarketplace.Services
 {
@@ -7,16 +8,6 @@ namespace MusicMarketplace.Services
     {
         private readonly MusicMarketplaceContext _context;
         public OrderItemsService(MusicMarketplaceContext context) => _context = context;
-
-        public class OrderItemDto
-        {
-            public int product_id { get; set; }
-            public string product_name { get; set; }
-            public int quantity { get; set; }
-            public decimal unit_price { get; set; }
-            public decimal total_price { get; set; }
-        }
-
         public async Task<List<OrderItem>> GetAllAsync()
         {
             return await _context.OrderItems.ToListAsync();

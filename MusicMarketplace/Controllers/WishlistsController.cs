@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MusicMarketplace.Services;
+using MusicMarketplace.DTOs;
 
 namespace MusicMarketplace.Controllers
 {
@@ -28,7 +29,7 @@ namespace MusicMarketplace.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostWishlist(WishlistsService.WishlistCreateDto dto)
+        public async Task<IActionResult> PostWishlist(WishlistCreateDto dto)
         {
             try
             {
