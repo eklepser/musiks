@@ -1,9 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MusicMarketplace.DTOs;
 using MusicMarketplace.Models;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace MusicMarketplace.Services
 {

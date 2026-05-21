@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using MusicMarketplace.DTOs;
 using MusicMarketplace.Models;
 using MusicMarketplace.Services;
-using System.Threading.Tasks;
 
 namespace MusicMarketplace.Controllers
 {

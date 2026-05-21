@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using MusicMarketplace.Services;
 using MusicMarketplace.DTOs;
+using MusicMarketplace.Services;
 
 namespace MusicMarketplace.Controllers
 {

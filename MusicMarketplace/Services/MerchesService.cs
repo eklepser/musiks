@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MusicMarketplace.Models;
-using MusicMarketplace.DTOs;
 
 namespace MusicMarketplace.Services
 {

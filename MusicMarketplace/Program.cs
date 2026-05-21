@@ -47,8 +47,8 @@ namespace MusicMarketplace
 
             app.UseCors("AllowAll");
             app.UseMiddleware<HtmlExtensionRewriteMiddleware>();
-            app.UseDefaultFiles(); 
-            app.UseStaticFiles();  
+            app.UseDefaultFiles();
+            app.UseStaticFiles();
 
             if (app.Environment.IsDevelopment())
             {

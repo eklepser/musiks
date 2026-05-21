@@ -1,9 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.FileProviders;
-using System.IO;
-using System.Threading.Tasks;
-
-namespace MusicMarketplace.Middleware
+﻿namespace MusicMarketplace.Middleware
 {
     public class HtmlExtensionRewriteMiddleware
     {
