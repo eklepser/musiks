@@ -136,6 +136,10 @@ namespace MusicMarketplace.Controllers
                     color = c.Merch.color,
                     size = c.size,
                     gender = c.gender,
+                    artistIds = _context.ArtistMerches
+                        .Where(am => am.merch_id == c.merch_id)
+                        .Select(am => am.artist_id)
+                        .ToList(),
                     artistNames = _context.ArtistMerches
                         .Where(am => am.merch_id == c.merch_id)
                         .Join(_context.Artists,
@@ -163,6 +167,10 @@ namespace MusicMarketplace.Controllers
                     color = a.Merch.color,
                     accessory_type = a.accessory_type,
                     weight = a.weight,
+                    artistIds = _context.ArtistMerches
+                        .Where(am => am.merch_id == a.merch_id)
+                        .Select(am => am.artist_id)
+                        .ToList(),
                     artistNames = _context.ArtistMerches
                         .Where(am => am.merch_id == a.merch_id)
                         .Join(_context.Artists,
@@ -172,18 +180,12 @@ namespace MusicMarketplace.Controllers
                         .ToList()
                 });
 
+            // Применяем фильтры (кроме type, его обработаем позже)
             if (!string.IsNullOrEmpty(searchName))
             {
                 ticketsQuery = ticketsQuery.Where(t => t.name.ToLower().Contains(searchName.ToLower()));
                 clothingsQuery = clothingsQuery.Where(c => c.name.ToLower().Contains(searchName.ToLower()));
                 accessoriesQuery = accessoriesQuery.Where(a => a.name.ToLower().Contains(searchName.ToLower()));
-            }
-
-            if (!string.IsNullOrEmpty(type))
-            {
-                if (type == "ticket") clothingsQuery = clothingsQuery.Where(c => false);
-                else if (type == "clothing") accessoriesQuery = accessoriesQuery.Where(a => false);
-                else if (type == "accessory") ticketsQuery = ticketsQuery.Where(t => false);
             }
 
             if (manufacturerId.HasValue)
@@ -242,12 +244,21 @@ namespace MusicMarketplace.Controllers
                 accessoriesQuery = accessoriesQuery.Where(a => productIdsWithGenre.Contains(a.product_id));
             }
 
+            // Материализуем запросы
             var tickets = await ticketsQuery.ToListAsync();
             var clothings = await clothingsQuery.ToListAsync();
             var accessories = await accessoriesQuery.ToListAsync();
 
-            var result = tickets.Cast<object>().Concat(clothings).Concat(accessories).ToList();
+            // Формируем результат в зависимости от выбранного типа
+            var result = new List<object>();
+            if (string.IsNullOrEmpty(type) || type == "ticket")
+                result.AddRange(tickets);
+            if (string.IsNullOrEmpty(type) || type == "clothing")
+                result.AddRange(clothings);
+            if (string.IsNullOrEmpty(type) || type == "accessory")
+                result.AddRange(accessories);
 
+            // Сортировка
             result = sortBy switch
             {
                 "price_asc" => result.OrderBy(p => (decimal)p.GetType().GetProperty("price")?.GetValue(p)).ToList(),
