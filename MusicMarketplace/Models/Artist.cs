@@ -1,20 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace MusicMarketplace.Models;
-
-public partial class Artist
+namespace MusicMarketplace.Models
 {
-    public int artist_id { get; set; }
-    public string name { get; set; } = null!;
-    public string? country { get; set; }
-    public int? debut_year { get; set; }
-    public string? language { get; set; }
+    [Table("Artist")]
+    public class Artist
+    {
+        public int artist_id { get; set; }
+        public string name { get; set; }
+        public string? country { get; set; }
+        public int? debut_year { get; set; }
+        public string? language { get; set; }
 
-    [NotMapped]
-    public virtual ICollection<Concert> concerts { get; set; } = new List<Concert>();
-
-    [NotMapped]
-    public virtual ICollection<Merch> merches { get; set; } = new List<Merch>();
+        public virtual ICollection<ArtistConcert> ArtistConcerts { get; set; } = new List<ArtistConcert>();
+        public virtual ICollection<ArtistMerch> ArtistMerches { get; set; } = new List<ArtistMerch>();
+    }
 }

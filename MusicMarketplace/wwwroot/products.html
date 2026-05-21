@@ -79,7 +79,7 @@
 
             <div id="edit-panel" style="display: none;">
                 <h3>Редактирование товара</h3>
-                <!-- формы редактирования билета, одежды, аксессуара (без изменений) -->
+                <!-- Редактирование билета -->
                 <div id="edit-ticket-form" style="display: none;">
                     <div class="form-card">
                         <input type="hidden" id="edit-ticket-id">
@@ -99,6 +99,7 @@
                         <div id="edit-ticket-success" class="success"></div>
                     </div>
                 </div>
+                <!-- Редактирование одежды (с выбором исполнителей) -->
                 <div id="edit-clothing-form" style="display: none;">
                     <div class="form-card">
                         <input type="hidden" id="edit-clothing-id">
@@ -125,7 +126,15 @@
                                 <option value="female">Женский</option>
                                 <option value="unisex">Унисекс</option>
                             </select>
-                            <button type="button" id="edit-clothing-artists-btn" class="artists-btn" data-product-id="">Выбрать исполнителей</button>
+                        </div>
+                        <div class="form-group-row" style="align-items: center;">
+                            <label style="margin-right: 15px;">Исполнители:</label>
+                            <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
+                                <div id="edit-clothing-selected-artists-list" style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 8px; min-height: 40px; background: #f9f9f9;"></div>
+                                <button type="button" id="edit-clothing-artists-btn" class="artists-btn">Выбрать исполнителей</button>
+                            </div>
+                        </div>
+                        <div class="form-actions">
                             <button id="edit-clothing-submit">Сохранить</button>
                             <button id="edit-clothing-cancel">Отмена</button>
                         </div>
@@ -133,6 +142,7 @@
                         <div id="edit-clothing-success" class="success"></div>
                     </div>
                 </div>
+                <!-- Редактирование аксессуара (с выбором исполнителей) -->
                 <div id="edit-accessory-form" style="display: none;">
                     <div class="form-card">
                         <input type="hidden" id="edit-accessory-id">
@@ -146,7 +156,15 @@
                             <input type="text" id="edit-accessory-color" placeholder="Цвет">
                             <input type="text" id="edit-accessory-type" placeholder="Тип">
                             <input type="number" id="edit-accessory-weight" placeholder="Вес (г)" step="0.01">
-                            <button type="button" id="edit-accessory-artists-btn" class="artists-btn" data-product-id="">Выбрать исполнителей</button>
+                        </div>
+                        <div class="form-group-row" style="align-items: center;">
+                            <label style="margin-right: 15px;">Исполнители:</label>
+                            <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
+                                <div id="edit-accessory-selected-artists-list" style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 8px; min-height: 40px; background: #f9f9f9;"></div>
+                                <button type="button" id="edit-accessory-artists-btn" class="artists-btn">Выбрать исполнителей</button>
+                            </div>
+                        </div>
+                        <div class="form-actions">
                             <button id="edit-accessory-submit">Сохранить</button>
                             <button id="edit-accessory-cancel">Отмена</button>
                         </div>
@@ -169,8 +187,9 @@
             </table>
         </div>
 
-        <!-- ВКЛАДКА ДОБАВЛЕНИЯ (без изменений) -->
+        <!-- ВКЛАДКА ДОБАВЛЕНИЯ ТОВАРОВ -->
         <div id="add-tab" class="tab-content">
+            <!-- Добавление билета (без исполнителей) -->
             <div class="add-section">
                 <h3>Добавление билета</h3>
                 <div class="form-card">
@@ -192,6 +211,7 @@
                 </div>
             </div>
 
+            <!-- Добавление одежды (с выбором исполнителей) -->
             <div class="add-section">
                 <h3>Добавление одежды</h3>
                 <div class="form-card">
@@ -219,15 +239,24 @@
                             <option value="female">Женский</option>
                             <option value="unisex" selected>Унисекс</option>
                         </select>
+                    </div>
+                    <div class="form-group-row" style="align-items: center;">
+                        <label style="margin-right: 15px;">Исполнители:</label>
+                        <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
+                            <div id="clothing-selected-artists-list" style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 8px; min-height: 40px; background: #f9f9f9;"></div>
+                            <button type="button" id="open-clothing-artists-modal-btn" class="artists-btn">Выбрать исполнителей</button>
+                        </div>
+                    </div>
+                    <div class="form-actions">
                         <button id="clothing-submit">Добавить</button>
                         <button id="clothing-cancel" style="display:none;">Отмена</button>
-                        <button type="button" id="add-clothing-artists-btn" class="artists-btn" style="display:none;" data-product-id="">Выбрать исполнителей</button>
                     </div>
                     <div id="clothing-error" class="error"></div>
                     <div id="clothing-success" class="success"></div>
                 </div>
             </div>
 
+            <!-- Добавление аксессуара (с выбором исполнителей) -->
             <div class="add-section">
                 <h3>Добавление аксессуара</h3>
                 <div class="form-card">
@@ -242,9 +271,17 @@
                         <input type="text" id="accessory-color" placeholder="Цвет">
                         <input type="text" id="accessory-type" placeholder="Тип">
                         <input type="number" id="accessory-weight" placeholder="Вес (г)" step="0.01">
+                    </div>
+                    <div class="form-group-row" style="align-items: center;">
+                        <label style="margin-right: 15px;">Исполнители:</label>
+                        <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
+                            <div id="accessory-selected-artists-list" style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 8px; min-height: 40px; background: #f9f9f9;"></div>
+                            <button type="button" id="open-accessory-artists-modal-btn" class="artists-btn">Выбрать исполнителей</button>
+                        </div>
+                    </div>
+                    <div class="form-actions">
                         <button id="accessory-submit">Добавить</button>
                         <button id="accessory-cancel" style="display:none;">Отмена</button>
-                        <button type="button" id="add-accessory-artists-btn" class="artists-btn" style="display:none;" data-product-id="">Выбрать исполнителей</button>
                     </div>
                     <div id="accessory-error" class="error"></div>
                     <div id="accessory-success" class="success"></div>
@@ -343,7 +380,20 @@
             </table>
         </div>
 
-        <!-- МОДАЛЬНЫЕ ОКНА (без изменений) -->
+        <!-- Модальное окно для выбора исполнителей (общее для одежды и аксессуаров) -->
+        <div id="artists-merch-modal" class="modal">
+            <div class="modal-content">
+                <h3>Выбор исполнителей для товара</h3>
+                <div id="modal-merch-artists-list" class="artist-list"></div>
+                <select id="modal-merch-artist-select">
+                    <option value="">-- Добавить исполнителя --</option>
+                </select>
+                <button id="modal-merch-add-artist">Добавить</button>
+                <button id="modal-merch-close">Закрыть</button>
+            </div>
+        </div>
+
+        <!-- Остальные модальные окна -->
         <div id="product-artists-modal" class="modal">
             <div class="modal-content">
                 <h3>Исполнители товара</h3>
@@ -355,60 +405,60 @@
                 <button id="product-artist-close">Закрыть</button>
             </div>
         </div>
-    </div>
 
-    <div id="cart-modal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <h3>Добавление в корзину</h3>
-            <p id="cart-product-name"></p>
-            <div class="form-group">
-                <label>Количество:</label>
-                <input type="number" id="cart-quantity" value="1" min="1" style="width: 100%;">
-            </div>
-            <div class="form-group">
-                <button id="cart-confirm-btn">Добавить</button>
-                <button id="cart-cancel-btn">Отмена</button>
+        <div id="cart-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <h3>Добавление в корзину</h3>
+                <p id="cart-product-name"></p>
+                <div class="form-group">
+                    <label>Количество:</label>
+                    <input type="number" id="cart-quantity" value="1" min="1" style="width: 100%;">
+                </div>
+                <div class="form-group">
+                    <button id="cart-confirm-btn">Добавить</button>
+                    <button id="cart-cancel-btn">Отмена</button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div id="remove-from-cart-modal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <h3>Удаление из корзины</h3>
-            <p id="remove-cart-product-name"></p>
-            <div class="form-group">
-                <label>Количество для удаления:</label>
-                <input type="number" id="remove-cart-quantity" value="1" min="1" style="width: 100%;">
-                <small>Максимум: <span id="remove-cart-max"></span></small>
-            </div>
-            <div class="form-group">
-                <button id="remove-cart-confirm-btn">Удалить</button>
-                <button id="remove-cart-cancel-btn">Отмена</button>
+        <div id="remove-from-cart-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <h3>Удаление из корзины</h3>
+                <p id="remove-cart-product-name"></p>
+                <div class="form-group">
+                    <label>Количество для удаления:</label>
+                    <input type="number" id="remove-cart-quantity" value="1" min="1" style="width: 100%;">
+                    <small>Максимум: <span id="remove-cart-max"></span></small>
+                </div>
+                <div class="form-group">
+                    <button id="remove-cart-confirm-btn">Удалить</button>
+                    <button id="remove-cart-cancel-btn">Отмена</button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div id="review-modal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <h3>Оставить отзыв</h3>
-            <p id="review-product-name"></p>
-            <div class="form-group">
-                <label>Оценка (1-5):</label>
-                <select id="review-rating" style="width: 100%;">
-                    <option value="5">5</option>
-                    <option value="4">4</option>
-                    <option value="3">3</option>
-                    <option value="2">2</option>
-                    <option value="1">1</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Текст отзыва:</label>
-                <textarea id="review-text" rows="3" style="width: 100%;"></textarea>
-            </div>
-            <div class="form-group">
-                <button id="review-confirm-btn">Отправить</button>
-                <button id="review-cancel-btn">Отмена</button>
+        <div id="review-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <h3>Оставить отзыв</h3>
+                <p id="review-product-name"></p>
+                <div class="form-group">
+                    <label>Оценка (1-5):</label>
+                    <select id="review-rating" style="width: 100%;">
+                        <option value="5">5</option>
+                        <option value="4">4</option>
+                        <option value="3">3</option>
+                        <option value="2">2</option>
+                        <option value="1">1</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Текст отзыва:</label>
+                    <textarea id="review-text" rows="3" style="width: 100%;"></textarea>
+                </div>
+                <div class="form-group">
+                    <button id="review-confirm-btn">Отправить</button>
+                    <button id="review-cancel-btn">Отмена</button>
+                </div>
             </div>
         </div>
     </div>

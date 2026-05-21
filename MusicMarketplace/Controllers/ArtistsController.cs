@@ -15,8 +15,20 @@ namespace MusicMarketplace.Controllers
         public ArtistsController(MusicMarketplaceContext context) => _context = context;
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Artist>>> GetArtists() =>
-            await _context.Artists.ToListAsync();
+        public async Task<ActionResult<IEnumerable<ArtistDto>>> GetArtists()
+        {
+            var artists = await _context.Artists
+                .Select(a => new ArtistDto
+                {
+                    artist_id = a.artist_id,
+                    name = a.name,
+                    country = a.country,
+                    debut_year = a.debut_year,
+                    language = a.language
+                })
+                .ToListAsync();
+            return Ok(artists);
+        }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<Artist>> GetArtist(int id)

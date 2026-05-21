@@ -1,45 +1,51 @@
-﻿document.getElementById('ticket-submit').addEventListener('click', saveTicket);
-document.getElementById('ticket-cancel').addEventListener('click', clearTicketForm);
-document.getElementById('clothing-submit').addEventListener('click', saveClothing);
-document.getElementById('clothing-cancel').addEventListener('click', clearClothingForm);
-document.getElementById('accessory-submit').addEventListener('click', saveAccessory);
-document.getElementById('accessory-cancel').addEventListener('click', clearAccessoryForm);
-document.getElementById('manufacturer-submit').addEventListener('click', saveManufacturer);
-document.getElementById('manufacturer-cancel').addEventListener('click', clearManufacturerForm);
-document.getElementById('genre-submit').addEventListener('click', saveGenre);
-document.getElementById('genre-cancel').addEventListener('click', clearGenreForm);
-document.getElementById('apply-filters').addEventListener('click', () => renderCatalog());
-document.getElementById('clear-filters').addEventListener('click', () => {
+﻿document.getElementById('ticket-submit')?.addEventListener('click', saveTicket);
+document.getElementById('ticket-cancel')?.addEventListener('click', clearTicketForm);
+document.getElementById('clothing-submit')?.addEventListener('click', saveClothing);
+document.getElementById('clothing-cancel')?.addEventListener('click', clearClothingForm);
+document.getElementById('accessory-submit')?.addEventListener('click', saveAccessory);
+document.getElementById('accessory-cancel')?.addEventListener('click', clearAccessoryForm);
+document.getElementById('manufacturer-submit')?.addEventListener('click', saveManufacturer);
+document.getElementById('manufacturer-cancel')?.addEventListener('click', clearManufacturerForm);
+document.getElementById('genre-submit')?.addEventListener('click', saveGenre);
+document.getElementById('genre-cancel')?.addEventListener('click', clearGenreForm);
+document.getElementById('apply-filters')?.addEventListener('click', () => renderCatalog());
+document.getElementById('clear-filters')?.addEventListener('click', () => {
     document.getElementById('search-name').value = '';
     document.getElementById('filter-type').value = '';
     document.getElementById('filter-manufacturer').value = '';
-    document.querySelectorAll('.genre-checkbox').forEach(cb => cb.checked = false);
+    document.getElementById('filter-artist').value = '';
+    document.getElementById('filter-in-stock').checked = false;
+    document.getElementById('price-min').value = '';
+    document.getElementById('price-max').value = '';
+    document.getElementById('genre-select').value = '';
+    document.getElementById('sort-by').value = '';
     renderCatalog();
 });
-document.getElementById('edit-ticket-submit').addEventListener('click', saveEditTicket);
-document.getElementById('edit-ticket-cancel').addEventListener('click', () => hideEditPanel());
-document.getElementById('edit-clothing-submit').addEventListener('click', saveEditClothing);
-document.getElementById('edit-clothing-cancel').addEventListener('click', () => hideEditPanel());
-document.getElementById('edit-accessory-submit').addEventListener('click', saveEditAccessory);
-document.getElementById('edit-accessory-cancel').addEventListener('click', () => hideEditPanel());
-document.getElementById('edit-clothing-artists-btn').addEventListener('click', () => {
-    const pid = document.getElementById('edit-clothing-artists-btn').getAttribute('data-product-id');
-    if (pid) openProductArtistsModal(parseInt(pid));
-});
-document.getElementById('edit-accessory-artists-btn').addEventListener('click', () => {
-    const pid = document.getElementById('edit-accessory-artists-btn').getAttribute('data-product-id');
-    if (pid) openProductArtistsModal(parseInt(pid));
-});
-document.getElementById('add-clothing-artists-btn').addEventListener('click', () => {
-    const pid = document.getElementById('add-clothing-artists-btn').getAttribute('data-product-id');
-    if (pid) openProductArtistsModal(parseInt(pid));
-});
-document.getElementById('add-accessory-artists-btn').addEventListener('click', () => {
-    const pid = document.getElementById('add-accessory-artists-btn').getAttribute('data-product-id');
-    if (pid) openProductArtistsModal(parseInt(pid));
-});
-document.getElementById('product-artist-add').addEventListener('click', addProductArtist);
-document.getElementById('product-artist-close').addEventListener('click', () => {
+document.getElementById('edit-ticket-submit')?.addEventListener('click', saveEditTicket);
+document.getElementById('edit-ticket-cancel')?.addEventListener('click', () => hideEditPanel());
+document.getElementById('edit-clothing-submit')?.addEventListener('click', saveEditClothing);
+document.getElementById('edit-clothing-cancel')?.addEventListener('click', () => hideEditPanel());
+document.getElementById('edit-accessory-submit')?.addEventListener('click', saveEditAccessory);
+document.getElementById('edit-accessory-cancel')?.addEventListener('click', () => hideEditPanel());
+
+const editClothingArtistsBtn = document.getElementById('edit-clothing-artists-btn');
+if (editClothingArtistsBtn) {
+    editClothingArtistsBtn.addEventListener('click', () => openClothingArtistsModal());
+}
+const editAccessoryArtistsBtn = document.getElementById('edit-accessory-artists-btn');
+if (editAccessoryArtistsBtn) {
+    editAccessoryArtistsBtn.addEventListener('click', () => openAccessoryArtistsModal());
+}
+const addClothingArtistsBtn = document.getElementById('open-clothing-artists-modal-btn');
+if (addClothingArtistsBtn) {
+    addClothingArtistsBtn.addEventListener('click', () => openClothingArtistsModal());
+}
+const addAccessoryArtistsBtn = document.getElementById('open-accessory-artists-modal-btn');
+if (addAccessoryArtistsBtn) {
+    addAccessoryArtistsBtn.addEventListener('click', () => openAccessoryArtistsModal());
+}
+document.getElementById('product-artist-add')?.addEventListener('click', addProductArtist);
+document.getElementById('product-artist-close')?.addEventListener('click', () => {
     document.getElementById('product-artists-modal').style.display = 'none';
 });
 window.addEventListener('click', (e) => {
@@ -47,15 +53,15 @@ window.addEventListener('click', (e) => {
     if (e.target === modal) modal.style.display = 'none';
 });
 
-document.getElementById('cart-confirm-btn').addEventListener('click', () => {
+document.getElementById('cart-confirm-btn')?.addEventListener('click', () => {
     if (currentProductForCart) {
         const quantity = parseInt(document.getElementById('cart-quantity').value);
         addToCart(currentProductForCart.id, currentProductForCart.name, quantity);
         hideCartModal();
     }
 });
-document.getElementById('cart-cancel-btn').addEventListener('click', hideCartModal);
-document.getElementById('review-confirm-btn').addEventListener('click', () => {
+document.getElementById('cart-cancel-btn')?.addEventListener('click', hideCartModal);
+document.getElementById('review-confirm-btn')?.addEventListener('click', () => {
     if (currentProductForReview) {
         const rating = parseInt(document.getElementById('review-rating').value);
         const reviewText = document.getElementById('review-text').value;
@@ -63,7 +69,7 @@ document.getElementById('review-confirm-btn').addEventListener('click', () => {
         hideReviewModal();
     }
 });
-document.getElementById('review-cancel-btn').addEventListener('click', hideReviewModal);
+document.getElementById('review-cancel-btn')?.addEventListener('click', hideReviewModal);
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -105,7 +111,10 @@ function loadUsersAndInit() {
     const select = document.getElementById('user-select');
     if (!select) return;
     fetch('https://localhost:7062/api/Users')
-        .then(resp => resp.json())
+        .then(resp => {
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            return resp.json();
+        })
         .then(users => {
             select.innerHTML = '<option value="">-- Выберите пользователя --</option>';
             users.forEach(user => {
@@ -129,27 +138,30 @@ function loadUsersAndInit() {
                 loadUserStatus();
             }
         })
-        .catch(err => console.error(err));
+        .catch(err => {
+            console.error(err);
+            showToast('Не удалось загрузить список пользователей', 'error');
+        });
     select.addEventListener('change', (e) => {
         const userId = parseInt(e.target.value);
         if (!userId) {
             localStorage.removeItem('currentUserId');
             loadUserStatus();
-            if (typeof showToast === 'function') showToast('Пользователь не выбран', 'success');
+            showToast('Пользователь не выбран', 'success');
             return;
         }
         fetch(`https://localhost:7062/api/Users/${userId}`)
             .then(resp => resp.json())
             .then(user => {
                 localStorage.setItem('currentUserId', userId);
-                if (typeof showToast === 'function') showToast(`Выбран пользователь: ${user.full_name}`, 'success');
+                showToast(`Выбран пользователь: ${user.full_name}`, 'success');
                 loadUserStatus();
             })
             .catch(err => console.error(err));
     });
 }
 
-document.getElementById('remove-cart-confirm-btn').addEventListener('click', () => {
+document.getElementById('remove-cart-confirm-btn')?.addEventListener('click', () => {
     if (currentProductForRemove) {
         const quantity = parseInt(document.getElementById('remove-cart-quantity').value);
         if (quantity && quantity > 0 && quantity <= currentProductForRemove.currentQuantity) {
@@ -159,9 +171,15 @@ document.getElementById('remove-cart-confirm-btn').addEventListener('click', () 
         }
     }
 });
-document.getElementById('remove-cart-cancel-btn').addEventListener('click', hideRemoveFromCartModal);
+document.getElementById('remove-cart-cancel-btn')?.addEventListener('click', hideRemoveFromCartModal);
 
-loadAllItems();
+// Инициализация каталога – вызываем loadAllItems, которая определена в catalog.js
+if (typeof loadAllItems === 'function') {
+    loadAllItems();
+} else {
+    console.error('loadAllItems not defined, check catalog.js');
+}
+
 loadManufacturersForSelect('filter-manufacturer');
 loadGenresAndLinks();
 loadManufacturersForSelect('edit-ticket-manufacturer-id');

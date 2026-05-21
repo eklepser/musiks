@@ -88,15 +88,15 @@ namespace MusicMarketplace.Controllers
 
         [HttpGet("filter")]
         public async Task<ActionResult<IEnumerable<object>>> GetProductsFiltered(
-        [FromQuery] string? searchName = null,
-        [FromQuery] string? type = null,
-        [FromQuery] int? manufacturerId = null,
-        [FromQuery] int? artistId = null,
-        [FromQuery] bool inStock = false,
-        [FromQuery] decimal? priceMin = null,
-        [FromQuery] decimal? priceMax = null,
-        [FromQuery] string? sortBy = null,
-        [FromQuery] string? selectedGenres = null)
+            [FromQuery] string? searchName = null,
+            [FromQuery] string? type = null,
+            [FromQuery] int? manufacturerId = null,
+            [FromQuery] int? artistId = null,
+            [FromQuery] bool inStock = false,
+            [FromQuery] decimal? priceMin = null,
+            [FromQuery] decimal? priceMax = null,
+            [FromQuery] string? sortBy = null,
+            [FromQuery] string? selectedGenres = null)
         {
             var ticketsQuery = _context.Tickets
                 .Include(t => t.concert)
@@ -135,7 +135,14 @@ namespace MusicMarketplace.Controllers
                     material = c.Merch.material,
                     color = c.Merch.color,
                     size = c.size,
-                    gender = c.gender
+                    gender = c.gender,
+                    artistNames = _context.ArtistMerches
+                        .Where(am => am.merch_id == c.merch_id)
+                        .Join(_context.Artists,
+                              am => am.artist_id,
+                              a => a.artist_id,
+                              (am, a) => a.name)
+                        .ToList()
                 });
 
             var accessoriesQuery = _context.Accessories
@@ -155,7 +162,14 @@ namespace MusicMarketplace.Controllers
                     material = a.Merch.material,
                     color = a.Merch.color,
                     accessory_type = a.accessory_type,
-                    weight = a.weight
+                    weight = a.weight,
+                    artistNames = _context.ArtistMerches
+                        .Where(am => am.merch_id == a.merch_id)
+                        .Join(_context.Artists,
+                              am => am.artist_id,
+                              a => a.artist_id,
+                              (am, a) => a.name)
+                        .ToList()
                 });
 
             if (!string.IsNullOrEmpty(searchName))
@@ -232,7 +246,7 @@ namespace MusicMarketplace.Controllers
             var clothings = await clothingsQuery.ToListAsync();
             var accessories = await accessoriesQuery.ToListAsync();
 
-            var result = tickets.Concat<object>(clothings).Concat(accessories).ToList();
+            var result = tickets.Cast<object>().Concat(clothings).Concat(accessories).ToList();
 
             result = sortBy switch
             {

@@ -14,5 +14,6 @@ namespace MusicMarketplace.Models
         public virtual Product Product { get; set; }
         public virtual ICollection<Clothing> Clothings { get; set; }
         public virtual ICollection<Accessory> Accessories { get; set; }
+        public virtual ICollection<ArtistMerch> ArtistMerches { get; set; } = new List<ArtistMerch>();
     }
 }

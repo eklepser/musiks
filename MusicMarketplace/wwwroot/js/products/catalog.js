@@ -54,11 +54,21 @@ async function renderCatalog() {
                 if (item.color) extraLines.push(`Цвет: ${item.color}`);
                 if (item.size) extraLines.push(`Размер: ${item.size}`);
                 if (item.gender) extraLines.push(`Пол: ${item.gender}`);
+                if (item.artistNames) {
+                    let artists = item.artistNames;
+                    if (Array.isArray(artists)) artists = artists.join(', ');
+                    if (artists && artists.trim()) extraLines.push(`Исполнители: ${artists}`);
+                }
             } else if (item.type === 'accessory') {
                 if (item.material) extraLines.push(`Материал: ${item.material}`);
                 if (item.color) extraLines.push(`Цвет: ${item.color}`);
                 if (item.accessory_type) extraLines.push(`Тип: ${item.accessory_type}`);
                 if (item.weight) extraLines.push(`Вес: ${item.weight} г`);
+                if (item.artistNames) {
+                    let artists = item.artistNames;
+                    if (Array.isArray(artists)) artists = artists.join(', ');
+                    if (artists && artists.trim()) extraLines.push(`Исполнители: ${artists}`);
+                }
             }
             const extraText = extraLines.length ? extraLines.join('\n') : '—';
             const extraCell = row.insertCell(6);
@@ -125,7 +135,7 @@ async function renderCatalog() {
         });
     } catch (err) {
         console.error(err);
-        document.getElementById('catalog-tbody').innerHTML = '</table><td colspan="8" class="centered-message">Ошибка загрузки</tbody>';
+        document.getElementById('catalog-tbody').innerHTML = '<tr><td colspan="8" class="centered-message">Ошибка загрузки</tbody>';
     }
 }
 

@@ -192,8 +192,14 @@ public partial class MusicMarketplaceContext : DbContext
         {
             entity.ToTable("ArtistMerch");
             entity.HasKey(e => new { e.artist_id, e.merch_id });
-            entity.HasOne<Artist>().WithMany().HasForeignKey(d => d.artist_id).HasConstraintName("ArtistMerch_artist_id_fkey");
-            entity.HasOne<Merch>().WithMany().HasForeignKey(d => d.merch_id).HasConstraintName("ArtistMerch_merch_id_fkey");
+            entity.HasOne(e => e.Artist)
+                  .WithMany(a => a.ArtistMerches)
+                  .HasForeignKey(e => e.artist_id)
+                  .HasConstraintName("ArtistMerch_artist_id_fkey");
+            entity.HasOne(e => e.Merch)
+                  .WithMany(m => m.ArtistMerches)
+                  .HasForeignKey(e => e.merch_id)
+                  .HasConstraintName("ArtistMerch_merch_id_fkey");
         });
 
         modelBuilder.Entity<ProductGenre>(entity =>

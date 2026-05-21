@@ -1,4 +1,5 @@
-﻿const TICKETS_URL = 'https://localhost:7062/api/Tickets';
+﻿// common.js
+const TICKETS_URL = 'https://localhost:7062/api/Tickets';
 const CLOTHINGS_URL = 'https://localhost:7062/api/Clothings';
 const ACCESSORIES_URL = 'https://localhost:7062/api/Accessories';
 const CONCERTS_URL = 'https://localhost:7062/api/Concerts';
@@ -142,54 +143,6 @@ function getSelectedGenres() {
     return [parseInt(select.value)];
 }
 
-async function loadManufacturerNameDatalist() {
-    const resp = await fetch('https://localhost:7062/api/Manufacturers/filter/names');
-    if (resp.ok) {
-        const names = await resp.json();
-        const datalist = document.getElementById('manufacturer-name-datalist');
-        if (datalist) {
-            datalist.innerHTML = '';
-            names.forEach(name => {
-                const option = document.createElement('option');
-                option.value = name;
-                datalist.appendChild(option);
-            });
-        }
-    }
-}
-
-async function loadManufacturerCountryDatalist() {
-    const resp = await fetch('https://localhost:7062/api/Manufacturers/filter/countries');
-    if (resp.ok) {
-        const countries = await resp.json();
-        const datalist = document.getElementById('manufacturer-country-datalist');
-        if (datalist) {
-            datalist.innerHTML = '';
-            countries.forEach(country => {
-                const option = document.createElement('option');
-                option.value = country;
-                datalist.appendChild(option);
-            });
-        }
-    }
-}
-
-async function loadGenreNameDatalist() {
-    const resp = await fetch('https://localhost:7062/api/Genres/filter/names');
-    if (resp.ok) {
-        const names = await resp.json();
-        const datalist = document.getElementById('genre-name-datalist');
-        if (datalist) {
-            datalist.innerHTML = '';
-            names.forEach(name => {
-                const option = document.createElement('option');
-                option.value = name;
-                datalist.appendChild(option);
-            });
-        }
-    }
-}
-
 function validateTicket() {
     const name = document.getElementById('ticket-name').value.trim();
     const price = parseFloat(document.getElementById('ticket-price').value);
@@ -281,7 +234,62 @@ function hideReviewModal() {
     currentProductForReview = null;
 }
 
-// Загрузка подсказок для страниц
+async function loadAllArtists() {
+    const resp = await fetch(ARTISTS_URL);
+    if (resp.ok) {
+        allArtists = await resp.json();
+    }
+}
+
+async function loadManufacturerNameDatalist() {
+    const resp = await fetch('https://localhost:7062/api/Manufacturers/filter/names');
+    if (resp.ok) {
+        const names = await resp.json();
+        const datalist = document.getElementById('manufacturer-name-datalist');
+        if (datalist) {
+            datalist.innerHTML = '';
+            names.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                datalist.appendChild(option);
+            });
+        }
+    }
+}
+
+async function loadManufacturerCountryDatalist() {
+    const resp = await fetch('https://localhost:7062/api/Manufacturers/filter/countries');
+    if (resp.ok) {
+        const countries = await resp.json();
+        const datalist = document.getElementById('manufacturer-country-datalist');
+        if (datalist) {
+            datalist.innerHTML = '';
+            countries.forEach(country => {
+                const option = document.createElement('option');
+                option.value = country;
+                datalist.appendChild(option);
+            });
+        }
+    }
+}
+
+async function loadGenreNameDatalist() {
+    const resp = await fetch('https://localhost:7062/api/Genres/filter/names');
+    if (resp.ok) {
+        const names = await resp.json();
+        const datalist = document.getElementById('genre-name-datalist');
+        if (datalist) {
+            datalist.innerHTML = '';
+            names.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                datalist.appendChild(option);
+            });
+        }
+    }
+}
+
 loadManufacturerNameDatalist();
 loadManufacturerCountryDatalist();
 loadGenreNameDatalist();
+loadAllArtists();

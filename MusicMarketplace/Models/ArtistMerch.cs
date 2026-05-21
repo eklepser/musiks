@@ -7,6 +7,11 @@ namespace MusicMarketplace.Models
     {
         public int artist_id { get; set; }
         public int merch_id { get; set; }
-        public virtual Merch merch { get; set; }
+
+        [ForeignKey("artist_id")]
+        public virtual Artist Artist { get; set; } = null!;
+
+        [ForeignKey("merch_id")]
+        public virtual Merch Merch { get; set; } = null!;
     }
 }
