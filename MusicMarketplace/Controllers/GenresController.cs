@@ -1,9 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using MusicMarketplace.Models;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using MusicMarketplace.Services;
 
 namespace MusicMarketplace.Controllers
 {
@@ -11,95 +7,90 @@ namespace MusicMarketplace.Controllers
     [ApiController]
     public class GenresController : ControllerBase
     {
-        private readonly MusicMarketplaceContext _context;
-
-        public GenresController(MusicMarketplaceContext context)
+        private readonly GenresService _genresService;
+        public GenresController(GenresService genresService)
         {
-            _context = context;
+            _genresService = genresService;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Genre>>> GetGenres()
+        public async Task<IActionResult> GetGenres()
         {
-            return await _context.Genres.ToListAsync();
+            var genres = await _genresService.GetAllAsync();
+            return Ok(genres);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Genre>> GetGenre(int id)
+        public async Task<IActionResult> GetGenre(int id)
         {
-            var genre = await _context.Genres.FindAsync(id);
+            var genre = await _genresService.GetByIdAsync(id);
             if (genre == null) return NotFound();
-            return genre;
+            return Ok(genre);
         }
 
         [HttpPost]
-        public async Task<ActionResult<Genre>> PostGenre(GenreDto dto)
+        public async Task<IActionResult> PostGenre(GenresService.GenreDto dto)
         {
-            if (await _context.Genres.AnyAsync(g => g.name == dto.name))
-                return Conflict("Жанр с таким названием уже существует");
-
-            var genre = new Genre
+            try
             {
-                name = dto.name,
-                description = dto.description
-            };
-            _context.Genres.Add(genre);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetGenre), new { id = genre.genre_id }, genre);
+                var genre = await _genresService.CreateAsync(dto);
+                return CreatedAtAction(nameof(GetGenre), new { id = genre.genre_id }, genre);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ex.Message);
+            }
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutGenre(int id, GenreDto dto)
+        public async Task<IActionResult> PutGenre(int id, GenresService.GenreDto dto)
         {
-            if (id != dto.genre_id) return BadRequest();
-
-            var genre = await _context.Genres.FindAsync(id);
-            if (genre == null) return NotFound();
-
-            if (await _context.Genres.AnyAsync(g => g.name == dto.name && g.genre_id != id))
-                return Conflict("Жанр с таким названием уже существует");
-
-            genre.name = dto.name;
-            genre.description = dto.description;
-
-            await _context.SaveChangesAsync();
-            return NoContent();
+            try
+            {
+                await _genresService.UpdateAsync(id, dto);
+                return NoContent();
+            }
+            catch (ArgumentException)
+            {
+                return BadRequest();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ex.Message);
+            }
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteGenre(int id)
         {
-            var genre = await _context.Genres.FindAsync(id);
-            if (genre == null) return NotFound();
-            _context.Genres.Remove(genre);
-            await _context.SaveChangesAsync();
-            return NoContent();
+            try
+            {
+                await _genresService.DeleteAsync(id);
+                return NoContent();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
 
         [HttpGet("filter")]
-        public async Task<ActionResult<IEnumerable<Genre>>> GetGenresFiltered(
+        public async Task<IActionResult> GetGenresFiltered(
             [FromQuery] string? searchName = null,
             [FromQuery] string? sortBy = null)
         {
-            var query = _context.Genres.AsQueryable();
-
-            if (!string.IsNullOrEmpty(searchName))
-                query = query.Where(g => g.name.ToLower().Contains(searchName.ToLower()));
-
-            query = sortBy switch
-            {
-                "name_asc" => query.OrderBy(g => g.name),
-                "name_desc" => query.OrderByDescending(g => g.name),
-                _ => query.OrderBy(g => g.genre_id)
-            };
-
-            return Ok(await query.ToListAsync());
+            var genres = await _genresService.GetFilteredAsync(searchName, sortBy);
+            return Ok(genres);
         }
 
         [HttpGet("filter/names")]
-        public async Task<ActionResult<IEnumerable<string>>> GetGenreNames()
+        public async Task<IActionResult> GetGenreNames()
         {
-            var names = await _context.Genres.Select(g => g.name).ToListAsync();
+            var names = await _genresService.GetNamesAsync();
             return Ok(names);
         }
     }

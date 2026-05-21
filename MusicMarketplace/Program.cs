@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using MusicMarketplace.Models;
 using MusicMarketplace.Middleware;
+using MusicMarketplace.Models;
+using MusicMarketplace.Services;
 
 namespace MusicMarketplace
 {
@@ -22,6 +23,25 @@ namespace MusicMarketplace
             builder.Services.AddSwaggerGen();
             builder.Services.AddDbContext<MusicMarketplaceContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+            builder.Services.AddScoped<AccessoriesService>();
+            builder.Services.AddScoped<ArtistConcertsService>();
+            builder.Services.AddScoped<ArtistMerchesService>();
+            builder.Services.AddScoped<ArtistsService>();
+            builder.Services.AddScoped<CartsService>();
+            builder.Services.AddScoped<ClothingsService>();
+            builder.Services.AddScoped<ConcertsService>();
+            builder.Services.AddScoped<GenresService>();
+            builder.Services.AddScoped<ManufacturersService>();
+            builder.Services.AddScoped<MerchesService>();
+            builder.Services.AddScoped<OrderItemsService>();
+            builder.Services.AddScoped<OrdersService>();
+            builder.Services.AddScoped<ProductGenresService>();
+            builder.Services.AddScoped<ProductsService>();
+            builder.Services.AddScoped<ReviewsService>();
+            builder.Services.AddScoped<TicketsService>();
+            builder.Services.AddScoped<UsersService>();
+            builder.Services.AddScoped<WishlistsService>();
 
             var app = builder.Build();
 

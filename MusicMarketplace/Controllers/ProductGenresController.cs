@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using MusicMarketplace.DTOs;
 using MusicMarketplace.Models;
+using MusicMarketplace.Services;
 
 namespace MusicMarketplace.Controllers
 {
@@ -9,41 +8,38 @@ namespace MusicMarketplace.Controllers
     [ApiController]
     public class ProductGenresController : ControllerBase
     {
-        private readonly MusicMarketplaceContext _context;
-        public ProductGenresController(MusicMarketplaceContext context) => _context = context;
+        private readonly ProductGenresService _productGenresService;
+        public ProductGenresController(ProductGenresService productGenresService)
+        {
+            _productGenresService = productGenresService;
+        }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ProductGenreDto>>> GetProductGenres()
+        public async Task<IActionResult> GetProductGenres()
         {
-            var data = await _context.ProductGenres
-                .Join(_context.Products, pg => pg.product_id, p => p.product_id, (pg, p) => new { pg, product_name = p.name })
-                .Join(_context.Genres, x => x.pg.genre_id, g => g.genre_id, (x, g) => new ProductGenreDto
-                {
-                    product_id = x.pg.product_id,
-                    genre_id = x.pg.genre_id,
-                    product_name = x.product_name,
-                    genre_name = g.name
-                })
-                .ToListAsync();
-            return data;
+            var data = await _productGenresService.GetAllAsync();
+            return Ok(data);
         }
 
         [HttpPost]
-        public async Task<ActionResult<ProductGenre>> PostProductGenre(ProductGenre dto)
+        public async Task<IActionResult> PostProductGenre(ProductGenre dto)
         {
-            _context.ProductGenres.Add(dto);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetProductGenres), new { }, dto);
+            var result = await _productGenresService.CreateAsync(dto);
+            return CreatedAtAction(nameof(GetProductGenres), new { }, result);
         }
 
         [HttpDelete("{product_id}/{genre_id}")]
         public async Task<IActionResult> DeleteProductGenre(int product_id, int genre_id)
         {
-            var entity = await _context.ProductGenres.FindAsync(product_id, genre_id);
-            if (entity == null) return NotFound();
-            _context.ProductGenres.Remove(entity);
-            await _context.SaveChangesAsync();
-            return NoContent();
+            try
+            {
+                await _productGenresService.DeleteAsync(product_id, genre_id);
+                return NoContent();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
     }
 }

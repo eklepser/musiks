@@ -1,9 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using MusicMarketplace.Models;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using MusicMarketplace.Services;
 
 namespace MusicMarketplace.Controllers
 {
@@ -11,254 +7,64 @@ namespace MusicMarketplace.Controllers
     [ApiController]
     public class ClothingsController : ControllerBase
     {
-        private readonly MusicMarketplaceContext _context;
-        public ClothingsController(MusicMarketplaceContext context) => _context = context;
-
-        public class ClothingResponseDto
+        private readonly ClothingsService _clothingsService;
+        public ClothingsController(ClothingsService clothingsService)
         {
-            public int clothing_id { get; set; }
-            public int product_id { get; set; }
-            public string name { get; set; }
-            public decimal price { get; set; }
-            public string description { get; set; }
-            public int stock { get; set; }
-            public int manufacturer_id { get; set; }
-            public string material { get; set; }
-            public string color { get; set; }
-            public string size { get; set; }
-            public string gender { get; set; }
-            public List<int> artistIds { get; set; }
-            public string artistNames { get; set; }
-        }
-
-        public class ClothingCreateUpdateDto
-        {
-            public int clothing_id { get; set; }
-            public string name { get; set; }
-            public decimal price { get; set; }
-            public string description { get; set; }
-            public int stock { get; set; }
-            public int manufacturer_id { get; set; }
-            public string material { get; set; }
-            public string color { get; set; }
-            public string size { get; set; }
-            public string gender { get; set; }
-            public List<int> artistIds { get; set; }
+            _clothingsService = clothingsService;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ClothingResponseDto>>> GetClothings()
+        public async Task<IActionResult> GetClothings()
         {
-            var items = await (from c in _context.Clothings
-                               join m in _context.Merches on c.merch_id equals m.merch_id
-                               join p in _context.Products on m.product_id equals p.product_id
-                               select new ClothingResponseDto
-                               {
-                                   clothing_id = c.clothing_id,
-                                   product_id = p.product_id,
-                                   name = p.name,
-                                   price = p.price,
-                                   description = p.description,
-                                   stock = p.stock,
-                                   manufacturer_id = p.manufacturer_id,
-                                   material = m.material,
-                                   color = m.color,
-                                   size = c.size,
-                                   gender = c.gender
-                               }).ToListAsync();
-
-            foreach (var item in items)
-            {
-                var artistNamesList = await _context.ArtistMerches
-                    .Where(am => am.merch_id == item.clothing_id)
-                    .Join(_context.Artists,
-                          am => am.artist_id,
-                          a => a.artist_id,
-                          (am, a) => a.name)
-                    .ToListAsync();
-                item.artistIds = await _context.ArtistMerches
-                    .Where(am => am.merch_id == item.clothing_id)
-                    .Select(am => am.artist_id)
-                    .ToListAsync();
-                item.artistNames = string.Join(", ", artistNamesList);
-            }
+            var items = await _clothingsService.GetAllAsync();
             return Ok(items);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<ClothingResponseDto>> GetClothing(int id)
+        public async Task<IActionResult> GetClothing(int id)
         {
-            var item = await (from c in _context.Clothings
-                              join m in _context.Merches on c.merch_id equals m.merch_id
-                              join p in _context.Products on m.product_id equals p.product_id
-                              where c.clothing_id == id
-                              select new ClothingResponseDto
-                              {
-                                  clothing_id = c.clothing_id,
-                                  product_id = p.product_id,
-                                  name = p.name,
-                                  price = p.price,
-                                  description = p.description,
-                                  stock = p.stock,
-                                  manufacturer_id = p.manufacturer_id,
-                                  material = m.material,
-                                  color = m.color,
-                                  size = c.size,
-                                  gender = c.gender
-                              }).FirstOrDefaultAsync();
-
+            var item = await _clothingsService.GetByIdAsync(id);
             if (item == null) return NotFound();
-
-            var artistNamesList = await _context.ArtistMerches
-                .Where(am => am.merch_id == item.clothing_id)
-                .Join(_context.Artists,
-                      am => am.artist_id,
-                      a => a.artist_id,
-                      (am, a) => a.name)
-                .ToListAsync();
-            item.artistIds = await _context.ArtistMerches
-                .Where(am => am.merch_id == item.clothing_id)
-                .Select(am => am.artist_id)
-                .ToListAsync();
-            item.artistNames = string.Join(", ", artistNamesList);
             return Ok(item);
         }
 
         [HttpPost]
-        public async Task<ActionResult<ClothingResponseDto>> PostClothing(ClothingCreateUpdateDto dto)
+        public async Task<IActionResult> PostClothing(ClothingsService.ClothingCreateUpdateDto dto)
         {
-            using var tx = await _context.Database.BeginTransactionAsync();
-            try
-            {
-                var product = new Product
-                {
-                    name = dto.name,
-                    price = dto.price,
-                    description = dto.description,
-                    stock = dto.stock,
-                    manufacturer_id = dto.manufacturer_id
-                };
-                _context.Products.Add(product);
-                await _context.SaveChangesAsync();
-
-                var merch = new Merch
-                {
-                    product_id = product.product_id,
-                    material = dto.material,
-                    color = dto.color
-                };
-                _context.Merches.Add(merch);
-                await _context.SaveChangesAsync();
-
-                var clothing = new Clothing
-                {
-                    merch_id = merch.merch_id,
-                    size = dto.size,
-                    gender = dto.gender
-                };
-                _context.Clothings.Add(clothing);
-                await _context.SaveChangesAsync();
-
-                if (dto.artistIds != null && dto.artistIds.Any())
-                {
-                    foreach (var artistId in dto.artistIds)
-                    {
-                        _context.ArtistMerches.Add(new ArtistMerch { artist_id = artistId, merch_id = merch.merch_id });
-                    }
-                    await _context.SaveChangesAsync();
-                }
-
-                await tx.CommitAsync();
-
-                var resultDto = new ClothingResponseDto
-                {
-                    clothing_id = clothing.clothing_id,
-                    product_id = product.product_id,
-                    name = dto.name,
-                    price = dto.price,
-                    description = dto.description,
-                    stock = dto.stock,
-                    manufacturer_id = dto.manufacturer_id,
-                    material = dto.material,
-                    color = dto.color,
-                    size = dto.size,
-                    gender = dto.gender,
-                    artistIds = dto.artistIds ?? new List<int>()
-                };
-                return CreatedAtAction(nameof(GetClothing), new { id = clothing.clothing_id }, resultDto);
-            }
-            catch
-            {
-                await tx.RollbackAsync();
-                throw;
-            }
+            var result = await _clothingsService.CreateAsync(dto);
+            return CreatedAtAction(nameof(GetClothing), new { id = result.clothing_id }, result);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutClothing(int id, ClothingCreateUpdateDto dto)
+        public async Task<IActionResult> PutClothing(int id, ClothingsService.ClothingCreateUpdateDto dto)
         {
-            if (id != dto.clothing_id) return BadRequest();
-
-            using var tx = await _context.Database.BeginTransactionAsync();
             try
             {
-                var clothing = await _context.Clothings.FindAsync(id);
-                if (clothing == null) return NotFound();
-
-                var merch = await _context.Merches.FindAsync(clothing.merch_id);
-                if (merch == null) return NotFound();
-
-                var product = await _context.Products.FindAsync(merch.product_id);
-                if (product == null) return NotFound();
-
-                product.name = dto.name;
-                product.price = dto.price;
-                product.description = dto.description;
-                product.stock = dto.stock;
-                product.manufacturer_id = dto.manufacturer_id;
-
-                merch.material = dto.material;
-                merch.color = dto.color;
-
-                clothing.size = dto.size;
-                clothing.gender = dto.gender;
-
-                var oldLinks = await _context.ArtistMerches.Where(am => am.merch_id == merch.merch_id).ToListAsync();
-                _context.ArtistMerches.RemoveRange(oldLinks);
-
-                if (dto.artistIds != null && dto.artistIds.Any())
-                {
-                    foreach (var artistId in dto.artistIds)
-                    {
-                        _context.ArtistMerches.Add(new ArtistMerch { artist_id = artistId, merch_id = merch.merch_id });
-                    }
-                }
-
-                await _context.SaveChangesAsync();
-                await tx.CommitAsync();
+                await _clothingsService.UpdateAsync(id, dto);
                 return NoContent();
             }
-            catch
+            catch (ArgumentException)
             {
-                await tx.RollbackAsync();
-                throw;
+                return BadRequest();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
             }
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteClothing(int id)
         {
-            var clothing = await _context.Clothings.FindAsync(id);
-            if (clothing == null) return NotFound();
-
-            var merch = await _context.Merches.FindAsync(clothing.merch_id);
-            var product = merch != null ? await _context.Products.FindAsync(merch.product_id) : null;
-
-            _context.Clothings.Remove(clothing);
-            if (merch != null) _context.Merches.Remove(merch);
-            if (product != null) _context.Products.Remove(product);
-            await _context.SaveChangesAsync();
-            return NoContent();
+            try
+            {
+                await _clothingsService.DeleteAsync(id);
+                return NoContent();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
     }
 }

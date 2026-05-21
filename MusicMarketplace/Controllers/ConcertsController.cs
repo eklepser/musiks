@@ -1,10 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using MusicMarketplace.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using MusicMarketplace.Services;
 
 namespace MusicMarketplace.Controllers
 {
@@ -12,188 +7,94 @@ namespace MusicMarketplace.Controllers
     [ApiController]
     public class ConcertsController : ControllerBase
     {
-        private readonly MusicMarketplaceContext _context;
-        public ConcertsController(MusicMarketplaceContext context) => _context = context;
+        private readonly ConcertsService _concertsService;
+        public ConcertsController(ConcertsService concertsService)
+        {
+            _concertsService = concertsService;
+        }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Concert>>> GetConcerts()
+        public async Task<IActionResult> GetConcerts()
         {
-            return await _context.Concerts.ToListAsync();
+            var concerts = await _concertsService.GetAllAsync();
+            return Ok(concerts);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Concert>> GetConcert(int id)
+        public async Task<IActionResult> GetConcert(int id)
         {
-            var concert = await _context.Concerts.FindAsync(id);
+            var concert = await _concertsService.GetByIdAsync(id);
             if (concert == null) return NotFound();
-            return concert;
+            return Ok(concert);
         }
 
         [HttpGet("filter")]
-        public async Task<ActionResult<IEnumerable<object>>> GetConcertsFiltered(
+        public async Task<IActionResult> GetConcertsFiltered(
             [FromQuery] string? searchTitle = null,
             [FromQuery] string? searchVenue = null,
             [FromQuery] string? status = null,
             [FromQuery] int? artistId = null,
             [FromQuery] string? sortBy = null)
         {
-            var now = DateTime.Now;
-
-            var query = _context.Concerts
-                .Select(c => new
-                {
-                    c.concert_id,
-                    c.title,
-                    c.venue,
-                    c.datetime,
-                    artistIds = _context.ArtistConcerts
-                        .Where(ac => ac.concert_id == c.concert_id)
-                        .Select(ac => ac.artist_id)
-                        .ToList(),
-                    artistNames = _context.ArtistConcerts
-                        .Where(ac => ac.concert_id == c.concert_id)
-                        .Join(_context.Artists,
-                              ac => ac.artist_id,
-                              a => a.artist_id,
-                              (ac, a) => a.name)
-                        .ToList()
-                })
-                .AsQueryable();
-
-            if (status == "upcoming")
-                query = query.Where(c => c.datetime >= now);
-            else if (status == "past")
-                query = query.Where(c => c.datetime < now);
-
-            if (!string.IsNullOrEmpty(searchTitle))
-                query = query.Where(c => c.title.ToLower().Contains(searchTitle.ToLower()));
-
-            if (!string.IsNullOrEmpty(searchVenue))
-                query = query.Where(c => c.venue.ToLower().Contains(searchVenue.ToLower()));
-
-            if (artistId.HasValue)
-                query = query.Where(c => c.artistIds.Contains(artistId.Value));
-
-            var concerts = await query.ToListAsync();
-
-            if (sortBy == "date_asc")
-                concerts = concerts.OrderBy(c => c.datetime).ToList();
-            else if (sortBy == "date_desc")
-                concerts = concerts.OrderByDescending(c => c.datetime).ToList();
-            else
-                concerts = concerts.OrderBy(c => c.datetime).ToList();
-
-            var result = concerts.Select(c => new
-            {
-                c.concert_id,
-                c.title,
-                c.venue,
-                datetime = c.datetime,
-                artistNames = string.Join(", ", c.artistNames),
-                artistIds = c.artistIds
-            });
-
+            var result = await _concertsService.GetFilteredAsync(searchTitle, searchVenue, status, artistId, sortBy);
             return Ok(result);
         }
 
         [HttpGet("filter/artists")]
-        public async Task<ActionResult<IEnumerable<object>>> GetArtistsForFilter()
+        public async Task<IActionResult> GetArtistsForFilter()
         {
-            var artists = await _context.Artists
-                .OrderBy(a => a.name)
-                .Select(a => new { a.artist_id, a.name })
-                .ToListAsync();
+            var artists = await _concertsService.GetArtistsForFilterAsync();
             return Ok(artists);
         }
 
         [HttpPost]
-        public async Task<ActionResult<Concert>> PostConcert(ConcertDto dto)
+        public async Task<IActionResult> PostConcert(ConcertsService.ConcertDto dto)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                if (await _context.Concerts.AnyAsync(c => c.title == dto.title && c.venue == dto.venue && c.datetime == dto.datetime))
-                    return Conflict("Такой концерт уже существует");
-
-                var concert = new Concert
-                {
-                    title = dto.title,
-                    venue = dto.venue,
-                    datetime = dto.datetime
-                };
-                _context.Concerts.Add(concert);
-                await _context.SaveChangesAsync();
-
-                if (dto.artistIds != null && dto.artistIds.Any())
-                {
-                    foreach (var artistId in dto.artistIds)
-                    {
-                        _context.ArtistConcerts.Add(new ArtistConcert { artist_id = artistId, concert_id = concert.concert_id });
-                    }
-                    await _context.SaveChangesAsync();
-                }
-
-                await transaction.CommitAsync();
+                var concert = await _concertsService.CreateAsync(dto);
                 return CreatedAtAction(nameof(GetConcert), new { id = concert.concert_id }, concert);
             }
-            catch
+            catch (InvalidOperationException ex)
             {
-                await transaction.RollbackAsync();
-                throw;
+                return Conflict(ex.Message);
             }
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutConcert(int id, ConcertDto dto)
+        public async Task<IActionResult> PutConcert(int id, ConcertsService.ConcertDto dto)
         {
-            if (id != dto.concert_id) return BadRequest();
-
-            using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                var concert = await _context.Concerts.FindAsync(id);
-                if (concert == null) return NotFound();
-
-                if (await _context.Concerts.AnyAsync(c => c.title == dto.title && c.venue == dto.venue && c.datetime == dto.datetime && c.concert_id != id))
-                    return Conflict("Такой концерт уже существует");
-
-                concert.title = dto.title;
-                concert.venue = dto.venue;
-                concert.datetime = dto.datetime;
-
-                // Загружаем существующие связи
-                var oldLinks = await _context.ArtistConcerts
-                    .Where(ac => ac.concert_id == id)
-                    .ToListAsync();
-                _context.ArtistConcerts.RemoveRange(oldLinks);
-
-                if (dto.artistIds != null && dto.artistIds.Any())
-                {
-                    foreach (var artistId in dto.artistIds)
-                    {
-                        _context.ArtistConcerts.Add(new ArtistConcert { artist_id = artistId, concert_id = id });
-                    }
-                }
-
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
+                await _concertsService.UpdateAsync(id, dto);
                 return NoContent();
             }
-            catch
+            catch (ArgumentException)
             {
-                await transaction.RollbackAsync();
-                throw;
+                return BadRequest();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ex.Message);
             }
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteConcert(int id)
         {
-            var concert = await _context.Concerts.FindAsync(id);
-            if (concert == null) return NotFound();
-            _context.Concerts.Remove(concert);
-            await _context.SaveChangesAsync();
-            return NoContent();
+            try
+            {
+                await _concertsService.DeleteAsync(id);
+                return NoContent();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
     }
 }

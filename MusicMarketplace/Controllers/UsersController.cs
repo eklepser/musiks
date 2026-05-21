@@ -1,10 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using MusicMarketplace.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using MusicMarketplace.Services;
 
 namespace MusicMarketplace.Controllers
 {
@@ -12,85 +7,79 @@ namespace MusicMarketplace.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private readonly MusicMarketplaceContext _context;
-
-        public UsersController(MusicMarketplaceContext context)
+        private readonly UsersService _usersService;
+        public UsersController(UsersService usersService)
         {
-            _context = context;
+            _usersService = usersService;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<User>>> GetUsers()
+        public async Task<IActionResult> GetUsers()
         {
-            return await _context.Users.ToListAsync();
+            var users = await _usersService.GetAllAsync();
+            return Ok(users);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetUser(int id)
+        public async Task<IActionResult> GetUser(int id)
         {
-            var user = await _context.Users.FindAsync(id);
+            var user = await _usersService.GetByIdAsync(id);
             if (user == null) return NotFound();
-            return user;
+            return Ok(user);
         }
 
         [HttpPost]
-        public async Task<ActionResult<User>> PostUser(UserDto dto)
+        public async Task<IActionResult> PostUser(UsersService.UserDto dto)
         {
-            if (string.IsNullOrWhiteSpace(dto.password))
-                return BadRequest("Пароль обязателен при создании");
-
-            if (await _context.Users.AnyAsync(u => u.login == dto.login))
-                return Conflict("Логин уже существует");
-
-            if (await _context.Users.AnyAsync(u => u.email == dto.email))
-                return Conflict("Email уже существует");
-
-            var user = new User
+            try
             {
-                login = dto.login,
-                email = dto.email,
-                full_name = dto.full_name,
-                registration_date = DateTime.UtcNow,
-                password_hash = dto.password
-            };
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetUser), new { id = user.user_id }, user);
+                var user = await _usersService.CreateAsync(dto);
+                return CreatedAtAction(nameof(GetUser), new { id = user.user_id }, user);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ex.Message);
+            }
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutUser(int id, UserDto dto)
+        public async Task<IActionResult> PutUser(int id, UsersService.UserDto dto)
         {
-            if (id != dto.user_id) return BadRequest();
-
-            var user = await _context.Users.FindAsync(id);
-            if (user == null) return NotFound();
-
-            if (await _context.Users.AnyAsync(u => u.login == dto.login && u.user_id != id))
-                return Conflict("Логин уже занят другим пользователем");
-
-            if (await _context.Users.AnyAsync(u => u.email == dto.email && u.user_id != id))
-                return Conflict("Email уже занят другим пользователем");
-
-            user.login = dto.login;
-            user.email = dto.email;
-            user.full_name = dto.full_name;
-
-            if (!string.IsNullOrWhiteSpace(dto.password))
-                user.password_hash = dto.password;
-
-            await _context.SaveChangesAsync();
-            return NoContent();
+            try
+            {
+                await _usersService.UpdateAsync(id, dto);
+                return NoContent();
+            }
+            catch (ArgumentException)
+            {
+                return BadRequest();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ex.Message);
+            }
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
-            var user = await _context.Users.FindAsync(id);
-            if (user == null) return NotFound();
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
-            return NoContent();
+            try
+            {
+                await _usersService.DeleteAsync(id);
+                return NoContent();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
     }
 }

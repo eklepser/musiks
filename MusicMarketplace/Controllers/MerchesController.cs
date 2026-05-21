@@ -1,10 +1,6 @@
-﻿// MerchesController.cs
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
 using MusicMarketplace.Models;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using MusicMarketplace.Services;
 
 namespace MusicMarketplace.Controllers
 {
@@ -12,65 +8,64 @@ namespace MusicMarketplace.Controllers
     [ApiController]
     public class MerchesController : ControllerBase
     {
-        private readonly MusicMarketplaceContext _context;
-
-        public MerchesController(MusicMarketplaceContext context)
+        private readonly MerchesService _merchesService;
+        public MerchesController(MerchesService merchesService)
         {
-            _context = context;
+            _merchesService = merchesService;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Merch>>> GetMerches()
+        public async Task<IActionResult> GetMerches()
         {
-            return await _context.Merches.ToListAsync();
+            var items = await _merchesService.GetAllAsync();
+            return Ok(items);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Merch>> GetMerch(int id)
+        public async Task<IActionResult> GetMerch(int id)
         {
-            var merch = await _context.Merches.FindAsync(id);
+            var merch = await _merchesService.GetByIdAsync(id);
             if (merch == null) return NotFound();
-            return merch;
+            return Ok(merch);
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> PutMerch(int id, Merch merch)
         {
-            if (id != merch.merch_id) return BadRequest();
-            _context.Entry(merch).State = EntityState.Modified;
             try
             {
-                await _context.SaveChangesAsync();
+                await _merchesService.UpdateAsync(id, merch);
+                return NoContent();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (ArgumentException)
             {
-                if (!MerchExists(id)) return NotFound();
-                else throw;
+                return BadRequest();
             }
-            return NoContent();
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
 
         [HttpPost]
-        public async Task<ActionResult<Merch>> PostMerch(Merch merch)
+        public async Task<IActionResult> PostMerch(Merch merch)
         {
-            _context.Merches.Add(merch);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction("GetMerch", new { id = merch.merch_id }, merch);
+            var result = await _merchesService.CreateAsync(merch);
+            return CreatedAtAction(nameof(GetMerch), new { id = result.merch_id }, result);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteMerch(int id)
         {
-            var merch = await _context.Merches.FindAsync(id);
-            if (merch == null) return NotFound();
-            _context.Merches.Remove(merch);
-            await _context.SaveChangesAsync();
-            return NoContent();
-        }
-
-        private bool MerchExists(int id)
-        {
-            return _context.Merches.Any(e => e.merch_id == id);
+            try
+            {
+                await _merchesService.DeleteAsync(id);
+                return NoContent();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
     }
 }
