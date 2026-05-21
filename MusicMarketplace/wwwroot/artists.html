@@ -27,9 +27,10 @@
             <button class="tab-btn" data-tab="concerts">Концерты</button>
         </div>
 
+        <!-- Вкладка исполнителей -->
         <div id="artists-tab" class="tab-content active">
             <div class="filters-card">
-                <h3>Фильтры</h3>
+                <h3>Фильтры и сортировка</h3>
                 <div class="filter-group">
                     <input type="text" id="artist-search-name" list="artist-name-datalist" placeholder="Поиск по имени">
                     <datalist id="artist-name-datalist"></datalist>
@@ -38,7 +39,14 @@
                     </select>
                     <select id="artist-search-language">
                         <option value="">Все языки</option>
+                        <option value="Instrumental">Инструментальная (без языка)</option>
                     </select>
+                    <select id="artist-sort">
+                        <option value="name_asc" selected>Имя А-Я</option>
+                        <option value="name_desc">Имя Я-А</option>
+                    </select>
+                </div>
+                <div class="filter-group">
                     <button id="apply-artist-filters">Применить</button>
                     <button id="clear-artist-filters">Сбросить</button>
                 </div>
@@ -57,22 +65,42 @@
                 </div>
             </div>
 
+            <div class="stats-card">
+                <p>Найдено исполнителей: <span id="artist-found-count" class="highlight-number">0</span></p>
+            </div>
             <table id="artists-table">
-                <thead><tr><th>ID</th><th>Имя</th><th>Страна</th><th>Год дебюта</th><th>Язык</th><th>Действия</th></tr></thead>
-                <tbody id="artists-tbody"><tr><td colspan="6">Загрузка...–</tbody>
+                <thead>
+                    <tr><th>ID</th><th>Имя</th><th>Страна</th><th>Год дебюта</th><th>Язык</th><th>Действия</th></tr>
+                </thead>
+                <tbody id="artists-tbody">
+                    <tr><td colspan="6" class="centered-message">Загрузка...–
+                </tbody>
             </table>
         </div>
 
+        <!-- Вкладка концертов -->
         <div id="concerts-tab" class="tab-content">
             <div class="filters-card">
-                <h3>Фильтры</h3>
+                <h3>Фильтры и сортировка</h3>
                 <div class="filter-group">
                     <input type="text" id="concert-search-title" list="concert-title-datalist" placeholder="Название">
                     <datalist id="concert-title-datalist"></datalist>
-                    <select id="concert-search-venue">
-                        <option value="">Все места</option>
+                    <input type="text" id="concert-search-venue" placeholder="Место" list="concert-venue-datalist">
+                    <datalist id="concert-venue-datalist"></datalist>
+                    <select id="concert-search-status">
+                        <option value="">Все концерты</option>
+                        <option value="upcoming">Запланированные</option>
+                        <option value="past">Прошедшие</option>
                     </select>
-                    <input type="date" id="concert-search-date" placeholder="Дата">
+                    <select id="concert-search-artist">
+                        <option value="">Все исполнители</option>
+                    </select>
+                    <select id="concert-sort">
+                        <option value="date_asc" selected>Дата (сначала старые)</option>
+                        <option value="date_desc">Дата (сначала новые)</option>
+                    </select>
+                </div>
+                <div class="filter-group">
                     <button id="apply-concert-filters">Применить</button>
                     <button id="clear-concert-filters">Сбросить</button>
                 </div>
@@ -85,24 +113,43 @@
                     <input type="text" id="concert-title" placeholder="Название*" required>
                     <input type="text" id="concert-venue" placeholder="Место*" required>
                     <input type="datetime-local" id="concert-datetime" required>
+                </div>
+                <div class="form-group-row" style="align-items: center;">
+                    <label style="margin-right: 15px;">Исполнители:</label>
+                    <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
+                        <div id="selected-artists-list" style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 8px; min-height: 40px; background: #f9f9f9;"></div>
+                        <button type="button" id="open-artists-modal-btn" class="artists-btn">Выбрать исполнителей</button>
+                    </div>
+                </div>
+                <div class="form-actions">
                     <button id="concert-submit">Добавить</button>
                     <button id="concert-cancel" style="display:none;">Отмена</button>
                 </div>
+                <div id="concert-error" class="error"></div>
+                <div id="concert-success" class="success"></div>
             </div>
 
+            <div class="stats-card">
+                <p>Найдено концертов: <span id="concert-found-count" class="highlight-number">0</span></p>
+            </div>
             <table id="concerts-table">
-                <thead><tr><th>ID</th><th>Название</th><th>Место</th><th>Дата и время</th><th>Артисты</th><th>Действия</th></tr></thead>
-                <tbody id="concerts-tbody"><tr><td colspan="6">Загрузка...–</tbody>
+                <thead>
+                    <tr><th>ID</th><th>Название</th><th>Место</th><th>Дата и время</th><th>Исполнители</th><th>Действия</th></tr>
+                </thead>
+                <tbody id="concerts-tbody">
+                    <tr><td colspan="6" class="centered-message">Загрузка...–
+                </tbody>
             </table>
         </div>
     </div>
 
+    <!-- Модальное окно для выбора исполнителей концерта -->
     <div id="artists-modal" class="modal">
         <div class="modal-content">
-            <h3>Артисты концерта</h3>
+            <h3>Выбор исполнителей для концерта</h3>
             <div id="modal-artists-list" class="artist-list"></div>
             <select id="modal-artist-select">
-                <option value="">-- Добавить артиста --</option>
+                <option value="">-- Добавить исполнителя --</option>
             </select>
             <button id="modal-add-artist">Добавить</button>
             <button id="modal-close">Закрыть</button>

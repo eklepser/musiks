@@ -12,6 +12,7 @@ namespace MusicMarketplace.Models
         public string venue { get; set; }
         public DateTime datetime { get; set; }
 
-        public virtual ICollection<Ticket> Tickets { get; set; }
+        public virtual ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
+        public virtual ICollection<ArtistConcert> ArtistConcerts { get; set; } = new List<ArtistConcert>();
     }
 }

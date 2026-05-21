@@ -72,5 +72,44 @@ namespace MusicMarketplace.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+
+        [HttpGet("filter")]
+        public async Task<ActionResult<IEnumerable<ArtistDto>>> GetArtistsFiltered(
+        [FromQuery] string? searchName = null,
+        [FromQuery] string? searchCountry = null,
+        [FromQuery] string? searchLanguage = null,
+        [FromQuery] string? sortBy = null)
+        {
+            var query = _context.Artists.AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchName))
+                query = query.Where(a => a.name.ToLower().Contains(searchName.ToLower()));
+
+            if (!string.IsNullOrEmpty(searchCountry))
+                query = query.Where(a => a.country != null && a.country.ToLower().Contains(searchCountry.ToLower()));
+
+            if (searchLanguage == "Instrumental")
+                query = query.Where(a => a.language == null);
+            else if (!string.IsNullOrEmpty(searchLanguage))
+                query = query.Where(a => a.language != null && a.language.ToLower().Contains(searchLanguage.ToLower()));
+
+            query = sortBy switch
+            {
+                "name_asc" => query.OrderBy(a => a.name),
+                "name_desc" => query.OrderByDescending(a => a.name),
+                _ => query.OrderBy(a => a.name)
+            };
+
+            var artists = await query.Select(a => new ArtistDto
+            {
+                artist_id = a.artist_id,
+                name = a.name,
+                country = a.country,
+                debut_year = a.debut_year,
+                language = a.language
+            }).ToListAsync();
+
+            return Ok(artists);
+        }
     }
 }

@@ -67,5 +67,37 @@ namespace MusicMarketplace.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+
+        [HttpGet("byUser/{userId}/filter")]
+        public async Task<ActionResult<IEnumerable<object>>> GetWishlistFiltered(int userId,
+        [FromQuery] string? searchName = null,
+        [FromQuery] string? sortBy = null)
+        {
+            var query = _context.Wishlists
+                .Where(w => w.user_id == userId)
+                .Join(_context.Products, w => w.product_id, p => p.product_id, (w, p) => new { Wishlist = w, Product = p });
+
+            if (!string.IsNullOrEmpty(searchName))
+                query = query.Where(i => i.Product.name.ToLower().Contains(searchName.ToLower()));
+
+            var list = await query.Select(i => new
+            {
+                product_id = i.Product.product_id,
+                name = i.Product.name,
+                price = i.Product.price,
+                added_date = i.Wishlist.added_date
+            }).ToListAsync();
+
+            list = sortBy switch
+            {
+                "price_asc" => list.OrderBy(i => i.price).ToList(),
+                "price_desc" => list.OrderByDescending(i => i.price).ToList(),
+                "date_asc" => list.OrderBy(i => i.added_date).ToList(),
+                "date_desc" => list.OrderByDescending(i => i.added_date).ToList(),
+                _ => list.OrderByDescending(i => i.added_date).ToList()
+            };
+
+            return Ok(list);
+        }
     }
 }

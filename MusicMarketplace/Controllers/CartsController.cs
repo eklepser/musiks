@@ -132,5 +132,38 @@ namespace MusicMarketplace.Controllers
 
             return Ok(new { orderId = order.order_id, totalAmount });
         }
+
+        [HttpGet("byUser/{userId}/filter")]
+        public async Task<ActionResult<IEnumerable<object>>> GetCartFiltered(int userId,
+    [FromQuery] string? searchName = null,
+    [FromQuery] string? sortBy = null)
+        {
+            var query = _context.Carts
+                .Where(c => c.user_id == userId)
+                .Join(_context.Products, c => c.product_id, p => p.product_id, (c, p) => new { Cart = c, Product = p });
+
+            if (!string.IsNullOrEmpty(searchName))
+                query = query.Where(i => i.Product.name.ToLower().Contains(searchName.ToLower()));
+
+            var list = await query.Select(i => new
+            {
+                product_id = i.Product.product_id,
+                name = i.Product.name,
+                price = i.Product.price,
+                quantity = i.Cart.quantity,
+                added_date = i.Cart.added_date
+            }).ToListAsync();
+
+            list = sortBy switch
+            {
+                "price_asc" => list.OrderBy(i => i.price).ToList(),
+                "price_desc" => list.OrderByDescending(i => i.price).ToList(),
+                "date_asc" => list.OrderBy(i => i.added_date).ToList(),
+                "date_desc" => list.OrderByDescending(i => i.added_date).ToList(),
+                _ => list.OrderByDescending(i => i.added_date).ToList()
+            };
+
+            return Ok(list);
+        }
     }
 }

@@ -170,15 +170,22 @@ public partial class MusicMarketplaceContext : DbContext
         modelBuilder.Entity<Wishlist>(entity =>
         {
             entity.ToTable("Wishlist");
-            entity.HasKey(e => new { e.user_id, e.product_id }); 
+            entity.HasKey(e => new { e.user_id, e.product_id });
         });
 
+        // Исправленная конфигурация ArtistConcert
         modelBuilder.Entity<ArtistConcert>(entity =>
         {
             entity.ToTable("ArtistConcert");
             entity.HasKey(e => new { e.artist_id, e.concert_id });
-            entity.HasOne<Artist>().WithMany().HasForeignKey(d => d.artist_id).HasConstraintName("ArtistConcert_artist_id_fkey");
-            entity.HasOne<Concert>().WithMany().HasForeignKey(d => d.concert_id).HasConstraintName("ArtistConcert_concert_id_fkey");
+            entity.HasOne(e => e.Artist)
+                  .WithMany()
+                  .HasForeignKey(e => e.artist_id)
+                  .HasConstraintName("ArtistConcert_artist_id_fkey");
+            entity.HasOne(e => e.Concert)
+                  .WithMany(c => c.ArtistConcerts)
+                  .HasForeignKey(e => e.concert_id)
+                  .HasConstraintName("ArtistConcert_concert_id_fkey");
         });
 
         modelBuilder.Entity<ArtistMerch>(entity =>

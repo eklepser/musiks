@@ -45,6 +45,46 @@ namespace MusicMarketplace.Controllers
             return Ok(items);
         }
 
+        [HttpGet("byUser/{userId}/filter")]
+        public async Task<ActionResult<IEnumerable<object>>> GetUserReviewsFiltered(
+    int userId,
+    [FromQuery] string? searchName = null,
+    [FromQuery] int? rating = null,
+    [FromQuery] string? sortBy = null)
+        {
+            var query = _context.Reviews
+                .Where(r => r.user_id == userId)
+                .Join(_context.Products,
+                      r => r.product_id,
+                      p => p.product_id,
+                      (r, p) => new
+                      {
+                          r.product_id,
+                          product_name = p.name,
+                          r.rating,
+                          r.review_text,
+                          r.review_date
+                      });
+
+            if (!string.IsNullOrEmpty(searchName))
+                query = query.Where(r => r.product_name.ToLower().Contains(searchName.ToLower()));
+            if (rating.HasValue)
+                query = query.Where(r => r.rating == rating.Value);
+
+            var list = await query.ToListAsync();
+
+            list = sortBy switch
+            {
+                "rating_asc" => list.OrderBy(r => r.rating).ToList(),
+                "rating_desc" => list.OrderByDescending(r => r.rating).ToList(),
+                "date_asc" => list.OrderBy(r => r.review_date).ToList(),
+                "date_desc" => list.OrderByDescending(r => r.review_date).ToList(),
+                _ => list.OrderByDescending(r => r.review_date).ToList()
+            };
+
+            return Ok(list);
+        }
+
         [HttpPost]
         public async Task<IActionResult> PostReview(ReviewCreateDto dto)
         {
