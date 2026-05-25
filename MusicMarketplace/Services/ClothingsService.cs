@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿// ClothingsService.cs
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using MusicMarketplace.DTOs;
 using MusicMarketplace.Models;
@@ -64,6 +65,16 @@ namespace MusicMarketplace.Services
 
         public async Task<bool> DeleteAsync(int id)
         {
+            var clothing = await _context.Clothings
+                .Include(c => c.Merch)
+                .ThenInclude(m => m.Product)
+                .FirstOrDefaultAsync(c => c.clothing_id == id);
+            if (clothing == null)
+                throw new KeyNotFoundException($"Одежда с ID {id} не найдена");
+            var productId = clothing.Merch.Product.product_id;
+            var hasOrders = await _context.OrderItems.AnyAsync(oi => oi.product_id == productId);
+            if (hasOrders)
+                throw new InvalidOperationException("Нельзя удалить товар, который есть в заказах");
             var sql = "SELECT delete_clothing({0})";
             var result = await _context.Database.ExecuteSqlRawAsync(sql, id);
             return result > 0;

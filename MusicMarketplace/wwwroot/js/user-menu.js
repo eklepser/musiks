@@ -44,6 +44,7 @@ function onUserChange(userId, reload = true, showNotification = true) {
         localStorage.removeItem('currentUserId');
         currentUser = null;
         if (reload && window.location.pathname !== '/user.html') window.location.reload();
+        else if (window.location.pathname === '/user.html' && typeof loadDashboard === 'function') loadDashboard();
         return;
     }
     fetch(`https://localhost:7062/api/Users/${userId}`)
@@ -55,6 +56,7 @@ function onUserChange(userId, reload = true, showNotification = true) {
                 showToast(`Выбран пользователь: ${user.full_name}`, 'success');
             }
             if (reload && window.location.pathname !== '/user.html') window.location.reload();
+            else if (window.location.pathname === '/user.html' && typeof loadDashboard === 'function') loadDashboard();
         })
         .catch(err => console.error(err));
 }

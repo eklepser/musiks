@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿// AccessoriesService.cs
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using MusicMarketplace.DTOs;
 using MusicMarketplace.Models;
@@ -30,13 +31,13 @@ namespace MusicMarketplace.Services
                 sql,
                 dto.name,
                 dto.price,
-                dto.description,
+                dto.description ?? (object)DBNull.Value,
                 dto.stock,
                 dto.manufacturer_id,
-                dto.material,
-                dto.color,
-                dto.accessory_type,
-                dto.weight,
+                dto.material ?? (object)DBNull.Value,
+                dto.color ?? (object)DBNull.Value,
+                dto.accessory_type ?? (object)DBNull.Value,
+                dto.weight ?? (object)DBNull.Value,
                 json
             ).FirstOrDefaultAsync();
         }
@@ -50,13 +51,13 @@ namespace MusicMarketplace.Services
                 id,
                 dto.name,
                 dto.price,
-                dto.description,
+                dto.description ?? (object)DBNull.Value,
                 dto.stock,
                 dto.manufacturer_id,
-                dto.material,
-                dto.color,
-                dto.accessory_type,
-                dto.weight,
+                dto.material ?? (object)DBNull.Value,
+                dto.color ?? (object)DBNull.Value,
+                dto.accessory_type ?? (object)DBNull.Value,
+                dto.weight ?? (object)DBNull.Value,
                 json
             );
             return result > 0;
@@ -64,6 +65,16 @@ namespace MusicMarketplace.Services
 
         public async Task<bool> DeleteAsync(int id)
         {
+            var accessory = await _context.Accessories
+                .Include(a => a.Merch)
+                .ThenInclude(m => m.Product)
+                .FirstOrDefaultAsync(a => a.accessory_id == id);
+            if (accessory == null)
+                throw new KeyNotFoundException($"Аксессуар с ID {id} не найден");
+            var productId = accessory.Merch.Product.product_id;
+            var hasOrders = await _context.OrderItems.AnyAsync(oi => oi.product_id == productId);
+            if (hasOrders)
+                throw new InvalidOperationException("Нельзя удалить товар, который есть в заказах");
             var sql = "SELECT delete_accessory({0})";
             var result = await _context.Database.ExecuteSqlRawAsync(sql, id);
             return result > 0;

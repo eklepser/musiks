@@ -147,7 +147,6 @@ public partial class MusicMarketplaceContext : DbContext
             entity.ToTable("Ticket");
             entity.HasIndex(e => e.product_id, "Ticket_product_id_key").IsUnique();
             entity.Property(e => e.price_category).HasMaxLength(50);
-            entity.Property(e => e.quantity).IsRequired();
             entity.HasOne(d => d.concert).WithMany(p => p.Tickets).HasForeignKey(d => d.concert_id).HasConstraintName("Ticket_concert_id_fkey");
             entity.HasOne(d => d.product).WithOne(p => p.Ticket).HasForeignKey<Ticket>(d => d.product_id).HasConstraintName("Ticket_product_id_fkey");
         });

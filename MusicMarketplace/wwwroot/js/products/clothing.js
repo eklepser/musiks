@@ -199,6 +199,11 @@ async function deleteClothing(id, name) {
     if (!confirm(`Удалить одежду «${name}» (ID ${id})?`)) return;
     try {
         const resp = await fetch(`${CLOTHINGS_URL}/${id}`, { method: 'DELETE' });
+        if (resp.status === 409) {
+            const errorMessage = await resp.text();
+            showToast(errorMessage || 'Невозможно удалить товар, который есть в заказах', 'error');
+            return;
+        }
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         await loadAllItems();
         showToast(`Запись «${name}» (ID ${id}) удалена`, 'success');

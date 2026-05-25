@@ -9,7 +9,6 @@ namespace MusicMarketplace.Models
         public int concert_id { get; set; }
         public int product_id { get; set; }
         public string price_category { get; set; }
-        public int quantity { get; set; }
 
         public virtual Concert concert { get; set; }
         public virtual Product product { get; set; }

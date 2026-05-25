@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿// AccessoriesController.cs
+using Microsoft.AspNetCore.Mvc;
 using MusicMarketplace.DTOs;
 using MusicMarketplace.Services;
 
@@ -36,27 +37,27 @@ namespace MusicMarketplace.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutAccessory(int id, AccessoryCreateUpdateDto dto)
         {
-            try
-            {
-                await _service.UpdateAsync(id, dto);
-                return NoContent();
-            }
-            catch (ArgumentException)
-            {
-                return BadRequest();
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound();
-            }
+            var updated = await _service.UpdateAsync(id, dto);
+            if (!updated) return NotFound();
+            return NoContent();
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAccessory(int id)
         {
-            var deleted = await _service.DeleteAsync(id);
-            if (!deleted) return NotFound();
-            return NoContent();
+            try
+            {
+                await _service.DeleteAsync(id);
+                return NoContent();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ex.Message);
+            }
         }
     }
 }

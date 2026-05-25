@@ -48,7 +48,6 @@ async function renderCatalog() {
             if (item.type === 'ticket') {
                 extraLines.push(`Концерт: ${item.concert_title || item.concert_id}`);
                 if (item.price_category) extraLines.push(`Тип места: ${item.price_category}`);
-                if (item.quantity) extraLines.push(`Доступно: ${item.quantity} шт.`);
             } else if (item.type === 'clothing') {
                 if (item.material) extraLines.push(`Материал: ${item.material}`);
                 if (item.color) extraLines.push(`Цвет: ${item.color}`);

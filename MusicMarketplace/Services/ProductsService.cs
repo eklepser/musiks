@@ -167,7 +167,6 @@ namespace MusicMarketplace.Services
         public int concert_id { get; set; }
         public string concert_title { get; set; }
         public string price_category { get; set; }
-        public int quantity { get; set; }
         public string artistNames { get; set; }
         public string artistIds { get; set; }
     }

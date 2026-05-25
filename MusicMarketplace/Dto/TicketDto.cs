@@ -11,5 +11,4 @@ public class TicketDto
     public int manufacturer_id { get; set; }
     public int concert_id { get; set; }
     public string price_category { get; set; }
-    public int quantity { get; set; }
 }

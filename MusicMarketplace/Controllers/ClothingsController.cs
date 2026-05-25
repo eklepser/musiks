@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿// ClothingsController.cs
+using Microsoft.AspNetCore.Mvc;
 using MusicMarketplace.DTOs;
 using MusicMarketplace.Services;
 
@@ -65,6 +66,10 @@ namespace MusicMarketplace.Controllers
             catch (KeyNotFoundException)
             {
                 return NotFound();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(ex.Message);
             }
         }
     }
