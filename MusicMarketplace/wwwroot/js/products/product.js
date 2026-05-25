@@ -1,4 +1,6 @@
-﻿function renderTicketSelectedGenres() {
+﻿let activeGenreFormType = null;
+
+function renderTicketSelectedGenres() {
     const container = document.getElementById('ticket-selected-genres-list');
     if (!container) return;
     if (!window.selectedGenresForTicket || window.selectedGenresForTicket.length === 0) {
@@ -83,6 +85,7 @@ function renderEditAccessorySelectedGenres() {
 }
 
 function openTicketGenresModal() {
+    activeGenreFormType = 'ticket';
     const modal = document.getElementById('genres-modal');
     const genresListDiv = document.getElementById('modal-genres-list');
     const genreSelect = document.getElementById('modal-genre-select');
@@ -101,7 +104,7 @@ function openTicketGenresModal() {
         });
         document.querySelectorAll('.remove-genre-from-modal').forEach(btn => {
             btn.addEventListener('click', () => {
-                const id = parseInt(btn.dataset.genreId);
+                const id = parseInt(btn.dataset.genreId, 10);
                 window.selectedGenresForTicket = window.selectedGenresForTicket.filter(gid => gid !== id);
                 renderTicketSelectedGenres();
                 renderEditTicketSelectedGenres();
@@ -109,7 +112,7 @@ function openTicketGenresModal() {
             });
         });
     }
-    const availableGenres = genres.filter(g => !window.selectedGenresForTicket.includes(g.genre_id));
+    const availableGenres = genres.filter(g => !window.selectedGenresForTicket.includes(Number(g.genre_id)));
     genreSelect.innerHTML = '<option value="">-- Добавить жанр --</option>';
     availableGenres.forEach(genre => {
         const opt = document.createElement('option');
@@ -121,6 +124,7 @@ function openTicketGenresModal() {
 }
 
 function openClothingGenresModal() {
+    activeGenreFormType = 'clothing';
     const modal = document.getElementById('genres-modal');
     const genresListDiv = document.getElementById('modal-genres-list');
     const genreSelect = document.getElementById('modal-genre-select');
@@ -139,7 +143,7 @@ function openClothingGenresModal() {
         });
         document.querySelectorAll('.remove-genre-from-modal').forEach(btn => {
             btn.addEventListener('click', () => {
-                const id = parseInt(btn.dataset.genreId);
+                const id = parseInt(btn.dataset.genreId, 10);
                 window.selectedGenresForClothing = window.selectedGenresForClothing.filter(gid => gid !== id);
                 renderClothingSelectedGenres();
                 renderEditClothingSelectedGenres();
@@ -147,7 +151,7 @@ function openClothingGenresModal() {
             });
         });
     }
-    const availableGenres = genres.filter(g => !window.selectedGenresForClothing.includes(g.genre_id));
+    const availableGenres = genres.filter(g => !window.selectedGenresForClothing.includes(Number(g.genre_id)));
     genreSelect.innerHTML = '<option value="">-- Добавить жанр --</option>';
     availableGenres.forEach(genre => {
         const opt = document.createElement('option');
@@ -159,6 +163,7 @@ function openClothingGenresModal() {
 }
 
 function openAccessoryGenresModal() {
+    activeGenreFormType = 'accessory';
     const modal = document.getElementById('genres-modal');
     const genresListDiv = document.getElementById('modal-genres-list');
     const genreSelect = document.getElementById('modal-genre-select');
@@ -177,7 +182,7 @@ function openAccessoryGenresModal() {
         });
         document.querySelectorAll('.remove-genre-from-modal').forEach(btn => {
             btn.addEventListener('click', () => {
-                const id = parseInt(btn.dataset.genreId);
+                const id = parseInt(btn.dataset.genreId, 10);
                 window.selectedGenresForAccessory = window.selectedGenresForAccessory.filter(gid => gid !== id);
                 renderAccessorySelectedGenres();
                 renderEditAccessorySelectedGenres();
@@ -185,7 +190,7 @@ function openAccessoryGenresModal() {
             });
         });
     }
-    const availableGenres = genres.filter(g => !window.selectedGenresForAccessory.includes(g.genre_id));
+    const availableGenres = genres.filter(g => !window.selectedGenresForAccessory.includes(Number(g.genre_id)));
     genreSelect.innerHTML = '<option value="">-- Добавить жанр --</option>';
     availableGenres.forEach(genre => {
         const opt = document.createElement('option');
@@ -196,77 +201,44 @@ function openAccessoryGenresModal() {
     modal.style.display = 'block';
 }
 
-function addTicketGenreFromModal() {
-    const genreId = parseInt(document.getElementById('modal-genre-select').value);
+function addGenreFromModal() {
+    const genreId = parseInt(document.getElementById('modal-genre-select').value, 10);
     if (!genreId) return;
-    if (!window.selectedGenresForTicket.includes(genreId)) {
-        window.selectedGenresForTicket.push(genreId);
-        renderTicketSelectedGenres();
-        renderEditTicketSelectedGenres();
-        openTicketGenresModal();
+
+    let selectedArr, renderFn, editRenderFn, reopenFn;
+
+    switch (activeGenreFormType) {
+        case 'ticket':
+            selectedArr = window.selectedGenresForTicket;
+            renderFn = renderTicketSelectedGenres;
+            editRenderFn = renderEditTicketSelectedGenres;
+            reopenFn = openTicketGenresModal;
+            break;
+        case 'clothing':
+            selectedArr = window.selectedGenresForClothing;
+            renderFn = renderClothingSelectedGenres;
+            editRenderFn = renderEditClothingSelectedGenres;
+            reopenFn = openClothingGenresModal;
+            break;
+        case 'accessory':
+            selectedArr = window.selectedGenresForAccessory;
+            renderFn = renderAccessorySelectedGenres;
+            editRenderFn = renderEditAccessorySelectedGenres;
+            reopenFn = openAccessoryGenresModal;
+            break;
+        default:
+            return;
+    }
+
+    if (!selectedArr.includes(genreId)) {
+        selectedArr.push(genreId);
+        if (typeof renderFn === 'function') renderFn();
+        if (typeof editRenderFn === 'function') editRenderFn();
+        if (typeof reopenFn === 'function') reopenFn();
     } else {
         showToast('Жанр уже выбран', 'warning');
     }
 }
-
-function addClothingGenreFromModal() {
-    const genreId = parseInt(document.getElementById('modal-genre-select').value);
-    if (!genreId) return;
-    if (!window.selectedGenresForClothing.includes(genreId)) {
-        window.selectedGenresForClothing.push(genreId);
-        renderClothingSelectedGenres();
-        renderEditClothingSelectedGenres();
-        openClothingGenresModal();
-    } else {
-        showToast('Жанр уже выбран', 'warning');
-    }
-}
-
-function addAccessoryGenreFromModal() {
-    const genreId = parseInt(document.getElementById('modal-genre-select').value);
-    if (!genreId) return;
-    if (!window.selectedGenresForAccessory.includes(genreId)) {
-        window.selectedGenresForAccessory.push(genreId);
-        renderAccessorySelectedGenres();
-        renderEditAccessorySelectedGenres();
-        openAccessoryGenresModal();
-    } else {
-        showToast('Жанр уже выбран', 'warning');
-    }
-}
-
-function closeGenresModal() {
-    const modal = document.getElementById('genres-modal');
-    if (modal) modal.style.display = 'none';
-}
-
-document.getElementById('open-ticket-genres-modal-btn')?.addEventListener('click', openTicketGenresModal);
-document.getElementById('edit-ticket-genres-btn')?.addEventListener('click', openTicketGenresModal);
-document.getElementById('open-clothing-genres-modal-btn')?.addEventListener('click', openClothingGenresModal);
-document.getElementById('edit-clothing-genres-btn')?.addEventListener('click', openClothingGenresModal);
-document.getElementById('open-accessory-genres-modal-btn')?.addEventListener('click', openAccessoryGenresModal);
-document.getElementById('edit-accessory-genres-btn')?.addEventListener('click', openAccessoryGenresModal);
-
-document.getElementById('modal-add-genre')?.addEventListener('click', () => {
-    if (document.getElementById('open-ticket-genres-modal-btn')?.parentElement?.parentElement?.style.display !== 'none') {
-        addTicketGenreFromModal();
-    } else if (document.getElementById('open-clothing-genres-modal-btn')?.parentElement?.parentElement?.style.display !== 'none') {
-        addClothingGenreFromModal();
-    } else {
-        addAccessoryGenreFromModal();
-    }
-});
-
-document.getElementById('modal-genre-close')?.addEventListener('click', closeGenresModal);
-
-window.addEventListener('click', (e) => {
-    const modal = document.getElementById('genres-modal');
-    if (e.target === modal && modal) modal.style.display = 'none';
-});
-
-window.selectedGenresForTicket = window.selectedGenresForTicket || [];
-window.selectedGenresForClothing = window.selectedGenresForClothing || [];
-window.selectedGenresForAccessory = window.selectedGenresForAccessory || [];
 
 async function loadProductGenresForEdit(productId, productType) {
     try {
@@ -292,3 +264,28 @@ async function loadProductGenresForEdit(productId, productType) {
         console.error('Ошибка загрузки жанров:', e);
     }
 }
+
+function closeGenresModal() {
+    activeGenreFormType = null;
+    const modal = document.getElementById('genres-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+document.getElementById('open-ticket-genres-modal-btn')?.addEventListener('click', openTicketGenresModal);
+document.getElementById('edit-ticket-genres-btn')?.addEventListener('click', openTicketGenresModal);
+document.getElementById('open-clothing-genres-modal-btn')?.addEventListener('click', openClothingGenresModal);
+document.getElementById('edit-clothing-genres-btn')?.addEventListener('click', openClothingGenresModal);
+document.getElementById('open-accessory-genres-modal-btn')?.addEventListener('click', openAccessoryGenresModal);
+document.getElementById('edit-accessory-genres-btn')?.addEventListener('click', openAccessoryGenresModal);
+
+document.getElementById('modal-add-genre')?.addEventListener('click', addGenreFromModal);
+document.getElementById('modal-genre-close')?.addEventListener('click', closeGenresModal);
+
+window.addEventListener('click', (e) => {
+    const modal = document.getElementById('genres-modal');
+    if (e.target === modal && modal) modal.style.display = 'none';
+});
+
+window.selectedGenresForTicket = window.selectedGenresForTicket || [];
+window.selectedGenresForClothing = window.selectedGenresForClothing || [];
+window.selectedGenresForAccessory = window.selectedGenresForAccessory || [];

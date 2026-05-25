@@ -132,13 +132,13 @@ namespace MusicMarketplace.Services
             var sql = "SELECT * FROM get_filtered_tickets({0}, {1}, {2}, {3}, {4}, {5}, {6})";
             return await _context.Database.SqlQueryRaw<TicketFilterResult>(
                 sql,
-                searchName ?? (object)DBNull.Value,
-                manufacturerId ?? (object)DBNull.Value,
-                artistId ?? (object)DBNull.Value,
+                searchName,
+                manufacturerId,
+                artistId,
                 inStock,
-                priceMin ?? (object)DBNull.Value,
-                priceMax ?? (object)DBNull.Value,
-                selectedGenres ?? (object)DBNull.Value
+                priceMin,
+                priceMax,
+                selectedGenres
             ).ToListAsync();
         }
 
@@ -149,13 +149,13 @@ namespace MusicMarketplace.Services
             var sql = "SELECT * FROM get_filtered_clothings({0}, {1}, {2}, {3}, {4}, {5}, {6})";
             return await _context.Database.SqlQueryRaw<ClothingFilterResult>(
                 sql,
-                searchName ?? (object)DBNull.Value,
-                manufacturerId ?? (object)DBNull.Value,
-                artistId ?? (object)DBNull.Value,
+                searchName,
+                manufacturerId,
+                artistId,
                 inStock,
-                priceMin ?? (object)DBNull.Value,
-                priceMax ?? (object)DBNull.Value,
-                selectedGenres ?? (object)DBNull.Value
+                priceMin,
+                priceMax,
+                selectedGenres 
             ).ToListAsync();
         }
 
@@ -166,13 +166,13 @@ namespace MusicMarketplace.Services
             var sql = "SELECT * FROM get_filtered_accessories({0}, {1}, {2}, {3}, {4}, {5}, {6})";
             return await _context.Database.SqlQueryRaw<AccessoryFilterResult>(
                 sql,
-                searchName ?? (object)DBNull.Value,
-                manufacturerId ?? (object)DBNull.Value,
-                artistId ?? (object)DBNull.Value,
+                searchName,
+                manufacturerId,
+                artistId,
                 inStock,
-                priceMin ?? (object)DBNull.Value,
-                priceMax ?? (object)DBNull.Value,
-                selectedGenres ?? (object)DBNull.Value
+                priceMin,
+                priceMax,
+                selectedGenres
             ).ToListAsync();
         }
 

@@ -30,11 +30,11 @@ namespace MusicMarketplace.Services
                 sql,
                 dto.name,
                 dto.price,
-                dto.description ?? (object)DBNull.Value,
+                dto.description,
                 dto.stock,
                 dto.manufacturer_id,
                 dto.concert_id,
-                dto.price_category ?? (object)DBNull.Value,
+                dto.price_category,
                 genresJson
             ).FirstOrDefaultAsync();
         }
@@ -48,7 +48,7 @@ namespace MusicMarketplace.Services
                 id,
                 dto.name,
                 dto.price,
-                dto.description ?? (object)DBNull.Value,
+                dto.description,
                 dto.stock,
                 dto.manufacturer_id,
                 dto.concert_id,
