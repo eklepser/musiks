@@ -203,6 +203,7 @@ async function deleteAccessory(id, name) {
             return;
         }
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        hideEditPanel(); 
         await loadAllItems();
         showToast(`Запись «${name}» (ID ${id}) удалена`, 'success');
     } catch (err) {

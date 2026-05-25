@@ -127,6 +127,7 @@ async function deleteManufacturer(id, name) {
     try {
         const resp = await fetch(`${MANUFACTURERS_URL}/${id}`, { method: 'DELETE' });
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        clearManufacturerForm();
         await loadManufacturersTable();
         await loadManufacturersForSelect('filter-manufacturer');
         await loadManufacturersForSelect('ticket-manufacturer-id');

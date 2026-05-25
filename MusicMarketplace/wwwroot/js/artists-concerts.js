@@ -145,6 +145,8 @@ async function renderArtists() {
             row.insertCell(3).textContent = artist.debut_year || '';
             row.insertCell(4).textContent = artist.language || '';
             const actions = row.insertCell(5);
+            const btnRow = document.createElement('div');
+            btnRow.className = 'action-buttons-row';
             const editBtn = document.createElement('button');
             editBtn.textContent = 'Ред.';
             editBtn.className = 'edit-btn';
@@ -153,7 +155,8 @@ async function renderArtists() {
             delBtn.textContent = 'Удалить';
             delBtn.className = 'delete-btn';
             delBtn.onclick = () => deleteArtist(artist.artist_id, artist.name);
-            actions.append(editBtn, delBtn);
+            btnRow.append(editBtn, delBtn);
+            actions.appendChild(btnRow);
         });
     } catch (err) {
         console.error(err);
@@ -198,6 +201,8 @@ async function renderConcerts() {
             row.insertCell(3).textContent = new Date(concert.datetime).toLocaleString();
             row.insertCell(4).textContent = concert.artistNames || '—';
             const actions = row.insertCell(5);
+            const btnRow = document.createElement('div');
+            btnRow.className = 'action-buttons-row';
             const editBtn = document.createElement('button');
             editBtn.textContent = 'Ред.';
             editBtn.className = 'edit-btn';
@@ -206,7 +211,8 @@ async function renderConcerts() {
             delBtn.textContent = 'Удалить';
             delBtn.className = 'delete-btn';
             delBtn.onclick = () => deleteConcert(concert.concert_id, concert.title);
-            actions.append(editBtn, delBtn);
+            btnRow.append(editBtn, delBtn);
+            actions.appendChild(btnRow);
         }
     } catch (err) {
         console.error(err);
@@ -295,6 +301,7 @@ async function deleteArtist(id, name) {
     try {
         const resp = await fetch(`https://localhost:7062/api/Artists/${id}`, { method: 'DELETE' });
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        clearArtistForm();
         await loadArtists();
         await renderArtists();
         showToast(`Исполнитель «${name}» удалён`, 'success');
@@ -375,6 +382,7 @@ async function deleteConcert(id, title) {
     try {
         const resp = await fetch(`https://localhost:7062/api/Concerts/${id}`, { method: 'DELETE' });
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        clearConcertForm();
         await loadConcerts();
         await loadArtistConcerts();
         await renderConcerts();
@@ -384,7 +392,6 @@ async function deleteConcert(id, title) {
     }
 }
 
-// === Модальное окно для выбора исполнителей ===
 function openArtistsModal() {
     const modal = document.getElementById('artists-modal');
     const artistsListDiv = document.getElementById('modal-artists-list');

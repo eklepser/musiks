@@ -1,7 +1,6 @@
 ﻿let clothingEditId = null;
 let selectedArtistsForClothing = [];
 
-// Вспомогательная функция для преобразования artistIds в массив
 function ensureArtistIdsArray(artistIds) {
     if (Array.isArray(artistIds)) return artistIds;
     if (typeof artistIds === 'string') {
@@ -75,7 +74,6 @@ function fillEditClothingForm(c) {
     document.getElementById('edit-clothing-size').value = c.size || 'M';
     document.getElementById('edit-clothing-gender').value = c.gender || 'unisex';
     document.getElementById('edit-clothing-form').style.display = 'block';
-    // Преобразуем artistIds в массив
     selectedArtistsForClothing = ensureArtistIdsArray(c.artistIds);
     renderEditClothingSelectedArtists();
 }
@@ -104,7 +102,7 @@ async function saveEditClothing() {
         color: document.getElementById('edit-clothing-color').value.trim(),
         size: document.getElementById('edit-clothing-size').value,
         gender: document.getElementById('edit-clothing-gender').value,
-        artistIds: selectedArtistsForClothing  // уже массив
+        artistIds: selectedArtistsForClothing
     };
     if (!data.name) {
         showToast('Заполните название', 'error');
@@ -140,7 +138,10 @@ async function saveEditClothing() {
 
 async function saveClothing() {
     const errorMsg = validateClothing();
-    if (errorMsg) { showToast(errorMsg, 'error'); return; }
+    if (errorMsg) {
+        showToast(errorMsg, 'error');
+        return;
+    }
     const id = document.getElementById('clothing-edit-id').value;
     const name = document.getElementById('clothing-name').value.trim();
     const data = {
@@ -205,6 +206,7 @@ async function deleteClothing(id, name) {
             return;
         }
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        hideEditPanel();
         await loadAllItems();
         showToast(`Запись «${name}» (ID ${id}) удалена`, 'success');
     } catch (err) {

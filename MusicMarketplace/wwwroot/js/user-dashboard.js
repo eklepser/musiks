@@ -1,5 +1,4 @@
-﻿// user-dashboard.js (исправленная версия)
-async function getCurrentUser() {
+﻿async function getCurrentUser() {
     const userId = localStorage.getItem('currentUserId');
     if (!userId) return null;
     const resp = await fetch(`https://localhost:7062/api/Users/${userId}`);
@@ -99,17 +98,18 @@ function renderWishlist() {
         row.insertCell(2).textContent = item.price;
         row.insertCell(3).textContent = new Date(item.added_date).toLocaleString();
         const actions = row.insertCell(4);
+        const btnRow = document.createElement('div');
+        btnRow.className = 'action-buttons-row';
         const cartBtn = document.createElement('button');
         cartBtn.textContent = '🛒 В корзину';
         cartBtn.style.background = '#28a745';
-        cartBtn.style.marginRight = '5px';
         cartBtn.onclick = () => addToCart(item.product_id, item.name, 1);
         const delBtn = document.createElement('button');
         delBtn.textContent = 'Удалить';
         delBtn.className = 'delete-btn';
         delBtn.onclick = () => removeFromWishlist(item.product_id);
-        actions.appendChild(cartBtn);
-        actions.appendChild(delBtn);
+        btnRow.append(cartBtn, delBtn);
+        actions.appendChild(btnRow);
     });
 }
 
@@ -128,11 +128,14 @@ function renderCart() {
         row.insertCell(3).textContent = item.quantity;
         row.insertCell(4).textContent = new Date(item.added_date).toLocaleString();
         const actions = row.insertCell(5);
+        const btnRow = document.createElement('div');
+        btnRow.className = 'action-buttons-row';
         const delBtn = document.createElement('button');
         delBtn.textContent = 'Удалить';
         delBtn.className = 'delete-btn';
         delBtn.onclick = () => showRemoveFromCartModal(item.product_id, item.name, item.quantity);
-        actions.appendChild(delBtn);
+        btnRow.appendChild(delBtn);
+        actions.appendChild(btnRow);
     });
 }
 
@@ -150,11 +153,14 @@ function renderReviews() {
         row.insertCell(2).textContent = r.review_text || '';
         row.insertCell(3).textContent = new Date(r.review_date).toLocaleString();
         const actions = row.insertCell(4);
+        const btnRow = document.createElement('div');
+        btnRow.className = 'action-buttons-row';
         const delBtn = document.createElement('button');
         delBtn.textContent = 'Удалить';
         delBtn.className = 'delete-btn';
         delBtn.onclick = () => deleteReviewFromDashboard(r.product_id);
-        actions.appendChild(delBtn);
+        btnRow.appendChild(delBtn);
+        actions.appendChild(btnRow);
     });
 }
 
@@ -171,10 +177,13 @@ function renderOrders() {
             row.insertCell(2).textContent = order.status === 'pending' ? 'Ожидает' : (order.status === 'completed' ? 'Завершён' : 'Отменён');
             row.insertCell(3).textContent = order.total_amount?.toFixed(2);
             const actions = row.insertCell(4);
+            const btnRow = document.createElement('div');
+            btnRow.className = 'action-buttons-row';
             const detailsBtn = document.createElement('button');
             detailsBtn.textContent = 'Детали';
             detailsBtn.onclick = () => showOrderDetails(order.order_id);
-            actions.appendChild(detailsBtn);
+            btnRow.appendChild(detailsBtn);
+            actions.appendChild(btnRow);
         });
     }
     renderPurchasedItems(window.ordersData || []);
@@ -211,6 +220,8 @@ function renderPurchasedItems(orders) {
         row.insertCell(4).textContent = item.total_price.toFixed(2);
         row.insertCell(5).textContent = item.order_id;
         const actions = row.insertCell(6);
+        const btnRow = document.createElement('div');
+        btnRow.className = 'action-buttons-row';
         const hasReview = userReviewProductIds && userReviewProductIds.includes(item.product_id);
         const reviewBtn = document.createElement('button');
         reviewBtn.textContent = hasReview ? 'Отзыв оставлен' : 'Оставить отзыв';
@@ -224,7 +235,8 @@ function renderPurchasedItems(orders) {
                 showReviewModal();
             };
         }
-        actions.appendChild(reviewBtn);
+        btnRow.appendChild(reviewBtn);
+        actions.appendChild(btnRow);
     });
 }
 
@@ -316,7 +328,7 @@ async function checkout() {
 }
 
 function clearAllTables() {
-    document.getElementById('wishlist-tbody').innerHTML = '<td><td colspan="5" style="text-align: center;">Выберите пользователя</tbody>';
+    document.getElementById('wishlist-tbody').innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</tbody>';
     document.getElementById('cart-tbody').innerHTML = '<tr><td colspan="6" style="text-align: center;">Выберите пользователя</tbody>';
     document.getElementById('reviews-tbody').innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</tbody>';
     document.getElementById('orders-tbody').innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</tbody>';
@@ -347,7 +359,7 @@ async function loadDashboard() {
     showActiveTab();
 }
 
-// Обработчики (остаются без изменений)
+// Обработчики (без изменений)
 document.getElementById('wishlist-apply')?.addEventListener('click', loadWishlist);
 document.getElementById('wishlist-reset')?.addEventListener('click', () => {
     document.getElementById('wishlist-search').value = '';

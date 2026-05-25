@@ -110,6 +110,7 @@ async function deleteGenre(id, name) {
     try {
         const resp = await fetch(`${GENRES_URL}/${id}`, { method: 'DELETE' });
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        clearGenreForm();
         await loadGenresTable();
         await loadGenresAndLinks();
         showToast(`Запись «${name}» (ID ${id}) удалена`, 'success');

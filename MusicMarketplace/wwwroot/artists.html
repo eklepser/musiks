@@ -27,8 +27,22 @@
             <button class="tab-btn" data-tab="concerts">Концерты</button>
         </div>
 
-        <!-- Вкладка исполнителей -->
         <div id="artists-tab" class="tab-content active">
+            <div class="form-card">
+                <h2 id="artist-form-title">Добавить исполнителя</h2>
+                <input type="hidden" id="artist-edit-id">
+                <div class="form-group-row">
+                    <input type="text" id="artist-name" placeholder="Имя*" required>
+                    <input type="text" id="artist-country" placeholder="Страна">
+                    <input type="number" id="artist-debut-year" placeholder="Год дебюта">
+                    <input type="text" id="artist-language" placeholder="Язык">
+                </div>
+                <div class="form-actions">
+                    <button id="artist-submit">Добавить</button>
+                    <button id="artist-cancel" style="display:none;">Отмена</button>
+                </div>
+            </div>
+
             <div class="filters-card">
                 <h3>Фильтры и сортировка</h3>
                 <div class="filter-group">
@@ -52,19 +66,6 @@
                 </div>
             </div>
 
-            <div class="form-card">
-                <h2 id="artist-form-title">Добавить исполнителя</h2>
-                <input type="hidden" id="artist-edit-id">
-                <div class="form-group-row">
-                    <input type="text" id="artist-name" placeholder="Имя*" required>
-                    <input type="text" id="artist-country" placeholder="Страна">
-                    <input type="number" id="artist-debut-year" placeholder="Год дебюта">
-                    <input type="text" id="artist-language" placeholder="Язык">
-                    <button id="artist-submit">Добавить</button>
-                    <button id="artist-cancel" style="display:none;">Отмена</button>
-                </div>
-            </div>
-
             <div class="stats-card">
                 <p>Найдено исполнителей: <span id="artist-found-count" class="highlight-number">0</span></p>
             </div>
@@ -75,11 +76,32 @@
                 <tbody id="artists-tbody">
                     <tr><td colspan="6" class="centered-message">Загрузка...–
                 </tbody>
+                </tbody>
             </table>
         </div>
 
-        <!-- Вкладка концертов -->
         <div id="concerts-tab" class="tab-content">
+            <div class="form-card">
+                <h2 id="concert-form-title">Добавить концерт</h2>
+                <input type="hidden" id="concert-edit-id">
+                <div class="form-group-row">
+                    <input type="text" id="concert-title" placeholder="Название*" required>
+                    <input type="text" id="concert-venue" placeholder="Место*" required>
+                    <input type="datetime-local" id="concert-datetime" required>
+                </div>
+                <div class="form-group-row" style="align-items: center;">
+                    <label style="margin-right: 15px;">Исполнители:</label>
+                    <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
+                        <div id="selected-artists-list" style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 8px; min-height: 40px; background: #f9f9f9;"></div>
+                        <button type="button" id="open-artists-modal-btn" class="artists-btn">Выбрать исполнителей</button>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button id="concert-submit">Добавить</button>
+                    <button id="concert-cancel" style="display:none;">Отмена</button>
+                </div>
+            </div>
+
             <div class="filters-card">
                 <h3>Фильтры и сортировка</h3>
                 <div class="filter-group">
@@ -106,29 +128,6 @@
                 </div>
             </div>
 
-            <div class="form-card">
-                <h2 id="concert-form-title">Добавить концерт</h2>
-                <input type="hidden" id="concert-edit-id">
-                <div class="form-group-row">
-                    <input type="text" id="concert-title" placeholder="Название*" required>
-                    <input type="text" id="concert-venue" placeholder="Место*" required>
-                    <input type="datetime-local" id="concert-datetime" required>
-                </div>
-                <div class="form-group-row" style="align-items: center;">
-                    <label style="margin-right: 15px;">Исполнители:</label>
-                    <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
-                        <div id="selected-artists-list" style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 8px; min-height: 40px; background: #f9f9f9;"></div>
-                        <button type="button" id="open-artists-modal-btn" class="artists-btn">Выбрать исполнителей</button>
-                    </div>
-                </div>
-                <div class="form-actions">
-                    <button id="concert-submit">Добавить</button>
-                    <button id="concert-cancel" style="display:none;">Отмена</button>
-                </div>
-                <div id="concert-error" class="error"></div>
-                <div id="concert-success" class="success"></div>
-            </div>
-
             <div class="stats-card">
                 <p>Найдено концертов: <span id="concert-found-count" class="highlight-number">0</span></p>
             </div>
@@ -139,11 +138,11 @@
                 <tbody id="concerts-tbody">
                     <tr><td colspan="6" class="centered-message">Загрузка...–
                 </tbody>
+                </tbody>
             </table>
         </div>
     </div>
 
-    <!-- Модальное окно для выбора исполнителей концерта -->
     <div id="artists-modal" class="modal">
         <div class="modal-content">
             <h3>Выбор исполнителей для концерта</h3>

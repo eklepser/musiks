@@ -28,8 +28,96 @@
             <button class="tab-btn" data-tab="genres">Жанры</button>
         </div>
 
-        <!-- ВКЛАДКА КАТАЛОГА -->
         <div id="catalog-tab" class="tab-content active">
+            <div id="edit-panel" style="display: none;">
+                <h3>Редактирование товара</h3>
+                <div id="edit-ticket-form" style="display: none;">
+                    <div class="form-card">
+                        <input type="hidden" id="edit-ticket-id">
+                        <div class="form-group-row">
+                            <input type="text" id="edit-ticket-name" placeholder="Название*" required>
+                            <input type="number" id="edit-ticket-price" placeholder="Цена*" step="0.01" required>
+                            <textarea id="edit-ticket-description" placeholder="Описание"></textarea>
+                            <select id="edit-ticket-manufacturer-id" required><option value="">Производитель*</option></select>
+                            <input type="number" id="edit-ticket-stock" placeholder="Остаток">
+                            <select id="edit-ticket-concert-id" required><option value="">Концерт*</option></select>
+                            <input type="text" id="edit-ticket-price-category" placeholder="Тип места (VIP, Партер и т.д.)">
+                        </div>
+                        <div class="form-actions">
+                            <button id="edit-ticket-submit">Сохранить</button>
+                            <button id="edit-ticket-cancel">Отмена</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="edit-clothing-form" style="display: none;">
+                    <div class="form-card">
+                        <input type="hidden" id="edit-clothing-id">
+                        <div class="form-group-row">
+                            <input type="text" id="edit-clothing-name" placeholder="Название*" required>
+                            <input type="number" id="edit-clothing-price" placeholder="Цена*" step="0.01" required>
+                            <textarea id="edit-clothing-description" placeholder="Описание"></textarea>
+                            <input type="number" id="edit-clothing-stock" placeholder="Остаток">
+                            <select id="edit-clothing-manufacturer-id" required><option value="">Производитель*</option></select>
+                            <input type="text" id="edit-clothing-material" placeholder="Материал">
+                            <input type="text" id="edit-clothing-color" placeholder="Цвет">
+                            <select id="edit-clothing-size">
+                                <option value="">Размер</option>
+                                <option value="XS">XS</option>
+                                <option value="S">S</option>
+                                <option value="M">M</option>
+                                <option value="L">L</option>
+                                <option value="XL">XL</option>
+                                <option value="XXL">XXL</option>
+                            </select>
+                            <select id="edit-clothing-gender">
+                                <option value="">Пол</option>
+                                <option value="male">Мужской</option>
+                                <option value="female">Женский</option>
+                                <option value="unisex">Унисекс</option>
+                            </select>
+                        </div>
+                        <div class="form-group-row" style="align-items: center;">
+                            <label style="margin-right: 15px;">Исполнители:</label>
+                            <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
+                                <div id="edit-clothing-selected-artists-list" style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 8px; min-height: 40px; background: #f9f9f9;"></div>
+                                <button type="button" id="edit-clothing-artists-btn" class="artists-btn">Выбрать исполнителей</button>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button id="edit-clothing-submit">Сохранить</button>
+                            <button id="edit-clothing-cancel">Отмена</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="edit-accessory-form" style="display: none;">
+                    <div class="form-card">
+                        <input type="hidden" id="edit-accessory-id">
+                        <div class="form-group-row">
+                            <input type="text" id="edit-accessory-name" placeholder="Название*" required>
+                            <input type="number" id="edit-accessory-price" placeholder="Цена*" step="0.01" required>
+                            <textarea id="edit-accessory-description" placeholder="Описание"></textarea>
+                            <input type="number" id="edit-accessory-stock" placeholder="Остаток">
+                            <select id="edit-accessory-manufacturer-id" required><option value="">Производитель*</option></select>
+                            <input type="text" id="edit-accessory-material" placeholder="Материал">
+                            <input type="text" id="edit-accessory-color" placeholder="Цвет">
+                            <input type="text" id="edit-accessory-type" placeholder="Тип">
+                            <input type="number" id="edit-accessory-weight" placeholder="Вес (г)" step="0.01">
+                        </div>
+                        <div class="form-group-row" style="align-items: center;">
+                            <label style="margin-right: 15px;">Исполнители:</label>
+                            <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
+                                <div id="edit-accessory-selected-artists-list" style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 8px; min-height: 40px; background: #f9f9f9;"></div>
+                                <button type="button" id="edit-accessory-artists-btn" class="artists-btn">Выбрать исполнителей</button>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button id="edit-accessory-submit">Сохранить</button>
+                            <button id="edit-accessory-cancel">Отмена</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="filters-card">
                 <h3>Фильтры и сортировка</h3>
                 <div class="filter-group">
@@ -77,103 +165,6 @@
                 </div>
             </div>
 
-            <div id="edit-panel" style="display: none;">
-                <h3>Редактирование товара</h3>
-                <!-- Редактирование билета -->
-                <div id="edit-ticket-form" style="display: none;">
-                    <div class="form-card">
-                        <input type="hidden" id="edit-ticket-id">
-                        <div class="form-group-row">
-                            <input type="text" id="edit-ticket-name" placeholder="Название*" required>
-                            <input type="number" id="edit-ticket-price" placeholder="Цена*" step="0.01" required>
-                            <textarea id="edit-ticket-description" placeholder="Описание"></textarea>
-                            <select id="edit-ticket-manufacturer-id" required><option value="">Производитель*</option></select>
-                            <input type="number" id="edit-ticket-stock" placeholder="Остаток">
-                            <select id="edit-ticket-concert-id" required><option value="">Концерт*</option></select>
-                            <input type="text" id="edit-ticket-price-category" placeholder="Тип места (VIP, Партер и т.д.)">
-                            <input type="number" id="edit-ticket-quantity" placeholder="Количество билетов" min="1">
-                            <button id="edit-ticket-submit">Сохранить</button>
-                            <button id="edit-ticket-cancel">Отмена</button>
-                        </div>
-                        <div id="edit-ticket-error" class="error"></div>
-                        <div id="edit-ticket-success" class="success"></div>
-                    </div>
-                </div>
-                <!-- Редактирование одежды (с выбором исполнителей) -->
-                <div id="edit-clothing-form" style="display: none;">
-                    <div class="form-card">
-                        <input type="hidden" id="edit-clothing-id">
-                        <div class="form-group-row">
-                            <input type="text" id="edit-clothing-name" placeholder="Название*" required>
-                            <input type="number" id="edit-clothing-price" placeholder="Цена*" step="0.01" required>
-                            <textarea id="edit-clothing-description" placeholder="Описание"></textarea>
-                            <input type="number" id="edit-clothing-stock" placeholder="Остаток">
-                            <select id="edit-clothing-manufacturer-id" required><option value="">Производитель*</option></select>
-                            <input type="text" id="edit-clothing-material" placeholder="Материал">
-                            <input type="text" id="edit-clothing-color" placeholder="Цвет">
-                            <select id="edit-clothing-size">
-                                <option value="">Размер</option>
-                                <option value="XS">XS</option>
-                                <option value="S">S</option>
-                                <option value="M">M</option>
-                                <option value="L">L</option>
-                                <option value="XL">XL</option>
-                                <option value="XXL">XXL</option>
-                            </select>
-                            <select id="edit-clothing-gender">
-                                <option value="">Пол</option>
-                                <option value="male">Мужской</option>
-                                <option value="female">Женский</option>
-                                <option value="unisex">Унисекс</option>
-                            </select>
-                        </div>
-                        <div class="form-group-row" style="align-items: center;">
-                            <label style="margin-right: 15px;">Исполнители:</label>
-                            <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
-                                <div id="edit-clothing-selected-artists-list" style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 8px; min-height: 40px; background: #f9f9f9;"></div>
-                                <button type="button" id="edit-clothing-artists-btn" class="artists-btn">Выбрать исполнителей</button>
-                            </div>
-                        </div>
-                        <div class="form-actions">
-                            <button id="edit-clothing-submit">Сохранить</button>
-                            <button id="edit-clothing-cancel">Отмена</button>
-                        </div>
-                        <div id="edit-clothing-error" class="error"></div>
-                        <div id="edit-clothing-success" class="success"></div>
-                    </div>
-                </div>
-                <!-- Редактирование аксессуара (с выбором исполнителей) -->
-                <div id="edit-accessory-form" style="display: none;">
-                    <div class="form-card">
-                        <input type="hidden" id="edit-accessory-id">
-                        <div class="form-group-row">
-                            <input type="text" id="edit-accessory-name" placeholder="Название*" required>
-                            <input type="number" id="edit-accessory-price" placeholder="Цена*" step="0.01" required>
-                            <textarea id="edit-accessory-description" placeholder="Описание"></textarea>
-                            <input type="number" id="edit-accessory-stock" placeholder="Остаток">
-                            <select id="edit-accessory-manufacturer-id" required><option value="">Производитель*</option></select>
-                            <input type="text" id="edit-accessory-material" placeholder="Материал">
-                            <input type="text" id="edit-accessory-color" placeholder="Цвет">
-                            <input type="text" id="edit-accessory-type" placeholder="Тип">
-                            <input type="number" id="edit-accessory-weight" placeholder="Вес (г)" step="0.01">
-                        </div>
-                        <div class="form-group-row" style="align-items: center;">
-                            <label style="margin-right: 15px;">Исполнители:</label>
-                            <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
-                                <div id="edit-accessory-selected-artists-list" style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 8px; min-height: 40px; background: #f9f9f9;"></div>
-                                <button type="button" id="edit-accessory-artists-btn" class="artists-btn">Выбрать исполнителей</button>
-                            </div>
-                        </div>
-                        <div class="form-actions">
-                            <button id="edit-accessory-submit">Сохранить</button>
-                            <button id="edit-accessory-cancel">Отмена</button>
-                        </div>
-                        <div id="edit-accessory-error" class="error"></div>
-                        <div id="edit-accessory-success" class="success"></div>
-                    </div>
-                </div>
-            </div>
-
             <div class="stats-card">
                 <p>Найдено товаров: <span id="found-count" class="highlight-number">0</span></p>
             </div>
@@ -184,12 +175,11 @@
                 <tbody id="catalog-tbody">
                     <tr><td colspan="8" class="centered-message">Загрузка...–
                 </tbody>
+                </tbody>
             </table>
         </div>
 
-        <!-- ВКЛАДКА ДОБАВЛЕНИЯ ТОВАРОВ -->
         <div id="add-tab" class="tab-content">
-            <!-- Добавление билета (без исполнителей) -->
             <div class="add-section">
                 <h3>Добавление билета</h3>
                 <div class="form-card">
@@ -201,17 +191,15 @@
                         <select id="ticket-manufacturer-id" required><option value="">Производитель*</option></select>
                         <input type="number" id="ticket-stock" placeholder="Остаток">
                         <select id="ticket-concert-id" required><option value="">Концерт*</option></select>
-                        <input type="text" id="ticket-price-category" placeholder="Тип места (VIP, Партер и т.д.)">
-                        <input type="number" id="ticket-quantity" placeholder="Количество билетов" value="1" min="1">
+                        <input type="text" id="ticket-price-category" placeholder="Тип места">
+                    </div>
+                    <div class="form-actions">
                         <button id="ticket-submit">Добавить</button>
                         <button id="ticket-cancel" style="display:none;">Отмена</button>
                     </div>
-                    <div id="ticket-error" class="error"></div>
-                    <div id="ticket-success" class="success"></div>
                 </div>
             </div>
 
-            <!-- Добавление одежды (с выбором исполнителей) -->
             <div class="add-section">
                 <h3>Добавление одежды</h3>
                 <div class="form-card">
@@ -251,12 +239,9 @@
                         <button id="clothing-submit">Добавить</button>
                         <button id="clothing-cancel" style="display:none;">Отмена</button>
                     </div>
-                    <div id="clothing-error" class="error"></div>
-                    <div id="clothing-success" class="success"></div>
                 </div>
             </div>
 
-            <!-- Добавление аксессуара (с выбором исполнителей) -->
             <div class="add-section">
                 <h3>Добавление аксессуара</h3>
                 <div class="form-card">
@@ -283,13 +268,10 @@
                         <button id="accessory-submit">Добавить</button>
                         <button id="accessory-cancel" style="display:none;">Отмена</button>
                     </div>
-                    <div id="accessory-error" class="error"></div>
-                    <div id="accessory-success" class="success"></div>
                 </div>
             </div>
         </div>
 
-        <!-- ВКЛАДКА ПРОИЗВОДИТЕЛИ -->
         <div id="manufacturers-tab" class="tab-content">
             <div class="filters-card">
                 <h3>Фильтры и сортировка</h3>
@@ -320,8 +302,6 @@
                     <button id="manufacturer-submit">Добавить</button>
                     <button id="manufacturer-cancel" style="display:none;">Отмена</button>
                 </div>
-                <div id="manufacturer-error" class="error"></div>
-                <div id="manufacturer-success" class="success"></div>
             </div>
             <div class="stats-card">
                 <p>Найдено производителей: <span id="manufacturer-found-count" class="highlight-number">0</span></p>
@@ -333,10 +313,10 @@
                 <tbody id="manufacturers-tbody">
                     <tr><td colspan="5" class="centered-message">Загрузка...–
                 </tbody>
+                </tbody>
             </table>
         </div>
 
-        <!-- ВКЛАДКА ЖАНРЫ -->
         <div id="genres-tab" class="tab-content">
             <div class="filters-card">
                 <h3>Фильтры и сортировка</h3>
@@ -364,8 +344,6 @@
                     <button id="genre-submit">Добавить</button>
                     <button id="genre-cancel" style="display:none;">Отмена</button>
                 </div>
-                <div id="genre-error" class="error"></div>
-                <div id="genre-success" class="success"></div>
             </div>
             <div class="stats-card">
                 <p>Найдено жанров: <span id="genre-found-count" class="highlight-number">0</span></p>
@@ -377,10 +355,10 @@
                 <tbody id="genres-tbody">
                     <tr><td colspan="4" class="centered-message">Загрузка...–
                 </tbody>
+                </tbody>
             </table>
         </div>
 
-        <!-- Модальное окно для выбора исполнителей (общее для одежды и аксессуаров) -->
         <div id="artists-merch-modal" class="modal">
             <div class="modal-content">
                 <h3>Выбор исполнителей для товара</h3>
@@ -393,7 +371,6 @@
             </div>
         </div>
 
-        <!-- Остальные модальные окна -->
         <div id="product-artists-modal" class="modal">
             <div class="modal-content">
                 <h3>Исполнители товара</h3>
