@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using MusicMarketplace.DTOs;
 using MusicMarketplace.Models;
 using MusicMarketplace.Services;
 
@@ -9,10 +10,7 @@ namespace MusicMarketplace.Controllers
     public class OrderItemsController : ControllerBase
     {
         private readonly OrderItemsService _orderItemsService;
-        public OrderItemsController(OrderItemsService orderItemsService)
-        {
-            _orderItemsService = orderItemsService;
-        }
+        public OrderItemsController(OrderItemsService orderItemsService) => _orderItemsService = orderItemsService;
 
         [HttpGet]
         public async Task<IActionResult> GetOrderItems()
@@ -25,7 +23,7 @@ namespace MusicMarketplace.Controllers
         public async Task<IActionResult> GetOrderItem(int id)
         {
             var item = await _orderItemsService.GetByIdAsync(id);
-            if (item == null) return NotFound();
+            if (item == null) return NotFound(new { message = $"Элемент заказа с ID {id} не найден" });
             return Ok(item);
         }
 
@@ -37,13 +35,13 @@ namespace MusicMarketplace.Controllers
                 await _orderItemsService.UpdateAsync(id, orderItem);
                 return NoContent();
             }
-            catch (ArgumentException)
+            catch (ArgumentException ex)
             {
-                return BadRequest();
+                return BadRequest(new { message = ex.Message });
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
-                return NotFound();
+                return NotFound(new { message = ex.Message });
             }
         }
 
@@ -57,7 +55,7 @@ namespace MusicMarketplace.Controllers
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(ex.Message);
+                return Conflict(new { message = ex.Message });
             }
         }
 
@@ -69,9 +67,9 @@ namespace MusicMarketplace.Controllers
                 await _orderItemsService.DeleteAsync(id);
                 return NoContent();
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
-                return NotFound();
+                return NotFound(new { message = ex.Message });
             }
         }
 
@@ -83,9 +81,9 @@ namespace MusicMarketplace.Controllers
                 var items = await _orderItemsService.GetByOrderAsync(orderId);
                 return Ok(items);
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
-                return NotFound("Товары не найдены");
+                return NotFound(new { message = ex.Message });
             }
         }
     }

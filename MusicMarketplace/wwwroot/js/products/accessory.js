@@ -56,7 +56,9 @@ function clearAccessoryForm() {
     document.getElementById('accessory-edit-id').value = '';
     accessoryEditId = null;
     selectedArtistsForAccessory = [];
-    renderAccessorySelectedArtists();
+    window.selectedGenresForAccessory = [];
+    if (typeof renderAccessorySelectedArtists === 'function') renderAccessorySelectedArtists();
+    if (typeof renderAccessorySelectedGenres === 'function') renderAccessorySelectedGenres();
     document.getElementById('accessory-submit').innerText = 'Добавить';
     document.getElementById('accessory-cancel').style.display = 'none';
 }
@@ -75,7 +77,36 @@ function fillEditAccessoryForm(a) {
     document.getElementById('edit-accessory-weight').value = a.weight || '';
     document.getElementById('edit-accessory-form').style.display = 'block';
     selectedArtistsForAccessory = ensureArtistIdsArray(a.artistIds);
-    renderEditAccessorySelectedArtists();
+    window.selectedGenresForAccessory = a.genreIds || [];
+    if (typeof renderEditAccessorySelectedArtists === 'function') renderEditAccessorySelectedArtists();
+    if (typeof renderEditAccessorySelectedGenres === 'function') renderEditAccessorySelectedGenres();
+    loadProductGenresForEdit(a.product_id, 'accessory');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function validateAccessoryFields(name, price, stock, manufacturerId, material, color, type, weight, description) {
+    let err = validateRequiredString(name, 'Название', 2, 200, true);
+    if (err) return err;
+    err = validatePrice(price);
+    if (err) return err;
+    err = validateStock(stock);
+    if (err) return err;
+    if (!manufacturerId) return 'Выберите производителя';
+    err = validateOptionalString(material, 'Материал', 50);
+    if (err) return err;
+    err = validateOptionalString(color, 'Цвет', 30);
+    if (err) return err;
+    err = validateOptionalString(type, 'Тип аксессуара', 50);
+    if (err) return err;
+    if (weight && weight.trim() !== '') {
+        err = validatePositiveNumber(weight, 'Вес');
+        if (err) return err;
+    }
+    if (description && description.trim()) {
+        err = validateOptionalString(description, 'Описание', 1000);
+        if (err) return err;
+    }
+    return null;
 }
 
 async function saveEditAccessory() {
@@ -86,28 +117,35 @@ async function saveEditAccessory() {
         return;
     }
     const name = document.getElementById('edit-accessory-name').value.trim();
-    const price = parseFloat(document.getElementById('edit-accessory-price').value);
-    if (isNaN(price) || price <= 0) {
-        showToast('Цена должна быть положительным числом', 'error');
+    const price = document.getElementById('edit-accessory-price').value;
+    const stock = document.getElementById('edit-accessory-stock').value;
+    const material = document.getElementById('edit-accessory-material').value.trim();
+    const color = document.getElementById('edit-accessory-color').value.trim();
+    const type = document.getElementById('edit-accessory-type').value.trim();
+    const weight = document.getElementById('edit-accessory-weight').value;
+    const description = document.getElementById('edit-accessory-description').value.trim();
+
+    const validationError = validateAccessoryFields(name, price, stock, manufacturerId, material, color, type, weight, description);
+    if (validationError) {
+        showToast(validationError, 'error');
         return;
     }
+
     const data = {
         accessory_id: parseInt(id),
         name: name,
-        price: price,
-        description: document.getElementById('edit-accessory-description').value.trim(),
-        stock: parseInt(document.getElementById('edit-accessory-stock').value) || 0,
+        price: parseFloat(price),
+        description: description || null,
+        stock: parseInt(stock, 10),
         manufacturer_id: manufacturerId,
-        material: document.getElementById('edit-accessory-material').value.trim(),
-        color: document.getElementById('edit-accessory-color').value.trim(),
-        accessory_type: document.getElementById('edit-accessory-type').value.trim(),
-        weight: parseFloat(document.getElementById('edit-accessory-weight').value) || null,
-        artistIds: selectedArtistsForAccessory
+        material: material || null,
+        color: color || null,
+        accessory_type: type || null,
+        weight: weight ? parseFloat(weight) : null,
+        artistIds: selectedArtistsForAccessory,
+        genreIds: window.selectedGenresForAccessory
     };
-    if (!data.name) {
-        showToast('Заполните название', 'error');
-        return;
-    }
+
     try {
         const resp = await fetch(`${ACCESSORIES_URL}/${id}`, {
             method: 'PUT',
@@ -115,19 +153,23 @@ async function saveEditAccessory() {
             body: JSON.stringify(data)
         });
         if (resp.status === 409) {
-            const text = await resp.text();
-            showToast(text.includes('already') ? text : 'Такой аксессуар уже существует', 'error');
+            const error = await resp.json();
+            showToast(error.message || 'Такой аксессуар уже существует', 'error');
             return;
         }
-        if (!resp.ok) {
-            let errorMsg = 'Ошибка обновления';
-            try {
-                const text = await resp.text();
-                if (text) errorMsg = text;
-            } catch (e) { }
+        if (resp.status === 400) {
+            const error = await resp.json();
+            let errorMsg = 'Ошибка валидации';
+            if (error.errors) {
+                const firstError = Object.values(error.errors)[0];
+                if (firstError && firstError[0]) errorMsg = firstError[0];
+            } else if (error.message) {
+                errorMsg = error.message;
+            }
             showToast(errorMsg, 'error');
             return;
         }
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
         await loadAllItems();
         hideEditPanel();
         showToast(`Запись «${name}» (ID ${id}) обновлена`, 'success');
@@ -137,22 +179,37 @@ async function saveEditAccessory() {
 }
 
 async function saveAccessory() {
-    const errorMsg = validateAccessory();
-    if (errorMsg) { showToast(errorMsg, 'error'); return; }
-    const id = document.getElementById('accessory-edit-id').value;
     const name = document.getElementById('accessory-name').value.trim();
+    const price = document.getElementById('accessory-price').value;
+    const stock = document.getElementById('accessory-stock').value;
+    const manufacturerId = document.getElementById('accessory-manufacturer-id').value;
+    const material = document.getElementById('accessory-material').value.trim();
+    const color = document.getElementById('accessory-color').value.trim();
+    const type = document.getElementById('accessory-type').value.trim();
+    const weight = document.getElementById('accessory-weight').value;
+    const description = document.getElementById('accessory-description').value.trim();
+
+    const validationError = validateAccessoryFields(name, price, stock, manufacturerId, material, color, type, weight, description);
+    if (validationError) {
+        showToast(validationError, 'error');
+        return;
+    }
+
+    const id = document.getElementById('accessory-edit-id').value;
     const data = {
         name: name,
-        price: parseFloat(document.getElementById('accessory-price').value),
-        description: document.getElementById('accessory-description').value.trim(),
-        stock: parseInt(document.getElementById('accessory-stock').value) || 0,
-        manufacturer_id: parseInt(document.getElementById('accessory-manufacturer-id').value) || null,
-        material: document.getElementById('accessory-material').value.trim(),
-        color: document.getElementById('accessory-color').value.trim(),
-        accessory_type: document.getElementById('accessory-type').value.trim(),
-        weight: parseFloat(document.getElementById('accessory-weight').value) || null,
-        artistIds: selectedArtistsForAccessory
+        price: parseFloat(price),
+        description: description || null,
+        stock: parseInt(stock, 10),
+        manufacturer_id: parseInt(manufacturerId),
+        material: material || null,
+        color: color || null,
+        accessory_type: type || null,
+        weight: weight ? parseFloat(weight) : null,
+        artistIds: selectedArtistsForAccessory,
+        genreIds: window.selectedGenresForAccessory
     };
+
     let url = ACCESSORIES_URL, method = 'POST', isUpdate = false;
     if (id) {
         data.accessory_id = parseInt(id);
@@ -160,22 +217,27 @@ async function saveAccessory() {
         method = 'PUT';
         isUpdate = true;
     }
+
     try {
         const resp = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         if (resp.status === 409) {
-            const text = await resp.text();
-            showToast(text.includes('already') ? text : 'Такой аксессуар уже существует', 'error');
+            const error = await resp.json();
+            showToast(error.message || 'Такой аксессуар уже существует', 'error');
             return;
         }
-        if (!resp.ok) {
-            let errorMsg = 'Ошибка сохранения';
-            try {
-                const text = await resp.text();
-                if (text) errorMsg = text;
-            } catch (e) { }
+        if (resp.status === 400) {
+            const error = await resp.json();
+            let errorMsg = 'Ошибка валидации';
+            if (error.errors) {
+                const firstError = Object.values(error.errors)[0];
+                if (firstError && firstError[0]) errorMsg = firstError[0];
+            } else if (error.message) {
+                errorMsg = error.message;
+            }
             showToast(errorMsg, 'error');
             return;
         }
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
         let newId = id;
         if (!id) {
             const result = await resp.json();
@@ -198,12 +260,12 @@ async function deleteAccessory(id, name) {
     try {
         const resp = await fetch(`${ACCESSORIES_URL}/${id}`, { method: 'DELETE' });
         if (resp.status === 409) {
-            const errorMessage = await resp.text();
-            showToast(errorMessage || 'Невозможно удалить товар, который есть в заказах', 'error');
+            const error = await resp.json();
+            showToast(error.message || 'Невозможно удалить товар, который есть в заказах', 'error');
             return;
         }
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        hideEditPanel(); 
+        hideEditPanel();
         await loadAllItems();
         showToast(`Запись «${name}» (ID ${id}) удалена`, 'success');
     } catch (err) {
@@ -216,7 +278,6 @@ function openAccessoryArtistsModal() {
     const artistsListDiv = document.getElementById('modal-merch-artists-list');
     const artistSelect = document.getElementById('modal-merch-artist-select');
     if (!modal || !artistsListDiv || !artistSelect) return;
-
     artistsListDiv.innerHTML = '';
     if (selectedArtistsForAccessory.length === 0) {
         artistsListDiv.innerHTML = '<p>Нет выбранных исполнителей</p>';
@@ -270,6 +331,7 @@ function closeArtistsMerchModal() {
 
 document.getElementById('modal-merch-add-artist')?.addEventListener('click', addAccessoryArtistFromModal);
 document.getElementById('modal-merch-close')?.addEventListener('click', closeArtistsMerchModal);
+
 window.addEventListener('click', (e) => {
     const modal = document.getElementById('artists-merch-modal');
     if (e.target === modal && modal) modal.style.display = 'none';

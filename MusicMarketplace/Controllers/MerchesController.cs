@@ -9,10 +9,7 @@ namespace MusicMarketplace.Controllers
     public class MerchesController : ControllerBase
     {
         private readonly MerchesService _merchesService;
-        public MerchesController(MerchesService merchesService)
-        {
-            _merchesService = merchesService;
-        }
+        public MerchesController(MerchesService merchesService) => _merchesService = merchesService;
 
         [HttpGet]
         public async Task<IActionResult> GetMerches()
@@ -25,7 +22,7 @@ namespace MusicMarketplace.Controllers
         public async Task<IActionResult> GetMerch(int id)
         {
             var merch = await _merchesService.GetByIdAsync(id);
-            if (merch == null) return NotFound();
+            if (merch == null) return NotFound(new { message = $"Merch с ID {id} не найден" });
             return Ok(merch);
         }
 
@@ -37,13 +34,13 @@ namespace MusicMarketplace.Controllers
                 await _merchesService.UpdateAsync(id, merch);
                 return NoContent();
             }
-            catch (ArgumentException)
+            catch (ArgumentException ex)
             {
-                return BadRequest();
+                return BadRequest(new { message = ex.Message });
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
-                return NotFound();
+                return NotFound(new { message = ex.Message });
             }
         }
 
@@ -62,9 +59,9 @@ namespace MusicMarketplace.Controllers
                 await _merchesService.DeleteAsync(id);
                 return NoContent();
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
-                return NotFound();
+                return NotFound(new { message = ex.Message });
             }
         }
     }

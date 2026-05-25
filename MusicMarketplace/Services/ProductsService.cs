@@ -24,35 +24,75 @@ namespace MusicMarketplace.Services
 
         public async Task<Product> CreateAsync(ProductDto dto)
         {
+            if (string.IsNullOrWhiteSpace(dto.name))
+                throw new ArgumentException("Название товара обязательно");
+            if (dto.price <= 0)
+                throw new ArgumentException("Цена должна быть больше нуля");
+            if (dto.manufacturer_id <= 0)
+                throw new ArgumentException("Производитель обязателен");
+            if (dto.stock < 0)
+                throw new ArgumentException("Остаток не может быть отрицательным");
+
+            var exists = await _context.Products.AnyAsync(p => p.name == dto.name.Trim());
+            if (exists)
+                throw new InvalidOperationException($"Товар с названием '{dto.name}' уже существует");
+
             var sql = "SELECT * FROM create_product({0}, {1}, {2}, {3}, {4})";
             var result = await _context.Set<Product>().FromSqlRaw(
                 sql,
-                dto.name,
+                dto.name.Trim(),
                 dto.price,
-                dto.description ?? (object)DBNull.Value,
+                string.IsNullOrWhiteSpace(dto.description) ? null : dto.description.Trim(),
                 dto.stock,
                 dto.manufacturer_id
             ).FirstOrDefaultAsync();
+
             return result;
         }
 
         public async Task<bool> UpdateAsync(int id, ProductDto dto)
         {
+            if (string.IsNullOrWhiteSpace(dto.name))
+                throw new ArgumentException("Название товара обязательно");
+            if (dto.price <= 0)
+                throw new ArgumentException("Цена должна быть больше нуля");
+            if (dto.manufacturer_id <= 0)
+                throw new ArgumentException("Производитель обязателен");
+            if (dto.stock < 0)
+                throw new ArgumentException("Остаток не может быть отрицательным");
+
+            var existing = await _context.Products.FindAsync(id);
+            if (existing == null)
+                throw new KeyNotFoundException($"Товар с ID {id} не найден");
+
+            var conflict = await _context.Products.AnyAsync(p => p.name == dto.name.Trim() && p.product_id != id);
+            if (conflict)
+                throw new InvalidOperationException($"Товар с названием '{dto.name}' уже существует");
+
             var sql = "SELECT update_product({0}, {1}, {2}, {3}, {4}, {5})";
             var result = await _context.Database.ExecuteSqlRawAsync(
                 sql,
                 id,
-                dto.name,
+                dto.name.Trim(),
                 dto.price,
-                dto.description ?? (object)DBNull.Value,
+                string.IsNullOrWhiteSpace(dto.description) ? null : dto.description.Trim(),
                 dto.stock,
                 dto.manufacturer_id
             );
+
             return result > 0;
         }
 
         public async Task<bool> DeleteAsync(int id)
         {
+            var product = await _context.Products.FindAsync(id);
+            if (product == null)
+                throw new KeyNotFoundException($"Товар с ID {id} не найден");
+
+            var hasOrderItems = await _context.OrderItems.AnyAsync(oi => oi.product_id == id);
+            if (hasOrderItems)
+                throw new InvalidOperationException("Нельзя удалить товар, который есть в заказах");
+
             var sql = "SELECT delete_product({0})";
             var result = await _context.Database.ExecuteSqlRawAsync(sql, id);
             return result > 0;
@@ -65,20 +105,13 @@ namespace MusicMarketplace.Services
             var result = new List<object>();
 
             if (string.IsNullOrEmpty(type) || type == "ticket")
-            {
-                var tickets = await GetFilteredTicketsAsync(searchName, manufacturerId, artistId, inStock, priceMin, priceMax, selectedGenres);
-                result.AddRange(tickets);
-            }
+                result.AddRange(await GetFilteredTicketsAsync(searchName, manufacturerId, artistId, inStock, priceMin, priceMax, selectedGenres));
+
             if (string.IsNullOrEmpty(type) || type == "clothing")
-            {
-                var clothings = await GetFilteredClothingsAsync(searchName, manufacturerId, artistId, inStock, priceMin, priceMax, selectedGenres);
-                result.AddRange(clothings);
-            }
+                result.AddRange(await GetFilteredClothingsAsync(searchName, manufacturerId, artistId, inStock, priceMin, priceMax, selectedGenres));
+
             if (string.IsNullOrEmpty(type) || type == "accessory")
-            {
-                var accessories = await GetFilteredAccessoriesAsync(searchName, manufacturerId, artistId, inStock, priceMin, priceMax, selectedGenres);
-                result.AddRange(accessories);
-            }
+                result.AddRange(await GetFilteredAccessoriesAsync(searchName, manufacturerId, artistId, inStock, priceMin, priceMax, selectedGenres));
 
             result = sortBy switch
             {
@@ -159,16 +192,16 @@ namespace MusicMarketplace.Services
         public int product_id { get; set; }
         public string name { get; set; }
         public decimal price { get; set; }
-        public string description { get; set; }
+        public string? description { get; set; }
         public int stock { get; set; }
         public int manufacturer_id { get; set; }
         public string type { get; set; }
         public string typeName { get; set; }
         public int concert_id { get; set; }
-        public string concert_title { get; set; }
-        public string price_category { get; set; }
-        public string artistNames { get; set; }
-        public string artistIds { get; set; }
+        public string? concert_title { get; set; }
+        public string? price_category { get; set; }
+        public string? artistNames { get; set; }
+        public string? artistIds { get; set; }
     }
 
     public class ClothingFilterResult
@@ -177,17 +210,17 @@ namespace MusicMarketplace.Services
         public int product_id { get; set; }
         public string name { get; set; }
         public decimal price { get; set; }
-        public string description { get; set; }
+        public string? description { get; set; }
         public int stock { get; set; }
         public int manufacturer_id { get; set; }
         public string type { get; set; }
         public string typeName { get; set; }
-        public string material { get; set; }
-        public string color { get; set; }
-        public string size { get; set; }
-        public string gender { get; set; }
-        public string artistNames { get; set; }
-        public string artistIds { get; set; }
+        public string? material { get; set; }
+        public string? color { get; set; }
+        public string? size { get; set; }
+        public string? gender { get; set; }
+        public string? artistNames { get; set; }
+        public string? artistIds { get; set; }
     }
 
     public class AccessoryFilterResult
@@ -196,16 +229,16 @@ namespace MusicMarketplace.Services
         public int product_id { get; set; }
         public string name { get; set; }
         public decimal price { get; set; }
-        public string description { get; set; }
+        public string? description { get; set; }
         public int stock { get; set; }
         public int manufacturer_id { get; set; }
         public string type { get; set; }
         public string typeName { get; set; }
-        public string material { get; set; }
-        public string color { get; set; }
-        public string accessory_type { get; set; }
+        public string? material { get; set; }
+        public string? color { get; set; }
+        public string? accessory_type { get; set; }
         public decimal? weight { get; set; }
-        public string artistNames { get; set; }
-        public string artistIds { get; set; }
+        public string? artistNames { get; set; }
+        public string? artistIds { get; set; }
     }
 }

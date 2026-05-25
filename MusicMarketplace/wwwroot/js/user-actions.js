@@ -20,7 +20,8 @@ async function addToWishlist(productId, productName) {
             body: JSON.stringify(data)
         });
         if (resp.status === 409) {
-            showToast('Товар уже в вишлисте', 'warning');
+            const error = await resp.json();
+            showToast(error.message || 'Товар уже в вишлисте', 'warning');
             return false;
         }
         if (!resp.ok) {
@@ -56,7 +57,8 @@ async function addToCart(productId, productName, quantity = 1) {
             body: JSON.stringify(data)
         });
         if (resp.status === 409) {
-            showToast('Товар уже в корзине', 'warning');
+            const error = await resp.json();
+            showToast(error.message || 'Товар уже в корзине', 'warning');
             return false;
         }
         if (!resp.ok) {
@@ -97,7 +99,8 @@ async function addReview(productId, productName, rating, reviewText) {
             body: JSON.stringify(data)
         });
         if (resp.status === 409) {
-            showToast('Вы уже оставляли отзыв на этот товар', 'warning');
+            const error = await resp.json();
+            showToast(error.message || 'Вы уже оставляли отзыв на этот товар', 'warning');
             return false;
         }
         if (!resp.ok) {

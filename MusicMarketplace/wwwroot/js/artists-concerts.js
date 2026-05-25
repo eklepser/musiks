@@ -132,7 +132,7 @@ async function renderArtists() {
         if (!tbody) return;
         tbody.innerHTML = '';
         if (artists.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Нет данных</tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Нет данных</tbody>';
             if (countSpan) countSpan.innerText = '0';
             return;
         }
@@ -161,7 +161,7 @@ async function renderArtists() {
     } catch (err) {
         console.error(err);
         const tbody = document.getElementById('artists-tbody');
-        if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Ошибка загрузки</tr>';
+        if (tbody) tbody.innerHTML = '<td><td colspan="6" class="centered-message">Ошибка загрузки</tbody>';
     }
 }
 
@@ -188,7 +188,7 @@ async function renderConcerts() {
         if (!tbody) return;
         tbody.innerHTML = '';
         if (concerts.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Нет данных</tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Нет данных</tbody>';
             if (countSpan) countSpan.innerText = '0';
             return;
         }
@@ -217,7 +217,7 @@ async function renderConcerts() {
     } catch (err) {
         console.error(err);
         const tbody = document.getElementById('concerts-tbody');
-        if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Ошибка загрузки</tr>';
+        if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Ошибка загрузки</tbody>';
     }
 }
 

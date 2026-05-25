@@ -9,10 +9,7 @@ namespace MusicMarketplace.Controllers
     public class ReviewsController : ControllerBase
     {
         private readonly ReviewsService _reviewsService;
-        public ReviewsController(ReviewsService reviewsService)
-        {
-            _reviewsService = reviewsService;
-        }
+        public ReviewsController(ReviewsService reviewsService) => _reviewsService = reviewsService;
 
         [HttpGet("byUser/{userId}")]
         public async Task<IActionResult> GetByUser(int userId)
@@ -42,7 +39,7 @@ namespace MusicMarketplace.Controllers
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(ex.Message);
+                return Conflict(new { message = ex.Message });
             }
         }
 
@@ -54,9 +51,9 @@ namespace MusicMarketplace.Controllers
                 await _reviewsService.DeleteAsync(userId, productId);
                 return NoContent();
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
-                return NotFound();
+                return NotFound(new { message = ex.Message });
             }
         }
     }

@@ -7,13 +7,13 @@ public class ClothingDto
     public int product_id { get; set; }
     public string name { get; set; }
     public decimal price { get; set; }
-    public string description { get; set; }
+    public string? description { get; set; }
     public int stock { get; set; }
     public int manufacturer_id { get; set; }
-    public string material { get; set; }
-    public string color { get; set; }
-    public string size { get; set; }
-    public string gender { get; set; }
+    public string? material { get; set; }
+    public string? color { get; set; }
+    public string? size { get; set; }
+    public string? gender { get; set; }
 }
 
 public class ClothingResponseDto
@@ -22,15 +22,15 @@ public class ClothingResponseDto
     public int product_id { get; set; }
     public string name { get; set; }
     public decimal price { get; set; }
-    public string description { get; set; }
+    public string? description { get; set; }
     public int stock { get; set; }
     public int manufacturer_id { get; set; }
-    public string material { get; set; }
-    public string color { get; set; }
-    public string size { get; set; }
-    public string gender { get; set; }
-    public List<int> artistIds { get; set; }
-    public string artistNames { get; set; }
+    public string? material { get; set; }
+    public string? color { get; set; }
+    public string? size { get; set; }
+    public string? gender { get; set; }
+    public List<int>? artistIds { get; set; }
+    public string? artistNames { get; set; }
 }
 
 public class ClothingCreateUpdateDto
@@ -38,12 +38,13 @@ public class ClothingCreateUpdateDto
     public int clothing_id { get; set; }
     public string name { get; set; }
     public decimal price { get; set; }
-    public string description { get; set; }
+    public string? description { get; set; }
     public int stock { get; set; }
     public int manufacturer_id { get; set; }
-    public string material { get; set; }
-    public string color { get; set; }
-    public string size { get; set; }
-    public string gender { get; set; }
-    public List<int> artistIds { get; set; }
+    public string? material { get; set; }
+    public string? color { get; set; }
+    public string? size { get; set; }
+    public string? gender { get; set; }
+    public List<int>? artistIds { get; set; }
+    public List<int>? genreIds { get; set; }
 }

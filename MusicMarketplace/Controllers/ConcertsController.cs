@@ -9,10 +9,7 @@ namespace MusicMarketplace.Controllers
     public class ConcertsController : ControllerBase
     {
         private readonly ConcertsService _concertsService;
-        public ConcertsController(ConcertsService concertsService)
-        {
-            _concertsService = concertsService;
-        }
+        public ConcertsController(ConcertsService concertsService) => _concertsService = concertsService;
 
         [HttpGet]
         public async Task<IActionResult> GetConcerts()
@@ -25,7 +22,7 @@ namespace MusicMarketplace.Controllers
         public async Task<IActionResult> GetConcert(int id)
         {
             var concert = await _concertsService.GetByIdAsync(id);
-            if (concert == null) return NotFound();
+            if (concert == null) return NotFound(new { message = $"Концерт с ID {id} не найден" });
             return Ok(concert);
         }
 
@@ -56,9 +53,13 @@ namespace MusicMarketplace.Controllers
                 var concert = await _concertsService.CreateAsync(dto);
                 return CreatedAtAction(nameof(GetConcert), new { id = concert.concert_id }, concert);
             }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
             catch (InvalidOperationException ex)
             {
-                return Conflict(ex.Message);
+                return Conflict(new { message = ex.Message });
             }
         }
 
@@ -70,17 +71,17 @@ namespace MusicMarketplace.Controllers
                 await _concertsService.UpdateAsync(id, dto);
                 return NoContent();
             }
-            catch (ArgumentException)
+            catch (ArgumentException ex)
             {
-                return BadRequest();
+                return BadRequest(new { message = ex.Message });
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
-                return NotFound();
+                return NotFound(new { message = ex.Message });
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(ex.Message);
+                return Conflict(new { message = ex.Message });
             }
         }
 
@@ -92,9 +93,13 @@ namespace MusicMarketplace.Controllers
                 await _concertsService.DeleteAsync(id);
                 return NoContent();
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
-                return NotFound();
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { message = ex.Message });
             }
         }
     }

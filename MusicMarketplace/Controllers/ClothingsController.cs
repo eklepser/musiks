@@ -1,5 +1,4 @@
-﻿// ClothingsController.cs
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using MusicMarketplace.DTOs;
 using MusicMarketplace.Services;
 
@@ -10,10 +9,7 @@ namespace MusicMarketplace.Controllers
     public class ClothingsController : ControllerBase
     {
         private readonly ClothingsService _clothingsService;
-        public ClothingsController(ClothingsService clothingsService)
-        {
-            _clothingsService = clothingsService;
-        }
+        public ClothingsController(ClothingsService clothingsService) => _clothingsService = clothingsService;
 
         [HttpGet]
         public async Task<IActionResult> GetClothings()
@@ -26,15 +22,26 @@ namespace MusicMarketplace.Controllers
         public async Task<IActionResult> GetClothing(int id)
         {
             var item = await _clothingsService.GetByIdAsync(id);
-            if (item == null) return NotFound();
+            if (item == null) return NotFound(new { message = $"Одежда с ID {id} не найдена" });
             return Ok(item);
         }
 
         [HttpPost]
         public async Task<IActionResult> PostClothing(ClothingCreateUpdateDto dto)
         {
-            var result = await _clothingsService.CreateAsync(dto);
-            return CreatedAtAction(nameof(GetClothing), new { id = result.clothing_id }, result);
+            try
+            {
+                var result = await _clothingsService.CreateAsync(dto);
+                return CreatedAtAction(nameof(GetClothing), new { id = result.clothing_id }, result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { message = ex.Message });
+            }
         }
 
         [HttpPut("{id}")]
@@ -45,13 +52,17 @@ namespace MusicMarketplace.Controllers
                 await _clothingsService.UpdateAsync(id, dto);
                 return NoContent();
             }
-            catch (ArgumentException)
+            catch (ArgumentException ex)
             {
-                return BadRequest();
+                return BadRequest(new { message = ex.Message });
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
-                return NotFound();
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { message = ex.Message });
             }
         }
 
@@ -63,13 +74,13 @@ namespace MusicMarketplace.Controllers
                 await _clothingsService.DeleteAsync(id);
                 return NoContent();
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
-                return NotFound();
+                return NotFound(new { message = ex.Message });
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(ex.Message);
+                return Conflict(new { message = ex.Message });
             }
         }
     }

@@ -9,10 +9,7 @@ namespace MusicMarketplace.Controllers
     public class CartsController : ControllerBase
     {
         private readonly CartsService _cartsService;
-        public CartsController(CartsService cartsService)
-        {
-            _cartsService = cartsService;
-        }
+        public CartsController(CartsService cartsService) => _cartsService = cartsService;
 
         [HttpGet("byUser/{userId}")]
         public async Task<IActionResult> GetByUser(int userId)
@@ -24,8 +21,15 @@ namespace MusicMarketplace.Controllers
         [HttpPost]
         public async Task<IActionResult> PostCart(CartCreateDto dto)
         {
-            var newQuantity = await _cartsService.PostCartAsync(dto);
-            return Ok(new { quantity = newQuantity });
+            try
+            {
+                var newQuantity = await _cartsService.PostCartAsync(dto);
+                return Ok(new { quantity = newQuantity });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { message = ex.Message });
+            }
         }
 
         [HttpDelete("{userId}/{productId}")]
@@ -36,9 +40,9 @@ namespace MusicMarketplace.Controllers
                 await _cartsService.DeleteCartItemAsync(userId, productId, quantity);
                 return NoContent();
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
-                return NotFound();
+                return NotFound(new { message = ex.Message });
             }
         }
 
@@ -52,7 +56,7 @@ namespace MusicMarketplace.Controllers
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { message = ex.Message });
             }
         }
 

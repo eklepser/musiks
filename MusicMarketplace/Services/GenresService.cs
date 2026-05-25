@@ -23,29 +23,55 @@ namespace MusicMarketplace.Services
 
         public async Task<Genre> CreateAsync(GenreDto dto)
         {
+            if (string.IsNullOrWhiteSpace(dto.name))
+                throw new ArgumentException("Название жанра обязательно");
+
+            var exists = await _context.Genres.AnyAsync(g => g.name == dto.name.Trim());
+            if (exists)
+                throw new InvalidOperationException($"Жанр с названием '{dto.name}' уже существует");
+
             var sql = "SELECT * FROM create_genre({0}, {1})";
             var result = await _context.Set<Genre>().FromSqlRaw(
                 sql,
-                dto.name,
-                dto.description ?? (object)DBNull.Value
+                dto.name.Trim(),
+                string.IsNullOrWhiteSpace(dto.description) ? null : dto.description.Trim()
             ).FirstOrDefaultAsync();
             return result;
         }
 
         public async Task<bool> UpdateAsync(int id, GenreDto dto)
         {
+            if (string.IsNullOrWhiteSpace(dto.name))
+                throw new ArgumentException("Название жанра обязательно");
+
+            var existing = await _context.Genres.FindAsync(id);
+            if (existing == null)
+                throw new KeyNotFoundException($"Жанр с ID {id} не найден");
+
+            var conflict = await _context.Genres.AnyAsync(g => g.name == dto.name.Trim() && g.genre_id != id);
+            if (conflict)
+                throw new InvalidOperationException($"Жанр с названием '{dto.name}' уже существует");
+
             var sql = "SELECT update_genre({0}, {1}, {2})";
             var result = await _context.Database.ExecuteSqlRawAsync(
                 sql,
                 id,
-                dto.name,
-                dto.description
+                dto.name.Trim(),
+                string.IsNullOrWhiteSpace(dto.description) ? null : dto.description.Trim()
             );
             return result > 0;
         }
 
         public async Task<bool> DeleteAsync(int id)
         {
+            var genre = await _context.Genres.FindAsync(id);
+            if (genre == null)
+                throw new KeyNotFoundException($"Жанр с ID {id} не найден");
+
+            var hasProducts = await _context.ProductGenres.AnyAsync(pg => pg.genre_id == id);
+            if (hasProducts)
+                throw new InvalidOperationException("Невозможно удалить жанр, так как он используется в товарах");
+
             var sql = "SELECT delete_genre({0})";
             var result = await _context.Database.ExecuteSqlRawAsync(sql, id);
             return result > 0;
@@ -67,10 +93,7 @@ namespace MusicMarketplace.Services
             var result = await _context.Database.SqlQueryRaw<GenreNameResult>(sql).ToListAsync();
             return result.Select(r => r.name).ToList();
         }
-    }
 
-    public class GenreNameResult
-    {
-        public string name { get; set; }
+        private class GenreNameResult { public string name { get; set; } }
     }
 }

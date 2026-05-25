@@ -117,7 +117,7 @@ function renderCart() {
     const tbody = document.getElementById('cart-tbody');
     tbody.innerHTML = '';
     if (!window.cartData || window.cartData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Корзина пуста</tbody>';
+        tbody.innerHTML = '<table><td colspan="6" style="text-align: center;">Корзина пуста</tbody>';
         return;
     }
     window.cartData.forEach(item => {
@@ -359,7 +359,6 @@ async function loadDashboard() {
     showActiveTab();
 }
 
-// Обработчики (без изменений)
 document.getElementById('wishlist-apply')?.addEventListener('click', loadWishlist);
 document.getElementById('wishlist-reset')?.addEventListener('click', () => {
     document.getElementById('wishlist-search').value = '';

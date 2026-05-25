@@ -9,10 +9,7 @@ namespace MusicMarketplace.Controllers
     public class ProductsController : ControllerBase
     {
         private readonly ProductsService _productsService;
-        public ProductsController(ProductsService productsService)
-        {
-            _productsService = productsService;
-        }
+        public ProductsController(ProductsService productsService) => _productsService = productsService;
 
         [HttpGet]
         public async Task<IActionResult> GetProducts()
@@ -25,7 +22,7 @@ namespace MusicMarketplace.Controllers
         public async Task<IActionResult> GetProduct(int id)
         {
             var product = await _productsService.GetByIdAsync(id);
-            if (product == null) return NotFound();
+            if (product == null) return NotFound(new { message = $"Товар с ID {id} не найден" });
             return Ok(product);
         }
 
@@ -39,11 +36,11 @@ namespace MusicMarketplace.Controllers
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { message = ex.Message });
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(ex.Message);
+                return Conflict(new { message = ex.Message });
             }
         }
 
@@ -57,15 +54,15 @@ namespace MusicMarketplace.Controllers
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { message = ex.Message });
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
-                return NotFound();
+                return NotFound(new { message = ex.Message });
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(ex.Message);
+                return Conflict(new { message = ex.Message });
             }
         }
 
@@ -77,9 +74,13 @@ namespace MusicMarketplace.Controllers
                 await _productsService.DeleteAsync(id);
                 return NoContent();
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
-                return NotFound();
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { message = ex.Message });
             }
         }
 

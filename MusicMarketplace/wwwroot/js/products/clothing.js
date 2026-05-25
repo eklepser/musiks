@@ -56,7 +56,9 @@ function clearClothingForm() {
     document.getElementById('clothing-edit-id').value = '';
     clothingEditId = null;
     selectedArtistsForClothing = [];
-    renderClothingSelectedArtists();
+    window.selectedGenresForClothing = [];
+    if (typeof renderClothingSelectedArtists === 'function') renderClothingSelectedArtists();
+    if (typeof renderClothingSelectedGenres === 'function') renderClothingSelectedGenres();
     document.getElementById('clothing-submit').innerText = 'Добавить';
     document.getElementById('clothing-cancel').style.display = 'none';
 }
@@ -75,7 +77,30 @@ function fillEditClothingForm(c) {
     document.getElementById('edit-clothing-gender').value = c.gender || 'unisex';
     document.getElementById('edit-clothing-form').style.display = 'block';
     selectedArtistsForClothing = ensureArtistIdsArray(c.artistIds);
-    renderEditClothingSelectedArtists();
+    window.selectedGenresForClothing = c.genreIds || [];
+    if (typeof renderEditClothingSelectedArtists === 'function') renderEditClothingSelectedArtists();
+    if (typeof renderEditClothingSelectedGenres === 'function') renderEditClothingSelectedGenres();
+    loadProductGenresForEdit(c.product_id, 'clothing');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function validateClothingFields(name, price, stock, manufacturerId, material, color, description) {
+    let err = validateRequiredString(name, 'Название', 2, 200, true);
+    if (err) return err;
+    err = validatePrice(price);
+    if (err) return err;
+    err = validateStock(stock);
+    if (err) return err;
+    if (!manufacturerId) return 'Выберите производителя';
+    err = validateOptionalString(material, 'Материал', 50);
+    if (err) return err;
+    err = validateOptionalString(color, 'Цвет', 30);
+    if (err) return err;
+    if (description && description.trim()) {
+        err = validateOptionalString(description, 'Описание', 1000);
+        if (err) return err;
+    }
+    return null;
 }
 
 async function saveEditClothing() {
@@ -86,28 +111,33 @@ async function saveEditClothing() {
         return;
     }
     const name = document.getElementById('edit-clothing-name').value.trim();
-    const price = parseFloat(document.getElementById('edit-clothing-price').value);
-    if (isNaN(price) || price <= 0) {
-        showToast('Цена должна быть положительным числом', 'error');
+    const price = document.getElementById('edit-clothing-price').value;
+    const stock = document.getElementById('edit-clothing-stock').value;
+    const material = document.getElementById('edit-clothing-material').value.trim();
+    const color = document.getElementById('edit-clothing-color').value.trim();
+    const description = document.getElementById('edit-clothing-description').value.trim();
+
+    const validationError = validateClothingFields(name, price, stock, manufacturerId, material, color, description);
+    if (validationError) {
+        showToast(validationError, 'error');
         return;
     }
+
     const data = {
         clothing_id: parseInt(id),
         name: name,
-        price: price,
-        description: document.getElementById('edit-clothing-description').value.trim(),
-        stock: parseInt(document.getElementById('edit-clothing-stock').value) || 0,
+        price: parseFloat(price),
+        description: description || null,
+        stock: parseInt(stock, 10),
         manufacturer_id: manufacturerId,
-        material: document.getElementById('edit-clothing-material').value.trim(),
-        color: document.getElementById('edit-clothing-color').value.trim(),
+        material: material || null,
+        color: color || null,
         size: document.getElementById('edit-clothing-size').value,
         gender: document.getElementById('edit-clothing-gender').value,
-        artistIds: selectedArtistsForClothing
+        artistIds: selectedArtistsForClothing,
+        genreIds: window.selectedGenresForClothing
     };
-    if (!data.name) {
-        showToast('Заполните название', 'error');
-        return;
-    }
+
     try {
         const resp = await fetch(`${CLOTHINGS_URL}/${id}`, {
             method: 'PUT',
@@ -115,19 +145,23 @@ async function saveEditClothing() {
             body: JSON.stringify(data)
         });
         if (resp.status === 409) {
-            const text = await resp.text();
-            showToast(text.includes('already') ? text : 'Такая одежда уже существует', 'error');
+            const error = await resp.json();
+            showToast(error.message || 'Такая одежда уже существует', 'error');
             return;
         }
-        if (!resp.ok) {
-            let errorMsg = 'Ошибка обновления';
-            try {
-                const text = await resp.text();
-                if (text) errorMsg = text;
-            } catch (e) { }
+        if (resp.status === 400) {
+            const error = await resp.json();
+            let errorMsg = 'Ошибка валидации';
+            if (error.errors) {
+                const firstError = Object.values(error.errors)[0];
+                if (firstError && firstError[0]) errorMsg = firstError[0];
+            } else if (error.message) {
+                errorMsg = error.message;
+            }
             showToast(errorMsg, 'error');
             return;
         }
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
         await loadAllItems();
         hideEditPanel();
         showToast(`Запись «${name}» (ID ${id}) обновлена`, 'success');
@@ -137,25 +171,35 @@ async function saveEditClothing() {
 }
 
 async function saveClothing() {
-    const errorMsg = validateClothing();
-    if (errorMsg) {
-        showToast(errorMsg, 'error');
+    const name = document.getElementById('clothing-name').value.trim();
+    const price = document.getElementById('clothing-price').value;
+    const stock = document.getElementById('clothing-stock').value;
+    const manufacturerId = document.getElementById('clothing-manufacturer-id').value;
+    const material = document.getElementById('clothing-material').value.trim();
+    const color = document.getElementById('clothing-color').value.trim();
+    const description = document.getElementById('clothing-description').value.trim();
+
+    const validationError = validateClothingFields(name, price, stock, manufacturerId, material, color, description);
+    if (validationError) {
+        showToast(validationError, 'error');
         return;
     }
+
     const id = document.getElementById('clothing-edit-id').value;
-    const name = document.getElementById('clothing-name').value.trim();
     const data = {
         name: name,
-        price: parseFloat(document.getElementById('clothing-price').value),
-        description: document.getElementById('clothing-description').value.trim(),
-        stock: parseInt(document.getElementById('clothing-stock').value) || 0,
-        manufacturer_id: parseInt(document.getElementById('clothing-manufacturer-id').value) || null,
-        material: document.getElementById('clothing-material').value.trim(),
-        color: document.getElementById('clothing-color').value.trim(),
+        price: parseFloat(price),
+        description: description || null,
+        stock: parseInt(stock, 10),
+        manufacturer_id: parseInt(manufacturerId),
+        material: material || null,
+        color: color || null,
         size: document.getElementById('clothing-size').value,
         gender: document.getElementById('clothing-gender').value,
-        artistIds: selectedArtistsForClothing
+        artistIds: selectedArtistsForClothing,
+        genreIds: window.selectedGenresForClothing
     };
+
     let url = CLOTHINGS_URL, method = 'POST', isUpdate = false;
     if (id) {
         data.clothing_id = parseInt(id);
@@ -163,22 +207,27 @@ async function saveClothing() {
         method = 'PUT';
         isUpdate = true;
     }
+
     try {
         const resp = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         if (resp.status === 409) {
-            const text = await resp.text();
-            showToast(text.includes('already') ? text : 'Такая одежда уже существует', 'error');
+            const error = await resp.json();
+            showToast(error.message || 'Такая одежда уже существует', 'error');
             return;
         }
-        if (!resp.ok) {
-            let errorMsg = 'Ошибка сохранения';
-            try {
-                const text = await resp.text();
-                if (text) errorMsg = text;
-            } catch (e) { }
+        if (resp.status === 400) {
+            const error = await resp.json();
+            let errorMsg = 'Ошибка валидации';
+            if (error.errors) {
+                const firstError = Object.values(error.errors)[0];
+                if (firstError && firstError[0]) errorMsg = firstError[0];
+            } else if (error.message) {
+                errorMsg = error.message;
+            }
             showToast(errorMsg, 'error');
             return;
         }
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
         let newId = id;
         if (!id) {
             const result = await resp.json();
@@ -201,8 +250,8 @@ async function deleteClothing(id, name) {
     try {
         const resp = await fetch(`${CLOTHINGS_URL}/${id}`, { method: 'DELETE' });
         if (resp.status === 409) {
-            const errorMessage = await resp.text();
-            showToast(errorMessage || 'Невозможно удалить товар, который есть в заказах', 'error');
+            const error = await resp.json();
+            showToast(error.message || 'Невозможно удалить товар, который есть в заказах', 'error');
             return;
         }
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
@@ -219,7 +268,6 @@ function openClothingArtistsModal() {
     const artistsListDiv = document.getElementById('modal-merch-artists-list');
     const artistSelect = document.getElementById('modal-merch-artist-select');
     if (!modal || !artistsListDiv || !artistSelect) return;
-
     artistsListDiv.innerHTML = '';
     if (selectedArtistsForClothing.length === 0) {
         artistsListDiv.innerHTML = '<p>Нет выбранных исполнителей</p>';
@@ -273,6 +321,7 @@ function closeArtistsMerchModal() {
 
 document.getElementById('modal-merch-add-artist')?.addEventListener('click', addClothingArtistFromModal);
 document.getElementById('modal-merch-close')?.addEventListener('click', closeArtistsMerchModal);
+
 window.addEventListener('click', (e) => {
     const modal = document.getElementById('artists-merch-modal');
     if (e.target === modal && modal) modal.style.display = 'none';

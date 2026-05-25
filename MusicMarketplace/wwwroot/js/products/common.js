@@ -1,11 +1,11 @@
-﻿// common.js
-const TICKETS_URL = 'https://localhost:7062/api/Tickets';
+﻿const TICKETS_URL = 'https://localhost:7062/api/Tickets';
 const CLOTHINGS_URL = 'https://localhost:7062/api/Clothings';
 const ACCESSORIES_URL = 'https://localhost:7062/api/Accessories';
+const PRODUCTS_URL = 'https://localhost:7062/api/Products';
+const PRODUCT_GENRES_URL = 'https://localhost:7062/api/ProductGenres';
 const CONCERTS_URL = 'https://localhost:7062/api/Concerts';
 const MANUFACTURERS_URL = 'https://localhost:7062/api/Manufacturers';
 const GENRES_URL = 'https://localhost:7062/api/Genres';
-const PRODUCT_GENRES_URL = 'https://localhost:7062/api/ProductGenres';
 const ARTISTS_URL = 'https://localhost:7062/api/Artists';
 const ARTIST_MERCH_URL = 'https://localhost:7062/api/ArtistMerches';
 const PRODUCTS_FILTER_URL = 'https://localhost:7062/api/Products/filter';
@@ -69,19 +69,18 @@ function showToast(message, type = 'success') {
 }
 
 async function loadManufacturersForSelect(selectId) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
     const resp = await fetch(MANUFACTURERS_URL);
     if (resp.ok) {
         manufacturers = await resp.json();
-        const select = document.getElementById(selectId);
-        if (select) {
-            select.innerHTML = '<option value="">Все производители</option>';
-            manufacturers.forEach(m => {
-                const opt = document.createElement('option');
-                opt.value = m.manufacturer_id;
-                opt.textContent = m.name;
-                select.appendChild(opt);
-            });
-        }
+        select.innerHTML = '<option value="">Все производители</option>';
+        manufacturers.forEach(m => {
+            const opt = document.createElement('option');
+            opt.value = m.manufacturer_id;
+            opt.textContent = m.name;
+            select.appendChild(opt);
+        });
     }
 }
 
@@ -91,10 +90,11 @@ function getManufacturerName(id) {
 }
 
 async function loadConcertsSelect(selectId) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
     const resp = await fetch(CONCERTS_URL);
     if (resp.ok) {
         const concerts = await resp.json();
-        const select = document.getElementById(selectId);
         select.innerHTML = '<option value="">Выберите концерт</option>';
         concerts.forEach(c => {
             const opt = document.createElement('option');
@@ -141,49 +141,6 @@ function getSelectedGenres() {
     const select = document.getElementById('genre-select');
     if (!select || !select.value) return [];
     return [parseInt(select.value)];
-}
-
-function validateTicket() {
-    const name = document.getElementById('ticket-name').value.trim();
-    const price = parseFloat(document.getElementById('ticket-price').value);
-    const concertId = document.getElementById('ticket-concert-id').value;
-    if (!name) return 'Название обязательно.';
-    if (name.length > 100) return 'Название не может быть длиннее 100 символов.';
-    if (isNaN(price)) return 'Цена должна быть числом.';
-    if (price <= 0) return 'Цена должна быть больше нуля.';
-    if (price > 1000000) return 'Цена не может превышать 1 000 000 руб.';
-    if (!concertId) return 'Выберите концерт.';
-    return null;
-}
-
-function validateClothing() {
-    const name = document.getElementById('clothing-name').value.trim();
-    const price = parseFloat(document.getElementById('clothing-price').value);
-    if (!name) return 'Название обязательно.';
-    if (name.length > 100) return 'Название не может быть длиннее 100 символов.';
-    if (isNaN(price)) return 'Цена должна быть числом.';
-    if (price <= 0) return 'Цена должна быть больше нуля.';
-    if (price > 1000000) return 'Цена не может превышать 1 000 000 руб.';
-    const manufacturerId = document.getElementById('clothing-manufacturer-id').value;
-    if (!manufacturerId) return 'Выберите производителя.';
-    const stock = document.getElementById('clothing-stock').value;
-    if (stock && parseInt(stock) < 0) return 'Остаток не может быть отрицательным.';
-    return null;
-}
-
-function validateAccessory() {
-    const name = document.getElementById('accessory-name').value.trim();
-    const price = parseFloat(document.getElementById('accessory-price').value);
-    if (!name) return 'Название обязательно.';
-    if (name.length > 100) return 'Название не может быть длиннее 100 символов.';
-    if (isNaN(price)) return 'Цена должна быть числом.';
-    if (price <= 0) return 'Цена должна быть больше нуля.';
-    if (price > 1000000) return 'Цена не может превышать 1 000 000 руб.';
-    const manufacturerId = document.getElementById('accessory-manufacturer-id').value;
-    if (!manufacturerId) return 'Выберите производителя.';
-    const weight = document.getElementById('accessory-weight').value;
-    if (weight && parseFloat(weight) < 0) return 'Вес не может быть отрицательным.';
-    return null;
 }
 
 async function loadUserStatus() {
@@ -242,51 +199,56 @@ async function loadAllArtists() {
 }
 
 async function loadManufacturerNameDatalist() {
+    const datalist = document.getElementById('manufacturer-name-datalist');
+    if (!datalist) return;
     const resp = await fetch('https://localhost:7062/api/Manufacturers/filter/names');
     if (resp.ok) {
         const names = await resp.json();
-        const datalist = document.getElementById('manufacturer-name-datalist');
-        if (datalist) {
-            datalist.innerHTML = '';
-            names.forEach(name => {
-                const option = document.createElement('option');
-                option.value = name;
-                datalist.appendChild(option);
-            });
-        }
+        datalist.innerHTML = '';
+        names.forEach(name => {
+            const option = document.createElement('option');
+            option.value = name;
+            datalist.appendChild(option);
+        });
     }
 }
 
 async function loadManufacturerCountryDatalist() {
+    const datalist = document.getElementById('manufacturer-country-datalist');
+    if (!datalist) return;
     const resp = await fetch('https://localhost:7062/api/Manufacturers/filter/countries');
     if (resp.ok) {
         const countries = await resp.json();
-        const datalist = document.getElementById('manufacturer-country-datalist');
-        if (datalist) {
-            datalist.innerHTML = '';
-            countries.forEach(country => {
-                const option = document.createElement('option');
-                option.value = country;
-                datalist.appendChild(option);
-            });
-        }
+        datalist.innerHTML = '';
+        countries.forEach(country => {
+            const option = document.createElement('option');
+            option.value = country;
+            datalist.appendChild(option);
+        });
     }
 }
 
 async function loadGenreNameDatalist() {
+    const datalist = document.getElementById('genre-name-datalist');
+    if (!datalist) return;
     const resp = await fetch('https://localhost:7062/api/Genres/filter/names');
     if (resp.ok) {
         const names = await resp.json();
-        const datalist = document.getElementById('genre-name-datalist');
-        if (datalist) {
-            datalist.innerHTML = '';
-            names.forEach(name => {
-                const option = document.createElement('option');
-                option.value = name;
-                datalist.appendChild(option);
-            });
-        }
+        datalist.innerHTML = '';
+        names.forEach(name => {
+            const option = document.createElement('option');
+            option.value = name;
+            datalist.appendChild(option);
+        });
     }
+}
+
+function getSelectedGenres() {
+    const select = document.getElementById('genre-select');
+    if (!select || !select.value) return [];
+    const genreId = parseInt(select.value);
+    if (isNaN(genreId)) return [];
+    return [genreId];
 }
 
 loadManufacturerNameDatalist();

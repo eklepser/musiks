@@ -3,7 +3,7 @@
     return savedId ? parseInt(savedId) : null;
 }
 
-async function addToWishlist(productId, productName) {
+window.addToWishlist = async function (productId, productName) {
     const userId = getCurrentUserId();
     if (!userId) {
         showToast('Сначала выберите пользователя', 'error');
@@ -16,7 +16,8 @@ async function addToWishlist(productId, productName) {
             body: JSON.stringify({ user_id: userId, product_id: productId })
         });
         if (resp.status === 409) {
-            showToast('Товар уже в вишлисте', 'warning');
+            const error = await resp.json();
+            showToast(error.message || 'Товар уже в вишлисте', 'warning');
             return false;
         }
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
@@ -27,9 +28,9 @@ async function addToWishlist(productId, productName) {
         showToast('Ошибка добавления в вишлист', 'error');
         return false;
     }
-}
+};
 
-async function removeFromWishlist(productId) {
+window.removeFromWishlist = async function (productId) {
     const userId = getCurrentUserId();
     if (!userId) return;
     if (!confirm('Удалить из вишлиста?')) return;
@@ -38,9 +39,9 @@ async function removeFromWishlist(productId) {
         if (typeof loadUserStatus === 'function') await loadUserStatus();
         showToast('Товар удалён из вишлиста', 'success');
     } else showToast('Ошибка удаления', 'error');
-}
+};
 
-async function addToCart(productId, productName, quantity = 1) {
+window.addToCart = async function (productId, productName, quantity = 1) {
     const userId = getCurrentUserId();
     if (!userId) {
         showToast('Сначала выберите пользователя', 'error');
@@ -53,7 +54,8 @@ async function addToCart(productId, productName, quantity = 1) {
             body: JSON.stringify({ user_id: userId, product_id: productId, quantity: quantity })
         });
         if (resp.status === 409) {
-            showToast('Товар уже в корзине', 'warning');
+            const error = await resp.json();
+            showToast(error.message || 'Товар уже в корзине', 'warning');
             return false;
         }
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
@@ -74,9 +76,9 @@ async function addToCart(productId, productName, quantity = 1) {
         showToast('Ошибка добавления в корзину', 'error');
         return false;
     }
-}
+};
 
-function showRemoveFromCartModal(productId, productName, currentQuantity) {
+window.showRemoveFromCartModal = function (productId, productName, currentQuantity) {
     if (currentQuantity <= 1) {
         removeFromCart(productId);
         return;
@@ -89,15 +91,15 @@ function showRemoveFromCartModal(productId, productName, currentQuantity) {
     document.getElementById('remove-cart-quantity').max = currentQuantity;
     document.getElementById('remove-cart-max').innerText = currentQuantity;
     modal.style.display = 'block';
-}
+};
 
-function hideRemoveFromCartModal() {
+window.hideRemoveFromCartModal = function () {
     const modal = document.getElementById('remove-from-cart-modal');
     if (modal) modal.style.display = 'none';
     currentProductForRemove = null;
-}
+};
 
-async function removeFromCartWithQuantity(productId, quantity) {
+window.removeFromCartWithQuantity = async function (productId, quantity) {
     const userId = getCurrentUserId();
     if (!userId) return;
     const resp = await fetch(`https://localhost:7062/api/Carts/${userId}/${productId}?quantity=${quantity}`, { method: 'DELETE' });
@@ -107,9 +109,9 @@ async function removeFromCartWithQuantity(productId, quantity) {
         showToast(`Товар удалён из корзины (${quantity} шт.)`, 'success');
         hideRemoveFromCartModal();
     } else showToast('Ошибка удаления', 'error');
-}
+};
 
-async function removeFromCart(productId) {
+window.removeFromCart = async function (productId) {
     const userId = getCurrentUserId();
     if (!userId) return;
     const resp = await fetch(`https://localhost:7062/api/Carts/${userId}/${productId}`, { method: 'DELETE' });
@@ -118,9 +120,9 @@ async function removeFromCart(productId) {
         if (typeof loadCart === 'function') await loadCart();
         showToast('Товар удалён из корзины', 'success');
     } else showToast('Ошибка удаления', 'error');
-}
+};
 
-async function addReview(productId, productName, rating, reviewText) {
+window.addReview = async function (productId, productName, rating, reviewText) {
     const userId = getCurrentUserId();
     if (!userId) {
         showToast('Сначала выберите пользователя', 'error');
@@ -137,7 +139,8 @@ async function addReview(productId, productName, rating, reviewText) {
             body: JSON.stringify({ user_id: userId, product_id: productId, rating: rating, review_text: reviewText })
         });
         if (resp.status === 409) {
-            showToast('Вы уже оставляли отзыв на этот товар', 'warning');
+            const error = await resp.json();
+            showToast(error.message || 'Вы уже оставляли отзыв на этот товар', 'warning');
             return false;
         }
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
@@ -149,9 +152,9 @@ async function addReview(productId, productName, rating, reviewText) {
         showToast('Ошибка добавления отзыва', 'error');
         return false;
     }
-}
+};
 
-async function deleteReview(productId) {
+window.deleteReview = async function (productId) {
     const userId = getCurrentUserId();
     if (!userId) return;
     if (!confirm('Удалить отзыв?')) return;
@@ -161,4 +164,4 @@ async function deleteReview(productId) {
         if (typeof loadOrders === 'function') await loadOrders();
         showToast('Отзыв удалён', 'success');
     } else showToast('Ошибка удаления', 'error');
-}
+};

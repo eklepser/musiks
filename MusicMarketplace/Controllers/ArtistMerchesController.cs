@@ -28,15 +28,22 @@ namespace MusicMarketplace.Controllers
         [HttpPost]
         public async Task<IActionResult> PostArtistMerch(ArtistMerch dto)
         {
-            var result = await _service.CreateAsync(dto);
-            return CreatedAtAction(nameof(GetArtistMerches), new { }, result);
+            try
+            {
+                var result = await _service.CreateAsync(dto);
+                return CreatedAtAction(nameof(GetArtistMerches), new { }, result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { message = ex.Message });
+            }
         }
 
         [HttpDelete("{artist_id}/{merch_id}")]
         public async Task<IActionResult> DeleteArtistMerch(int artist_id, int merch_id)
         {
             var deleted = await _service.DeleteAsync(artist_id, merch_id);
-            if (!deleted) return NotFound();
+            if (!deleted) return NotFound(new { message = "Связь не найдена" });
             return NoContent();
         }
     }

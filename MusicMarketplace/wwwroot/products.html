@@ -41,7 +41,14 @@
                             <select id="edit-ticket-manufacturer-id" required><option value="">Производитель*</option></select>
                             <input type="number" id="edit-ticket-stock" placeholder="Остаток">
                             <select id="edit-ticket-concert-id" required><option value="">Концерт*</option></select>
-                            <input type="text" id="edit-ticket-price-category" placeholder="Тип места (VIP, Партер и т.д.)">
+                            <input type="text" id="edit-ticket-price-category" placeholder="Тип места">
+                        </div>
+                        <div class="form-group-row" style="align-items: center;">
+                            <label style="margin-right: 15px;">Жанры:</label>
+                            <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
+                                <div id="edit-ticket-selected-genres-list" style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 8px; min-height: 40px; background: #f9f9f9;"></div>
+                                <button type="button" id="edit-ticket-genres-btn" class="genres-btn">Выбрать жанры</button>
+                            </div>
                         </div>
                         <div class="form-actions">
                             <button id="edit-ticket-submit">Сохранить</button>
@@ -77,6 +84,13 @@
                             </select>
                         </div>
                         <div class="form-group-row" style="align-items: center;">
+                            <label style="margin-right: 15px;">Жанры:</label>
+                            <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
+                                <div id="edit-clothing-selected-genres-list" style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 8px; min-height: 40px; background: #f9f9f9;"></div>
+                                <button type="button" id="edit-clothing-genres-btn" class="genres-btn">Выбрать жанры</button>
+                            </div>
+                        </div>
+                        <div class="form-group-row" style="align-items: center;">
                             <label style="margin-right: 15px;">Исполнители:</label>
                             <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
                                 <div id="edit-clothing-selected-artists-list" style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 8px; min-height: 40px; background: #f9f9f9;"></div>
@@ -102,6 +116,13 @@
                             <input type="text" id="edit-accessory-color" placeholder="Цвет">
                             <input type="text" id="edit-accessory-type" placeholder="Тип">
                             <input type="number" id="edit-accessory-weight" placeholder="Вес (г)" step="0.01">
+                        </div>
+                        <div class="form-group-row" style="align-items: center;">
+                            <label style="margin-right: 15px;">Жанры:</label>
+                            <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
+                                <div id="edit-accessory-selected-genres-list" style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 8px; min-height: 40px; background: #f9f9f9;"></div>
+                                <button type="button" id="edit-accessory-genres-btn" class="genres-btn">Выбрать жанры</button>
+                            </div>
                         </div>
                         <div class="form-group-row" style="align-items: center;">
                             <label style="margin-right: 15px;">Исполнители:</label>
@@ -170,10 +191,10 @@
             </div>
             <table id="catalog-table">
                 <thead>
-                    <tr><th>ID</th><th>Тип</th><th>Название</th><th>Цена</th><th>Остаток</th><th>Производитель</th><th>Доп. параметры</th><th>Действия</th></tr>
+                    <tr><th>ID</th><th>Тип</th><th>Название</th><th>Цена</th><th>Остаток</th><th>Производитель</th><th>Жанры</th><th>Доп. параметры</th><th>Действия</th></tr>
                 </thead>
                 <tbody id="catalog-tbody">
-                    <tr><td colspan="8" class="centered-message">Загрузка...–
+                    <tr><td colspan="9" class="centered-message">Загрузка...–
                 </tbody>
                 </tbody>
             </table>
@@ -192,6 +213,13 @@
                         <input type="number" id="ticket-stock" placeholder="Остаток">
                         <select id="ticket-concert-id" required><option value="">Концерт*</option></select>
                         <input type="text" id="ticket-price-category" placeholder="Тип места">
+                    </div>
+                    <div class="form-group-row" style="align-items: center;">
+                        <label style="margin-right: 15px;">Жанры:</label>
+                        <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
+                            <div id="ticket-selected-genres-list" style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 8px; min-height: 40px; background: #f9f9f9;"></div>
+                            <button type="button" id="open-ticket-genres-modal-btn" class="genres-btn">Выбрать жанры</button>
+                        </div>
                     </div>
                     <div class="form-actions">
                         <button id="ticket-submit">Добавить</button>
@@ -229,6 +257,13 @@
                         </select>
                     </div>
                     <div class="form-group-row" style="align-items: center;">
+                        <label style="margin-right: 15px;">Жанры:</label>
+                        <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
+                            <div id="clothing-selected-genres-list" style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 8px; min-height: 40px; background: #f9f9f9;"></div>
+                            <button type="button" id="open-clothing-genres-modal-btn" class="genres-btn">Выбрать жанры</button>
+                        </div>
+                    </div>
+                    <div class="form-group-row" style="align-items: center;">
                         <label style="margin-right: 15px;">Исполнители:</label>
                         <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
                             <div id="clothing-selected-artists-list" style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 8px; min-height: 40px; background: #f9f9f9;"></div>
@@ -256,6 +291,13 @@
                         <input type="text" id="accessory-color" placeholder="Цвет">
                         <input type="text" id="accessory-type" placeholder="Тип">
                         <input type="number" id="accessory-weight" placeholder="Вес (г)" step="0.01">
+                    </div>
+                    <div class="form-group-row" style="align-items: center;">
+                        <label style="margin-right: 15px;">Жанры:</label>
+                        <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
+                            <div id="accessory-selected-genres-list" style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 8px; min-height: 40px; background: #f9f9f9;"></div>
+                            <button type="button" id="open-accessory-genres-modal-btn" class="genres-btn">Выбрать жанры</button>
+                        </div>
                     </div>
                     <div class="form-group-row" style="align-items: center;">
                         <label style="margin-right: 15px;">Исполнители:</label>
@@ -311,9 +353,10 @@
                     <tr><th>ID</th><th>Название</th><th>Контакты</th><th>Страна</th><th>Действия</th></tr>
                 </thead>
                 <tbody id="manufacturers-tbody">
-                    <tr><td colspan="5" class="centered-message">Загрузка...–
-                </tbody>
-                </tbody>
+                <td>
+                <td colspan="5" class="centered-message">
+                    Загрузка...–</tbody>
+                    </tbody>
             </table>
         </div>
 
@@ -359,6 +402,18 @@
             </table>
         </div>
 
+        <div id="genres-modal" class="modal">
+            <div class="modal-content">
+                <h3>Выбор жанров для товара</h3>
+                <div id="modal-genres-list" class="genre-list"></div>
+                <select id="modal-genre-select">
+                    <option value="">-- Добавить жанр --</option>
+                </select>
+                <button id="modal-add-genre">Добавить</button>
+                <button id="modal-genre-close">Закрыть</button>
+            </div>
+        </div>
+
         <div id="artists-merch-modal" class="modal">
             <div class="modal-content">
                 <h3>Выбор исполнителей для товара</h3>
@@ -368,18 +423,6 @@
                 </select>
                 <button id="modal-merch-add-artist">Добавить</button>
                 <button id="modal-merch-close">Закрыть</button>
-            </div>
-        </div>
-
-        <div id="product-artists-modal" class="modal">
-            <div class="modal-content">
-                <h3>Исполнители товара</h3>
-                <div id="product-artists-list" class="artist-list"></div>
-                <select id="product-artist-select">
-                    <option value="">-- Добавить исполнителя --</option>
-                </select>
-                <button id="product-artist-add">Добавить</button>
-                <button id="product-artist-close">Закрыть</button>
             </div>
         </div>
 
@@ -441,6 +484,7 @@
     </div>
 
     <script src="js/toast.js"></script>
+    <script src="js/validation.js"></script>
     <script src="js/products/common.js"></script>
     <script src="js/products/catalog.js"></script>
     <script src="js/products/cart-wishlist.js"></script>
@@ -450,6 +494,7 @@
     <script src="js/products/manufacturer.js"></script>
     <script src="js/products/genre.js"></script>
     <script src="js/products/artist-merch.js"></script>
+    <script src="js/products/product.js"></script>
     <script src="js/user-menu.js"></script>
     <script src="js/products/main.js"></script>
 </body>

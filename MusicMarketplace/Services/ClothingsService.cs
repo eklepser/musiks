@@ -1,5 +1,4 @@
-﻿// ClothingsService.cs
-using System.Text.Json;
+﻿using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using MusicMarketplace.DTOs;
 using MusicMarketplace.Models;
@@ -25,8 +24,9 @@ namespace MusicMarketplace.Services
 
         public async Task<ClothingResponseDto> CreateAsync(ClothingCreateUpdateDto dto)
         {
-            var json = JsonSerializer.Serialize(dto.artistIds ?? new List<int>());
-            var sql = "SELECT * FROM create_clothing({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})";
+            var artistsJson = JsonSerializer.Serialize(dto.artistIds ?? new List<int>());
+            var genresJson = JsonSerializer.Serialize(dto.genreIds ?? new List<int>());
+            var sql = "SELECT * FROM create_clothing({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10})";
             return await _context.Database.SqlQueryRaw<ClothingResponseDto>(
                 sql,
                 dto.name,
@@ -38,14 +38,16 @@ namespace MusicMarketplace.Services
                 dto.color ?? (object)DBNull.Value,
                 dto.size ?? (object)DBNull.Value,
                 dto.gender ?? (object)DBNull.Value,
-                json
+                artistsJson,
+                genresJson
             ).FirstOrDefaultAsync();
         }
 
         public async Task<bool> UpdateAsync(int id, ClothingCreateUpdateDto dto)
         {
-            var json = JsonSerializer.Serialize(dto.artistIds ?? new List<int>());
-            var sql = "SELECT update_clothing({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10})";
+            var artistsJson = JsonSerializer.Serialize(dto.artistIds ?? new List<int>());
+            var genresJson = JsonSerializer.Serialize(dto.genreIds ?? new List<int>());
+            var sql = "SELECT update_clothing({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11})";
             var result = await _context.Database.ExecuteSqlRawAsync(
                 sql,
                 id,
@@ -58,23 +60,14 @@ namespace MusicMarketplace.Services
                 dto.color ?? (object)DBNull.Value,
                 dto.size ?? (object)DBNull.Value,
                 dto.gender ?? (object)DBNull.Value,
-                json
+                artistsJson,
+                genresJson
             );
             return result > 0;
         }
 
         public async Task<bool> DeleteAsync(int id)
         {
-            var clothing = await _context.Clothings
-                .Include(c => c.Merch)
-                .ThenInclude(m => m.Product)
-                .FirstOrDefaultAsync(c => c.clothing_id == id);
-            if (clothing == null)
-                throw new KeyNotFoundException($"Одежда с ID {id} не найдена");
-            var productId = clothing.Merch.Product.product_id;
-            var hasOrders = await _context.OrderItems.AnyAsync(oi => oi.product_id == productId);
-            if (hasOrders)
-                throw new InvalidOperationException("Нельзя удалить товар, который есть в заказах");
             var sql = "SELECT delete_clothing({0})";
             var result = await _context.Database.ExecuteSqlRawAsync(sql, id);
             return result > 0;

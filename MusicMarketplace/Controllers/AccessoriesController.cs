@@ -1,5 +1,4 @@
-﻿// AccessoriesController.cs
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using MusicMarketplace.DTOs;
 using MusicMarketplace.Services;
 
@@ -23,23 +22,49 @@ namespace MusicMarketplace.Controllers
         public async Task<IActionResult> GetAccessory(int id)
         {
             var item = await _service.GetByIdAsync(id);
-            if (item == null) return NotFound();
+            if (item == null) return NotFound(new { message = $"Аксессуар с ID {id} не найден" });
             return Ok(item);
         }
 
         [HttpPost]
         public async Task<IActionResult> PostAccessory(AccessoryCreateUpdateDto dto)
         {
-            var result = await _service.CreateAsync(dto);
-            return CreatedAtAction(nameof(GetAccessory), new { id = result.accessory_id }, result);
+            try
+            {
+                var result = await _service.CreateAsync(dto);
+                return CreatedAtAction(nameof(GetAccessory), new { id = result.accessory_id }, result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { message = ex.Message });
+            }
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> PutAccessory(int id, AccessoryCreateUpdateDto dto)
         {
-            var updated = await _service.UpdateAsync(id, dto);
-            if (!updated) return NotFound();
-            return NoContent();
+            try
+            {
+                var updated = await _service.UpdateAsync(id, dto);
+                if (!updated) return NotFound(new { message = $"Аксессуар с ID {id} не найден" });
+                return NoContent();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { message = ex.Message });
+            }
         }
 
         [HttpDelete("{id}")]
@@ -50,13 +75,13 @@ namespace MusicMarketplace.Controllers
                 await _service.DeleteAsync(id);
                 return NoContent();
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
-                return NotFound();
+                return NotFound(new { message = ex.Message });
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(ex.Message);
+                return Conflict(new { message = ex.Message });
             }
         }
     }

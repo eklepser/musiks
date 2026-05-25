@@ -2,6 +2,21 @@
     await renderCatalog();
 }
 
+async function getProductGenreNames(productId) {
+    try {
+        const resp = await fetch(PRODUCT_GENRES_URL);
+        if (resp.ok) {
+            const links = await resp.json();
+            const productLinks = links.filter(l => l.product_id === productId);
+            const genreNames = productLinks.map(l => l.genre_name);
+            return genreNames.join(', ');
+        }
+    } catch (e) {
+        console.error(e);
+    }
+    return '';
+}
+
 async function renderCatalog() {
     const searchName = document.getElementById('search-name').value.trim();
     const filterType = document.getElementById('filter-type').value;
@@ -13,16 +28,18 @@ async function renderCatalog() {
     const sortBy = document.getElementById('sort-by').value;
     const selectedGenres = getSelectedGenres();
 
-    let url = `${PRODUCTS_FILTER_URL}?`;
-    if (searchName) url += `searchName=${encodeURIComponent(searchName)}&`;
-    if (filterType) url += `type=${filterType}&`;
-    if (filterManufacturerId) url += `manufacturerId=${filterManufacturerId}&`;
-    if (filterArtistId) url += `artistId=${filterArtistId}&`;
-    if (filterInStock) url += `inStock=true&`;
-    if (priceMin) url += `priceMin=${priceMin}&`;
-    if (priceMax) url += `priceMax=${priceMax}&`;
-    if (sortBy) url += `sortBy=${sortBy}&`;
-    if (selectedGenres.length) url += `selectedGenres=${selectedGenres.join(',')}&`;
+    const params = [];
+    if (searchName) params.push(`searchName=${encodeURIComponent(searchName)}`);
+    if (filterType) params.push(`type=${filterType}`);
+    if (filterManufacturerId) params.push(`manufacturerId=${filterManufacturerId}`);
+    if (filterArtistId) params.push(`artistId=${filterArtistId}`);
+    if (filterInStock) params.push(`inStock=true`);
+    if (priceMin) params.push(`priceMin=${priceMin}`);
+    if (priceMax) params.push(`priceMax=${priceMax}`);
+    if (sortBy) params.push(`sortBy=${sortBy}`);
+    if (selectedGenres.length) params.push(`selectedGenres=${encodeURIComponent(selectedGenres.join(','))}`);
+
+    const url = `${PRODUCTS_FILTER_URL}?${params.join('&')}`;
 
     try {
         const resp = await fetch(url);
@@ -33,10 +50,10 @@ async function renderCatalog() {
         const tbody = document.getElementById('catalog-tbody');
         tbody.innerHTML = '';
         if (items.length === 0) {
-            tbody.innerHTML = '<table><td colspan="8" class="centered-message">Нет данных</tbody>';
+            tbody.innerHTML = '<tr><td colspan="9" class="centered-message">Нет данных</td></tr>';
             return;
         }
-        items.forEach(item => {
+        for (const item of items) {
             const row = tbody.insertRow();
             row.insertCell(0).textContent = item.product_id;
             row.insertCell(1).textContent = item.typeName;
@@ -44,6 +61,11 @@ async function renderCatalog() {
             row.insertCell(3).textContent = item.price;
             row.insertCell(4).textContent = item.stock;
             row.insertCell(5).textContent = getManufacturerName(item.manufacturer_id);
+
+            let genresText = await getProductGenreNames(item.product_id);
+            if (!genresText) genresText = '—';
+            row.insertCell(6).textContent = genresText;
+
             let extraLines = [];
             if (item.type === 'ticket') {
                 extraLines.push(`Концерт: ${item.concert_title || item.concert_id}`);
@@ -70,43 +92,40 @@ async function renderCatalog() {
                 }
             }
             const extraText = extraLines.length ? extraLines.join('\n') : '—';
-            const extraCell = row.insertCell(6);
+            const extraCell = row.insertCell(7);
             extraCell.style.whiteSpace = 'pre-wrap';
             extraCell.textContent = extraText;
 
-            const actions = row.insertCell(7);
+            const actions = row.insertCell(8);
             const topRow = document.createElement('div');
             topRow.className = 'action-buttons-row';
             const bottomRow = document.createElement('div');
             bottomRow.className = 'action-buttons-row';
 
-            const inWishlist = userWishlistIds.includes(item.product_id);
+            const inWishlist = userWishlistIds && userWishlistIds.includes(item.product_id);
             const wishBtn = document.createElement('button');
             wishBtn.textContent = '❤️';
             if (inWishlist) {
                 wishBtn.style.background = '#dc3545';
                 wishBtn.title = 'Удалить из вишлиста';
-                wishBtn.onclick = () => removeFromWishlist(item.product_id);
+                wishBtn.onclick = () => { if (typeof removeFromWishlist === 'function') removeFromWishlist(item.product_id); };
             } else {
                 wishBtn.style.background = '#ffc107';
                 wishBtn.title = 'В вишлист';
-                wishBtn.onclick = () => addToWishlist(item.product_id, item.name);
+                wishBtn.onclick = () => { if (typeof addToWishlist === 'function') addToWishlist(item.product_id, item.name); };
             }
 
-            const inCart = userCartIds.includes(item.product_id);
+            const inCart = userCartIds && userCartIds.includes(item.product_id);
             const cartBtn = document.createElement('button');
             cartBtn.textContent = '🛒';
             if (inCart) {
                 cartBtn.style.background = '#28a745';
                 cartBtn.title = 'Удалить из корзины';
-                cartBtn.onclick = () => showRemoveFromCartModal(item.product_id, item.name);
+                cartBtn.onclick = () => { if (typeof showRemoveFromCartModal === 'function') showRemoveFromCartModal(item.product_id, item.name); };
             } else {
                 cartBtn.style.background = '#28a745';
                 cartBtn.title = 'В корзину';
-                cartBtn.onclick = () => {
-                    currentProductForCart = { id: item.product_id, name: item.name };
-                    showCartModal();
-                };
+                cartBtn.onclick = () => { if (typeof showCartModal === 'function') { currentProductForCart = { id: item.product_id, name: item.name }; showCartModal(); } };
             }
 
             topRow.append(wishBtn, cartBtn);
@@ -115,9 +134,9 @@ async function renderCatalog() {
             editBtn.textContent = 'Ред.';
             editBtn.className = 'edit-btn';
             editBtn.onclick = () => {
-                if (item.type === 'ticket') fillEditTicketForm(item);
-                else if (item.type === 'clothing') fillEditClothingForm(item);
-                else if (item.type === 'accessory') fillEditAccessoryForm(item);
+                if (item.type === 'ticket' && typeof fillEditTicketForm === 'function') fillEditTicketForm(item);
+                else if (item.type === 'clothing' && typeof fillEditClothingForm === 'function') fillEditClothingForm(item);
+                else if (item.type === 'accessory' && typeof fillEditAccessoryForm === 'function') fillEditAccessoryForm(item);
                 document.getElementById('edit-panel').style.display = 'block';
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             };
@@ -125,21 +144,21 @@ async function renderCatalog() {
             delBtn.textContent = 'Удалить';
             delBtn.className = 'delete-btn';
             delBtn.onclick = () => {
-                if (item.type === 'ticket') deleteTicket(item.ticket_id, item.name);
-                else if (item.type === 'clothing') deleteClothing(item.clothing_id, item.name);
-                else if (item.type === 'accessory') deleteAccessory(item.accessory_id, item.name);
+                if (item.type === 'ticket' && typeof deleteTicket === 'function') deleteTicket(item.ticket_id, item.name);
+                else if (item.type === 'clothing' && typeof deleteClothing === 'function') deleteClothing(item.clothing_id, item.name);
+                else if (item.type === 'accessory' && typeof deleteAccessory === 'function') deleteAccessory(item.accessory_id, item.name);
             };
             bottomRow.append(editBtn, delBtn);
             actions.append(topRow, bottomRow);
-        });
+        }
     } catch (err) {
         console.error(err);
-        document.getElementById('catalog-tbody').innerHTML = '<tr><td colspan="8" class="centered-message">Ошибка загрузки</tbody>';
+        document.getElementById('catalog-tbody').innerHTML = '<tr><td colspan="9" class="centered-message">Ошибка загрузки</td></tr>';
     }
 }
 
 function refreshCatalogFilters() {
-    loadManufacturersForSelect('filter-manufacturer');
+    if (typeof loadManufacturersForSelect === 'function') loadManufacturersForSelect('filter-manufacturer');
     renderCatalog();
 }
 

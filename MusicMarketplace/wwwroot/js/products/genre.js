@@ -1,25 +1,33 @@
 ﻿let genreEditId = null;
 
 async function loadGenresTable() {
-    const searchName = document.getElementById('genre-search-name').value.trim();
-    const sortBy = document.getElementById('genre-sort').value;
+    const searchName = document.getElementById('genre-search-name');
+    const sortBy = document.getElementById('genre-sort');
+
+    if (!searchName || !sortBy) return;
+
+    const searchNameValue = searchName.value.trim();
+    const sortByValue = sortBy.value;
 
     let url = `https://localhost:7062/api/Genres/filter?`;
-    if (searchName) url += `searchName=${encodeURIComponent(searchName)}&`;
-    if (sortBy) url += `sortBy=${sortBy}&`;
+    if (searchNameValue) url += `searchName=${encodeURIComponent(searchNameValue)}&`;
+    if (sortByValue) url += `sortBy=${sortByValue}&`;
 
     try {
         const resp = await fetch(url);
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         let items = await resp.json();
         const tbody = document.getElementById('genres-tbody');
+        if (!tbody) return;
         tbody.innerHTML = '';
         if (items.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="centered-message">Нет данных</tr>';
-            document.getElementById('genre-found-count').innerText = '0';
+            tbody.innerHTML = '<tr><td colspan="4" class="centered-message">Нет данных</td></tr>';
+            const countSpan = document.getElementById('genre-found-count');
+            if (countSpan) countSpan.innerText = '0';
             return;
         }
-        document.getElementById('genre-found-count').innerText = items.length;
+        const countSpan = document.getElementById('genre-found-count');
+        if (countSpan) countSpan.innerText = items.length;
         items.forEach(item => {
             const row = tbody.insertRow();
             row.insertCell(0).textContent = item.genre_id;
@@ -40,38 +48,74 @@ async function loadGenresTable() {
             actions.appendChild(btnRow);
         });
     } catch (err) {
-        document.getElementById('genres-tbody').innerHTML = '<tr><td colspan="4" class="centered-message">Ошибка загрузки</tr>';
-        document.getElementById('genre-found-count').innerText = '0';
+        const tbody = document.getElementById('genres-tbody');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="4" class="centered-message">Ошибка загрузки</td></tr>';
+        const countSpan = document.getElementById('genre-found-count');
+        if (countSpan) countSpan.innerText = '0';
     }
 }
 
 function fillGenreForm(item) {
-    document.getElementById('genre-name').value = item.name;
-    document.getElementById('genre-description').value = item.description || '';
-    document.getElementById('genre-edit-id').value = item.genre_id;
+    const nameInput = document.getElementById('genre-name');
+    const descInput = document.getElementById('genre-description');
+    const editIdInput = document.getElementById('genre-edit-id');
+    const formTitle = document.getElementById('genre-form-title');
+    const submitBtn = document.getElementById('genre-submit');
+    const cancelBtn = document.getElementById('genre-cancel');
+
+    if (!nameInput || !descInput || !editIdInput || !formTitle || !submitBtn || !cancelBtn) return;
+
+    nameInput.value = item.name;
+    descInput.value = item.description || '';
+    editIdInput.value = item.genre_id;
     genreEditId = item.genre_id;
-    document.getElementById('genre-form-title').innerText = 'Редактировать жанр';
-    document.getElementById('genre-submit').innerText = 'Сохранить';
-    document.getElementById('genre-cancel').style.display = 'inline-block';
+    formTitle.innerText = 'Редактировать жанр';
+    submitBtn.innerText = 'Сохранить';
+    cancelBtn.style.display = 'inline-block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function clearGenreForm() {
-    document.getElementById('genre-name').value = '';
-    document.getElementById('genre-description').value = '';
-    document.getElementById('genre-edit-id').value = '';
+    const nameInput = document.getElementById('genre-name');
+    const descInput = document.getElementById('genre-description');
+    const editIdInput = document.getElementById('genre-edit-id');
+    const formTitle = document.getElementById('genre-form-title');
+    const submitBtn = document.getElementById('genre-submit');
+    const cancelBtn = document.getElementById('genre-cancel');
+
+    if (nameInput) nameInput.value = '';
+    if (descInput) descInput.value = '';
+    if (editIdInput) editIdInput.value = '';
     genreEditId = null;
-    document.getElementById('genre-form-title').innerText = 'Добавить жанр';
-    document.getElementById('genre-submit').innerText = 'Добавить';
-    document.getElementById('genre-cancel').style.display = 'none';
+    if (formTitle) formTitle.innerText = 'Добавить жанр';
+    if (submitBtn) submitBtn.innerText = 'Добавить';
+    if (cancelBtn) cancelBtn.style.display = 'none';
+}
+
+function validateGenreFields(name, description) {
+    let err = validateRequiredString(name, 'Название', 2, 50, true);
+    if (err) return err;
+    if (description && description.trim() !== '') {
+        err = validateOptionalString(description, 'Описание', 500);
+        if (err) return err;
+    }
+    return null;
 }
 
 async function saveGenre() {
-    const id = document.getElementById('genre-edit-id').value;
-    const name = document.getElementById('genre-name').value.trim();
-    const description = document.getElementById('genre-description').value.trim();
+    const editId = document.getElementById('genre-edit-id');
+    const nameInput = document.getElementById('genre-name');
+    const descInput = document.getElementById('genre-description');
 
-    if (!name) {
-        showToast('Название обязательно', 'error');
+    if (!editId || !nameInput || !descInput) return;
+
+    const id = editId.value;
+    const name = nameInput.value.trim();
+    const description = descInput.value.trim();
+
+    const validationError = validateGenreFields(name, description);
+    if (validationError) {
+        showToast(validationError, 'error');
         return;
     }
 
@@ -89,8 +133,20 @@ async function saveGenre() {
     try {
         const resp = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         if (resp.status === 409) {
-            const text = await resp.text();
-            showToast(text.includes('already') ? text : 'Такой жанр уже существует', 'error');
+            const error = await resp.json();
+            showToast(error.message || 'Такой жанр уже существует', 'error');
+            return;
+        }
+        if (resp.status === 400) {
+            const error = await resp.json();
+            let errorMsg = 'Ошибка валидации';
+            if (error.errors) {
+                const firstError = Object.values(error.errors)[0];
+                if (firstError && firstError[0]) errorMsg = firstError[0];
+            } else if (error.message) {
+                errorMsg = error.message;
+            }
+            showToast(errorMsg, 'error');
             return;
         }
         if (!resp.ok) throw new Error('Ошибка ' + resp.status);
@@ -109,6 +165,11 @@ async function deleteGenre(id, name) {
     if (!confirm(`Удалить жанр «${name}» (ID ${id})?`)) return;
     try {
         const resp = await fetch(`${GENRES_URL}/${id}`, { method: 'DELETE' });
+        if (resp.status === 409) {
+            const error = await resp.json();
+            showToast(error.message || 'Невозможно удалить жанр, так как он используется в товарах', 'error');
+            return;
+        }
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         clearGenreForm();
         await loadGenresTable();
@@ -119,9 +180,14 @@ async function deleteGenre(id, name) {
     }
 }
 
-document.getElementById('genre-apply-filters').addEventListener('click', () => loadGenresTable());
-document.getElementById('genre-clear-filters').addEventListener('click', () => {
-    document.getElementById('genre-search-name').value = '';
-    document.getElementById('genre-sort').value = 'name_asc';
+const genreApplyBtn = document.getElementById('genre-apply-filters');
+if (genreApplyBtn) genreApplyBtn.addEventListener('click', () => loadGenresTable());
+
+const genreClearBtn = document.getElementById('genre-clear-filters');
+if (genreClearBtn) genreClearBtn.addEventListener('click', () => {
+    const searchName = document.getElementById('genre-search-name');
+    const sortBy = document.getElementById('genre-sort');
+    if (searchName) searchName.value = '';
+    if (sortBy) sortBy.value = 'name_asc';
     loadGenresTable();
 });

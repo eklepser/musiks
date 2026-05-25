@@ -9,10 +9,7 @@ namespace MusicMarketplace.Controllers
     public class GenresController : ControllerBase
     {
         private readonly GenresService _genresService;
-        public GenresController(GenresService genresService)
-        {
-            _genresService = genresService;
-        }
+        public GenresController(GenresService genresService) => _genresService = genresService;
 
         [HttpGet]
         public async Task<IActionResult> GetGenres()
@@ -25,7 +22,7 @@ namespace MusicMarketplace.Controllers
         public async Task<IActionResult> GetGenre(int id)
         {
             var genre = await _genresService.GetByIdAsync(id);
-            if (genre == null) return NotFound();
+            if (genre == null) return NotFound(new { message = $"Жанр с ID {id} не найден" });
             return Ok(genre);
         }
 
@@ -37,9 +34,13 @@ namespace MusicMarketplace.Controllers
                 var genre = await _genresService.CreateAsync(dto);
                 return CreatedAtAction(nameof(GetGenre), new { id = genre.genre_id }, genre);
             }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
             catch (InvalidOperationException ex)
             {
-                return Conflict(ex.Message);
+                return Conflict(new { message = ex.Message });
             }
         }
 
@@ -51,17 +52,17 @@ namespace MusicMarketplace.Controllers
                 await _genresService.UpdateAsync(id, dto);
                 return NoContent();
             }
-            catch (ArgumentException)
+            catch (ArgumentException ex)
             {
-                return BadRequest();
+                return BadRequest(new { message = ex.Message });
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
-                return NotFound();
+                return NotFound(new { message = ex.Message });
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(ex.Message);
+                return Conflict(new { message = ex.Message });
             }
         }
 
@@ -73,9 +74,13 @@ namespace MusicMarketplace.Controllers
                 await _genresService.DeleteAsync(id);
                 return NoContent();
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
-                return NotFound();
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { message = ex.Message });
             }
         }
 

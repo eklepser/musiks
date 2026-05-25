@@ -23,31 +23,61 @@ namespace MusicMarketplace.Services
 
         public async Task<Manufacturer> CreateAsync(ManufacturerDto dto)
         {
+            if (string.IsNullOrWhiteSpace(dto.name))
+                throw new ArgumentException("Название производителя обязательно");
+            if (string.IsNullOrWhiteSpace(dto.contact_info))
+                throw new ArgumentException("Контактные данные обязательны");
+
+            var exists = await _context.Manufacturers.AnyAsync(m => m.name == dto.name.Trim());
+            if (exists)
+                throw new InvalidOperationException($"Производитель с названием '{dto.name}' уже существует");
+
             var sql = "SELECT * FROM create_manufacturer({0}, {1}, {2})";
             var result = await _context.Set<Manufacturer>().FromSqlRaw(
                 sql,
-                dto.name,
-                dto.contact_info ?? (object)DBNull.Value,
-                dto.country ?? (object)DBNull.Value
+                dto.name.Trim(),
+                dto.contact_info.Trim(),
+                string.IsNullOrWhiteSpace(dto.country) ? null : dto.country.Trim()
             ).FirstOrDefaultAsync();
             return result;
         }
 
         public async Task<bool> UpdateAsync(int id, ManufacturerDto dto)
         {
+            if (string.IsNullOrWhiteSpace(dto.name))
+                throw new ArgumentException("Название производителя обязательно");
+            if (string.IsNullOrWhiteSpace(dto.contact_info))
+                throw new ArgumentException("Контактные данные обязательны");
+
+            var existing = await _context.Manufacturers.FirstOrDefaultAsync(m => m.manufacturer_id == id);
+            if (existing == null)
+                throw new KeyNotFoundException($"Производитель с ID {id} не найден");
+
+            var conflict = await _context.Manufacturers.AnyAsync(m => m.name == dto.name.Trim() && m.manufacturer_id != id);
+            if (conflict)
+                throw new InvalidOperationException($"Производитель с названием '{dto.name}' уже существует");
+
             var sql = "SELECT update_manufacturer({0}, {1}, {2}, {3})";
             var result = await _context.Database.ExecuteSqlRawAsync(
                 sql,
                 id,
-                dto.name,
-                dto.contact_info,
-                dto.country
+                dto.name.Trim(),
+                dto.contact_info.Trim(),
+                string.IsNullOrWhiteSpace(dto.country) ? null : dto.country.Trim()
             );
             return result > 0;
         }
 
         public async Task<bool> DeleteAsync(int id)
         {
+            var manufacturer = await _context.Manufacturers.FindAsync(id);
+            if (manufacturer == null)
+                throw new KeyNotFoundException($"Производитель с ID {id} не найден");
+
+            var hasProducts = await _context.Products.AnyAsync(p => p.manufacturer_id == id);
+            if (hasProducts)
+                throw new InvalidOperationException("Невозможно удалить производителя, так как существуют связанные товары");
+
             var sql = "SELECT delete_manufacturer({0})";
             var result = await _context.Database.ExecuteSqlRawAsync(sql, id);
             return result > 0;

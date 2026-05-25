@@ -59,7 +59,7 @@ async function renderTable() {
         let orders = await resp.json();
         orders.sort((a, b) => a.order_id - b.order_id);
         tbody.innerHTML = '';
-        if (orders.length === 0) { tbody.innerHTML = '<tr><td colspan="6">Нет данных</td></td>'; return; }
+        if (orders.length === 0) { tbody.innerHTML = '<tr><td colspan="6">Нет данных</tbody>'; return; }
         for (const order of orders) {
             const userResp = await fetch(`${USERS_URL}/${order.user_id}`);
             const userName = userResp.ok ? (await userResp.json()).full_name : `ID ${order.user_id}`;
@@ -78,7 +78,7 @@ async function renderTable() {
         }
     } catch (err) {
         showError('Ошибка загрузки: ' + err.message);
-        tbody.innerHTML = '<tr><td colspan="6">Ошибка загрузки данных</td></tr>';
+        tbody.innerHTML = '<td><td colspan="6">Ошибка загрузки数据</tbody>';
     }
 }
 function fillFormForEdit(order) {
@@ -99,7 +99,7 @@ async function createOrder() {
         const resp = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         if (resp.status === 409) {
             const conflict = await resp.json();
-            showError(conflict.title || 'Заказ с таким номером уже существует');
+            showError(conflict.message || 'Заказ с такими данными уже существует');
             return false;
         }
         if (!resp.ok) throw new Error('Ошибка ' + resp.status);
@@ -113,7 +113,7 @@ async function updateOrder(id) {
         const resp = await fetch(`${API_URL}/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         if (resp.status === 409) {
             const conflict = await resp.json();
-            showError(conflict.title || 'Заказ с таким номером уже существует');
+            showError(conflict.message || 'Заказ с такими данными уже существует');
             return false;
         }
         if (!resp.ok) throw new Error('HTTP ' + resp.status);

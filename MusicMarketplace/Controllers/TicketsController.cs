@@ -1,5 +1,4 @@
-﻿// TicketsController.cs
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using MusicMarketplace.DTOs;
 using MusicMarketplace.Services;
 
@@ -10,10 +9,7 @@ namespace MusicMarketplace.Controllers
     public class TicketsController : ControllerBase
     {
         private readonly TicketsService _ticketsService;
-        public TicketsController(TicketsService ticketsService)
-        {
-            _ticketsService = ticketsService;
-        }
+        public TicketsController(TicketsService ticketsService) => _ticketsService = ticketsService;
 
         [HttpGet]
         public async Task<IActionResult> GetTickets()
@@ -26,7 +22,7 @@ namespace MusicMarketplace.Controllers
         public async Task<IActionResult> GetTicket(int id)
         {
             var ticket = await _ticketsService.GetByIdAsync(id);
-            if (ticket == null) return NotFound();
+            if (ticket == null) return NotFound(new { message = $"Билет с ID {id} не найден" });
             return Ok(ticket);
         }
 
@@ -38,9 +34,13 @@ namespace MusicMarketplace.Controllers
                 var result = await _ticketsService.CreateAsync(dto);
                 return CreatedAtAction(nameof(GetTicket), new { id = result.ticket_id }, result);
             }
-            catch
+            catch (ArgumentException ex)
             {
-                return StatusCode(500);
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { message = ex.Message });
             }
         }
 
@@ -52,13 +52,17 @@ namespace MusicMarketplace.Controllers
                 await _ticketsService.UpdateAsync(id, dto);
                 return NoContent();
             }
-            catch (ArgumentException)
+            catch (ArgumentException ex)
             {
-                return BadRequest();
+                return BadRequest(new { message = ex.Message });
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
-                return NotFound();
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { message = ex.Message });
             }
         }
 
@@ -70,13 +74,13 @@ namespace MusicMarketplace.Controllers
                 await _ticketsService.DeleteAsync(id);
                 return NoContent();
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
-                return NotFound();
+                return NotFound(new { message = ex.Message });
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(ex.Message);
+                return Conflict(new { message = ex.Message });
             }
         }
     }

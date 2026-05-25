@@ -50,7 +50,7 @@ document.getElementById('product-artist-close')?.addEventListener('click', () =>
 });
 window.addEventListener('click', (e) => {
     const modal = document.getElementById('product-artists-modal');
-    if (e.target === modal) modal.style.display = 'none';
+    if (e.target === modal && modal) modal.style.display = 'none';
 });
 
 document.getElementById('cart-confirm-btn')?.addEventListener('click', () => {
@@ -77,7 +77,8 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         btn.classList.add('active');
         const tabId = `${btn.dataset.tab}-tab`;
-        document.getElementById(tabId).classList.add('active');
+        const tabContent = document.getElementById(tabId);
+        if (tabContent) tabContent.classList.add('active');
         if (btn.dataset.tab === 'catalog') {
             refreshCatalogFilters();
             hideEditPanel();
@@ -87,9 +88,9 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
             loadManufacturersForSelect('accessory-manufacturer-id');
             loadConcertsSelect('ticket-concert-id');
         } else if (btn.dataset.tab === 'manufacturers') {
-            loadManufacturersTable();
+            if (typeof loadManufacturersTable === 'function') loadManufacturersTable();
         } else if (btn.dataset.tab === 'genres') {
-            loadGenresTable();
+            if (typeof loadGenresTable === 'function') loadGenresTable();
         }
     });
 });
@@ -173,7 +174,6 @@ document.getElementById('remove-cart-confirm-btn')?.addEventListener('click', ()
 });
 document.getElementById('remove-cart-cancel-btn')?.addEventListener('click', hideRemoveFromCartModal);
 
-// Инициализация каталога – вызываем loadAllItems, которая определена в catalog.js
 if (typeof loadAllItems === 'function') {
     loadAllItems();
 } else {
@@ -190,8 +190,8 @@ loadManufacturersForSelect('ticket-manufacturer-id');
 loadManufacturersForSelect('clothing-manufacturer-id');
 loadManufacturersForSelect('accessory-manufacturer-id');
 loadConcertsSelect('ticket-concert-id');
-loadManufacturersTable();
-loadGenresTable();
+if (typeof loadManufacturersTable === 'function') loadManufacturersTable();
+if (typeof loadGenresTable === 'function') loadGenresTable();
 
 highlightActiveNavItem();
 loadUsersAndInit();

@@ -9,10 +9,7 @@ namespace MusicMarketplace.Controllers
     public class ProductGenresController : ControllerBase
     {
         private readonly ProductGenresService _productGenresService;
-        public ProductGenresController(ProductGenresService productGenresService)
-        {
-            _productGenresService = productGenresService;
-        }
+        public ProductGenresController(ProductGenresService productGenresService) => _productGenresService = productGenresService;
 
         [HttpGet]
         public async Task<IActionResult> GetProductGenres()
@@ -24,8 +21,15 @@ namespace MusicMarketplace.Controllers
         [HttpPost]
         public async Task<IActionResult> PostProductGenre(ProductGenre dto)
         {
-            var result = await _productGenresService.CreateAsync(dto);
-            return CreatedAtAction(nameof(GetProductGenres), new { }, result);
+            try
+            {
+                var result = await _productGenresService.CreateAsync(dto);
+                return CreatedAtAction(nameof(GetProductGenres), new { }, result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { message = ex.Message });
+            }
         }
 
         [HttpDelete("{product_id}/{genre_id}")]
@@ -36,9 +40,9 @@ namespace MusicMarketplace.Controllers
                 await _productGenresService.DeleteAsync(product_id, genre_id);
                 return NoContent();
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
-                return NotFound();
+                return NotFound(new { message = ex.Message });
             }
         }
     }
