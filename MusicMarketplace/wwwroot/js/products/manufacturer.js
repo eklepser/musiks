@@ -17,7 +17,7 @@ async function loadManufacturersTable() {
         const tbody = document.getElementById('manufacturers-tbody');
         tbody.innerHTML = '';
         if (items.length === 0) {
-            tbody.innerHTML = '<td><td colspan="5" class="centered-message">Нет данных</tbody>';
+            tbody.innerHTML = '<tr><td colspan="5" class="centered-message">Нет данных</tr>';
             document.getElementById('manufacturer-found-count').innerText = '0';
             return;
         }
@@ -43,7 +43,7 @@ async function loadManufacturersTable() {
             actions.appendChild(btnRow);
         });
     } catch (err) {
-        document.getElementById('manufacturers-tbody').innerHTML = '<tr><td colspan="5" class="centered-message">Ошибка загрузки</tbody>';
+        document.getElementById('manufacturers-tbody').innerHTML = '<tr><td colspan="5" class="centered-message">Ошибка загрузки</tr>';
         document.getElementById('manufacturer-found-count').innerText = '0';
     }
 }
@@ -74,7 +74,7 @@ async function saveManufacturer() {
     const id = document.getElementById('manufacturer-edit-id').value;
     const name = document.getElementById('manufacturer-name').value.trim();
     const contact = document.getElementById('manufacturer-contact').value.trim();
-    const country = document.getElementById('manufacturer-country').value.trim() || null;
+    const country = document.getElementById('manufacturer-country').value.trim();
 
     if (!name) {
         showToast('Название обязательно', 'error');
@@ -88,7 +88,7 @@ async function saveManufacturer() {
     const data = {
         name: name,
         contact_info: contact,
-        country: country
+        country: country === '' ? null : country
     };
     let url = MANUFACTURERS_URL, method = 'POST', isUpdate = false;
     if (id) {

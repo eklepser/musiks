@@ -45,7 +45,7 @@ namespace MusicMarketplace.Services
         public async Task<Concert> CreateAsync(ConcertDto dto)
         {
             var json = JsonSerializer.Serialize(dto.artistIds ?? new List<int>());
-            var sql = "SELECT * FROM create_concert({0}, {1}, {2}, {3})";
+            var sql = "SELECT * FROM create_concert({0}, {1}, {2}::timestamp, {3})";
             var result = await _context.Set<Concert>().FromSqlRaw(
                 sql,
                 dto.title,
@@ -59,7 +59,7 @@ namespace MusicMarketplace.Services
         public async Task<bool> UpdateAsync(int id, ConcertDto dto)
         {
             var json = JsonSerializer.Serialize(dto.artistIds ?? new List<int>());
-            var sql = "SELECT update_concert({0}, {1}, {2}, {3}, {4})";
+            var sql = "SELECT update_concert({0}, {1}, {2}, {3}::timestamp, {4}) ";
             var result = await _context.Database.ExecuteSqlRawAsync(
                 sql,
                 id,

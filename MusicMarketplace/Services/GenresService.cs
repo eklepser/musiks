@@ -39,7 +39,7 @@ namespace MusicMarketplace.Services
                 sql,
                 id,
                 dto.name,
-                dto.description ?? (object)DBNull.Value
+                dto.description
             );
             return result > 0;
         }

@@ -15,7 +15,7 @@ async function loadGenresTable() {
         const tbody = document.getElementById('genres-tbody');
         tbody.innerHTML = '';
         if (items.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="centered-message">Нет данных</tbody>';
+            tbody.innerHTML = '<tr><td colspan="4" class="centered-message">Нет данных</tr>';
             document.getElementById('genre-found-count').innerText = '0';
             return;
         }
@@ -40,7 +40,7 @@ async function loadGenresTable() {
             actions.appendChild(btnRow);
         });
     } catch (err) {
-        document.getElementById('genres-tbody').innerHTML = '<tr><td colspan="4" class="centered-message">Ошибка загрузки</tbody>';
+        document.getElementById('genres-tbody').innerHTML = '<tr><td colspan="4" class="centered-message">Ошибка загрузки</tr>';
         document.getElementById('genre-found-count').innerText = '0';
     }
 }
@@ -68,7 +68,7 @@ function clearGenreForm() {
 async function saveGenre() {
     const id = document.getElementById('genre-edit-id').value;
     const name = document.getElementById('genre-name').value.trim();
-    const description = document.getElementById('genre-description').value.trim() || null;
+    const description = document.getElementById('genre-description').value.trim();
 
     if (!name) {
         showToast('Название обязательно', 'error');
@@ -77,7 +77,7 @@ async function saveGenre() {
 
     const data = {
         name: name,
-        description: description
+        description: description === '' ? null : description
     };
     let url = GENRES_URL, method = 'POST', isUpdate = false;
     if (id) {

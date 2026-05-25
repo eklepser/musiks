@@ -132,7 +132,7 @@ async function renderArtists() {
         if (!tbody) return;
         tbody.innerHTML = '';
         if (artists.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Нет данных</tbody>';
+            tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Нет данных</tr>';
             if (countSpan) countSpan.innerText = '0';
             return;
         }
@@ -161,7 +161,7 @@ async function renderArtists() {
     } catch (err) {
         console.error(err);
         const tbody = document.getElementById('artists-tbody');
-        if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Ошибка загрузки</tbody>';
+        if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Ошибка загрузки</tr>';
     }
 }
 
@@ -188,7 +188,7 @@ async function renderConcerts() {
         if (!tbody) return;
         tbody.innerHTML = '';
         if (concerts.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Нет данных</tbody>';
+            tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Нет данных</tr>';
             if (countSpan) countSpan.innerText = '0';
             return;
         }
@@ -217,7 +217,7 @@ async function renderConcerts() {
     } catch (err) {
         console.error(err);
         const tbody = document.getElementById('concerts-tbody');
-        if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Ошибка загрузки</tbody>';
+        if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Ошибка загрузки</tr>';
     }
 }
 
@@ -266,11 +266,14 @@ async function saveArtist() {
     const id = document.getElementById('artist-edit-id').value;
     const name = document.getElementById('artist-name').value.trim();
     if (!name) { showToast('Имя обязательно', 'error'); return; }
+    const countryVal = document.getElementById('artist-country').value.trim();
+    const debutVal = document.getElementById('artist-debut-year').value.trim();
+    const languageVal = document.getElementById('artist-language').value.trim();
     const data = {
         name: name,
-        country: document.getElementById('artist-country').value.trim() || null,
-        debut_year: document.getElementById('artist-debut-year').value ? parseInt(document.getElementById('artist-debut-year').value) : null,
-        language: document.getElementById('artist-language').value.trim() || null
+        country: countryVal === '' ? null : countryVal,
+        debut_year: debutVal === '' ? null : parseInt(debutVal),
+        language: languageVal === '' ? null : languageVal
     };
     let url = 'https://localhost:7062/api/Artists', method = 'POST', isUpdate = false;
     if (id) {
@@ -311,7 +314,7 @@ async function deleteArtist(id, name) {
 }
 
 function fillConcertForm(concert) {
-    const datetimeLocal = concert.datetime ? new Date(concert.datetime).toISOString().slice(0, 16) : '';
+    const datetimeLocal = concert.datetime ? concert.datetime.slice(0, 16) : '';
     document.getElementById('concert-title').value = concert.title;
     document.getElementById('concert-venue').value = concert.venue;
     document.getElementById('concert-datetime').value = datetimeLocal;
@@ -344,7 +347,8 @@ async function saveConcert() {
     const id = document.getElementById('concert-edit-id').value;
     const title = document.getElementById('concert-title').value.trim();
     const venue = document.getElementById('concert-venue').value.trim();
-    const datetime = document.getElementById('concert-datetime').value;
+    const datetimeInput = document.getElementById('concert-datetime').value;
+    const datetime = datetimeInput ? new Date(datetimeInput).toISOString() : null;
     const artistIds = selectedArtistsForConcert;
 
     if (!title || !venue || !datetime) {
@@ -366,7 +370,11 @@ async function saveConcert() {
             showToast(text.includes('already') ? text : 'Такой концерт уже существует', 'error');
             return;
         }
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        if (!resp.ok) {
+            const errorText = await resp.text();
+            showToast(errorText || 'Ошибка сохранения', 'error');
+            return;
+        }
         await loadConcerts();
         await loadArtistConcerts();
         clearConcertForm();

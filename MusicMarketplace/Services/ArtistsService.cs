@@ -40,9 +40,9 @@ namespace MusicMarketplace.Services
                 sql,
                 id,
                 dto.name,
-                dto.country ?? (object)DBNull.Value,
-                dto.debut_year ?? (object)DBNull.Value,
-                dto.language ?? (object)DBNull.Value
+                dto.country,
+                dto.debut_year,
+                dto.language
             );
             return result > 0;
         }
