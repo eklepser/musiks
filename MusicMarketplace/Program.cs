@@ -27,8 +27,6 @@ namespace MusicMarketplace
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             builder.Services.AddScoped<AccessoriesService>();
-            builder.Services.AddScoped<ArtistConcertsService>();
-            builder.Services.AddScoped<ArtistMerchesService>();
             builder.Services.AddScoped<ArtistsService>();
             builder.Services.AddScoped<CartsService>();
             builder.Services.AddScoped<ClothingsService>();
@@ -36,7 +34,6 @@ namespace MusicMarketplace
             builder.Services.AddScoped<GenresService>();
             builder.Services.AddScoped<ManufacturersService>();
             builder.Services.AddScoped<MerchesService>();
-            builder.Services.AddScoped<OrderItemsService>();
             builder.Services.AddScoped<OrdersService>();
             builder.Services.AddScoped<ProductGenresService>();
             builder.Services.AddScoped<ProductsService>();
