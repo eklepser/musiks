@@ -2,7 +2,6 @@
 window.cartData = [];
 window.reviewsData = [];
 window.ordersData = [];
-window.currentProductForRemove = null;
 
 async function getCurrentUser() {
     const userId = localStorage.getItem('currentUserId');
@@ -74,13 +73,11 @@ async function loadOrders() {
     const dateFrom = document.getElementById('orders-date-from').value;
     const dateTo = document.getElementById('orders-date-to').value;
     const sortBy = document.getElementById('orders-sort').value;
-
     let url = `https://localhost:7062/api/Orders/byUser/${user.user_id}/detailed?`;
     if (status) url += `status=${status}&`;
     if (dateFrom) url += `dateFrom=${encodeURIComponent(dateFrom)}&`;
     if (dateTo) url += `dateTo=${encodeURIComponent(dateTo)}&`;
     if (sortBy) url += `sortBy=${sortBy}&`;
-
     try {
         const resp = await fetch(url);
         if (resp.ok) {
@@ -148,7 +145,7 @@ function renderCart() {
         const delBtn = document.createElement('button');
         delBtn.textContent = 'Удалить';
         delBtn.className = 'delete-btn';
-        delBtn.onclick = () => showRemoveFromCartModal(item.product_id, item.name, item.quantity);
+        delBtn.onclick = () => window.showRemoveFromCartModal(item.product_id, item.name, item.quantity);
         btnRow.appendChild(delBtn);
         actions.appendChild(btnRow);
     });
@@ -204,7 +201,7 @@ function renderOrders() {
         topRow.className = 'action-buttons-row';
         const detailsBtn = document.createElement('button');
         detailsBtn.textContent = 'Детали';
-        detailsBtn.onclick = () => showOrderDetails(order.order_id);
+        detailsBtn.onclick = () => window.showOrderDetails(order.order_id);
         topRow.appendChild(detailsBtn);
 
         const bottomRow = document.createElement('div');
@@ -213,17 +210,16 @@ function renderOrders() {
             const completeBtn = document.createElement('button');
             completeBtn.textContent = 'Завершить';
             completeBtn.style.background = '#28a745';
-            completeBtn.onclick = () => completeOrder(order.order_id);
+            completeBtn.onclick = () => window.completeOrder(order.order_id);
             bottomRow.appendChild(completeBtn);
 
             const cancelBtn = document.createElement('button');
             cancelBtn.textContent = 'Отменить';
             cancelBtn.style.background = '#dc3545';
             cancelBtn.style.marginLeft = '5px';
-            cancelBtn.onclick = () => cancelOrder(order.order_id);
+            cancelBtn.onclick = () => window.cancelOrder(order.order_id);
             bottomRow.appendChild(cancelBtn);
         }
-
         actions.append(topRow, bottomRow);
     });
     renderPurchasedItems(window.ordersData || []);
@@ -282,7 +278,7 @@ function renderPurchasedItems(orders) {
     });
 }
 
-async function showOrderDetails(orderId) {
+window.showOrderDetails = async function (orderId) {
     const order = window.ordersData.find(o => o.order_id === orderId);
     if (!order) {
         window.showToast('Заказ не найден', 'error');
@@ -308,113 +304,13 @@ async function showOrderDetails(orderId) {
         });
     }
     document.getElementById('order-details-modal').style.display = 'block';
-}
+};
 
-function closeOrderModal() {
+window.closeOrderModal = function () {
     document.getElementById('order-details-modal').style.display = 'none';
-}
+};
 
-function showRemoveFromCartModal(productId, productName, currentQuantity) {
-    window.currentProductForRemove = { id: productId, name: productName, currentQuantity: currentQuantity };
-    const modal = document.getElementById('remove-from-cart-modal');
-    if (!modal) return;
-    document.getElementById('remove-cart-product-name').innerText = productName;
-    document.getElementById('remove-cart-quantity').value = 1;
-    document.getElementById('remove-cart-quantity').max = currentQuantity;
-    document.getElementById('remove-cart-max').innerText = currentQuantity;
-    modal.style.display = 'block';
-}
-
-function hideRemoveFromCartModal() {
-    const modal = document.getElementById('remove-from-cart-modal');
-    if (modal) modal.style.display = 'none';
-    window.currentProductForRemove = null;
-}
-
-async function removeFromCartWithQuantity(productId, quantity) {
-    const userId = localStorage.getItem('currentUserId');
-    if (!userId) return;
-    try {
-        const resp = await fetch(`https://localhost:7062/api/Carts/${userId}/${productId}?quantity=${quantity}`, { method: 'DELETE' });
-        if (resp.ok) {
-            window.hideRemoveFromCartModal();
-            await loadCart();
-            if (typeof window.loadUserStatus === 'function') await window.loadUserStatus();
-            window.showToast(`Удалено ${quantity} шт.`, 'success');
-        } else {
-            window.showToast('Ошибка удаления', 'error');
-        }
-    } catch (e) {
-        window.showToast('Ошибка сети', 'error');
-    }
-}
-
-async function removeFromWishlist(productId) {
-    const user = await getCurrentUser();
-    if (!user) return;
-    if (!confirm('Удалить из вишлиста?')) return;
-    try {
-        const resp = await fetch(`https://localhost:7062/api/Wishlists/${user.user_id}/${productId}`, { method: 'DELETE' });
-        if (resp.ok) {
-            await loadWishlist();
-            if (typeof window.showToast === 'function') window.showToast('Товар удалён из вишлиста', 'success');
-        } else {
-            if (typeof window.showToast === 'function') window.showToast('Ошибка удаления', 'error');
-        }
-    } catch (e) { console.error(e); }
-}
-
-async function deleteReviewFromDashboard(productId) {
-    const user = await getCurrentUser();
-    if (!user) return;
-    if (!confirm('Удалить отзыв?')) return;
-    try {
-        const resp = await fetch(`https://localhost:7062/api/Reviews/${user.user_id}/${productId}`, { method: 'DELETE' });
-        if (resp.ok) {
-            await loadReviews();
-            if (typeof window.loadUserStatus === 'function') await window.loadUserStatus();
-            await loadOrders();
-            if (typeof window.showToast === 'function') window.showToast('Отзыв удалён', 'success');
-        } else {
-            if (typeof window.showToast === 'function') window.showToast('Ошибка удаления', 'error');
-        }
-    } catch (e) { console.error(e); }
-}
-
-async function checkout() {
-    const user = await getCurrentUser();
-    if (!user) {
-        window.showToast('Сначала выберите пользователя', 'error');
-        return;
-    }
-    if (!window.cartData || window.cartData.length === 0) {
-        window.showToast('Корзина пуста', 'error');
-        return;
-    }
-    if (!confirm('Оформить заказ?')) return;
-    try {
-        const resp = await fetch(`https://localhost:7062/api/Carts/checkout/${user.user_id}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-        });
-        if (!resp.ok) {
-            const errorText = await resp.text();
-            let msg = 'Ошибка оформления заказа';
-            try { const obj = JSON.parse(errorText); if (obj.message) msg = obj.message; } catch { }
-            window.showToast(msg, 'error');
-            return;
-        }
-        const result = await resp.json();
-        window.showToast(`Заказ №${result.orderId} оформлен на сумму ${result.totalAmount}`, 'success');
-        await loadCart();
-        await loadOrders();
-        document.querySelector('.tab-btn[data-tab="orders"]').click();
-    } catch (err) {
-        window.showToast('Ошибка сети', 'error');
-    }
-}
-
-async function completeOrder(orderId) {
+window.completeOrder = async function (orderId) {
     if (!confirm('Завершить заказ?')) return;
     try {
         const resp = await fetch(`https://localhost:7062/api/Orders/${orderId}/complete`, { method: 'PUT' });
@@ -426,9 +322,9 @@ async function completeOrder(orderId) {
             window.showToast(err.message || 'Ошибка завершения', 'error');
         }
     } catch (e) { window.showToast('Ошибка сети', 'error'); }
-}
+};
 
-async function cancelOrder(orderId) {
+window.cancelOrder = async function (orderId) {
     if (!confirm('Отменить заказ? Остаток товаров на складе будет восстановлен.')) return;
     try {
         const resp = await fetch(`https://localhost:7062/api/Orders/${orderId}/cancel`, { method: 'PUT' });
@@ -440,7 +336,7 @@ async function cancelOrder(orderId) {
             window.showToast(err.message || 'Ошибка отмены', 'error');
         }
     } catch (e) { window.showToast('Ошибка сети', 'error'); }
-}
+};
 
 function clearAllTables() {
     const wishTbody = document.getElementById('wishlist-tbody');
@@ -521,9 +417,9 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 document.addEventListener('DOMContentLoaded', () => {
     const checkoutBtn = document.getElementById('checkout-btn');
-    if (checkoutBtn) checkoutBtn.addEventListener('click', checkout);
+    if (checkoutBtn) checkoutBtn.addEventListener('click', window.checkout);
     const closeModal = document.getElementById('modal-order-close');
-    if (closeModal) closeModal.addEventListener('click', closeOrderModal);
+    if (closeModal) closeModal.addEventListener('click', window.closeOrderModal);
     window.addEventListener('click', (e) => {
         const modal = document.getElementById('order-details-modal');
         if (e.target === modal) modal.style.display = 'none';
@@ -563,7 +459,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (window.currentProductForRemove) {
                 const quantity = parseInt(document.getElementById('remove-cart-quantity').value);
                 if (quantity && quantity > 0 && quantity <= window.currentProductForRemove.currentQuantity) {
-                    removeFromCartWithQuantity(window.currentProductForRemove.id, quantity);
+                    window.removeFromCartWithQuantity(window.currentProductForRemove.id, quantity);
                 } else {
                     window.showToast('Некорректное количество', 'error');
                 }
@@ -571,7 +467,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     const removeCartCancel = document.getElementById('remove-cart-cancel-btn');
-    if (removeCartCancel) removeCartCancel.addEventListener('click', hideRemoveFromCartModal);
+    if (removeCartCancel) removeCartCancel.addEventListener('click', window.hideRemoveFromCartModal);
 });
 
 loadDashboard();

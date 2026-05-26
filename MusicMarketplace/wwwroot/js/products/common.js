@@ -9,8 +9,6 @@ const GENRES_URL = 'https://localhost:7062/api/Genres';
 const ARTISTS_URL = 'https://localhost:7062/api/Artists';
 const ARTIST_MERCH_URL = 'https://localhost:7062/api/ArtistMerches';
 const PRODUCTS_FILTER_URL = 'https://localhost:7062/api/Products/filter';
-
-
 let manufacturers = [];
 let allProducts = [];
 let genres = [];
@@ -20,11 +18,9 @@ let userWishlistIds = [];
 let userCartIds = [];
 let userCartObjects = [];
 let userReviewProductIds = [];
-
-let currentProductForCart = null;
-let currentProductForReview = null;
-let currentProductForRemove = null;
-
+window.currentProductForCart = null;
+window.currentProductForReview = null;
+window.currentProductForRemove = null;
 function showToast(message, type = 'success') {
     let container = document.getElementById('toast-container');
     if (!container) {
@@ -68,7 +64,6 @@ function showToast(message, type = 'success') {
         setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
-
 async function loadManufacturersForSelect(selectId) {
     const select = document.getElementById(selectId);
     if (!select) return;
@@ -84,12 +79,10 @@ async function loadManufacturersForSelect(selectId) {
         });
     }
 }
-
 function getManufacturerName(id) {
     const m = manufacturers.find(m => m.manufacturer_id === id);
     return m ? m.name : '';
 }
-
 async function loadConcertsSelect(selectId) {
     const select = document.getElementById(selectId);
     if (!select) return;
@@ -105,7 +98,6 @@ async function loadConcertsSelect(selectId) {
         });
     }
 }
-
 async function loadGenresAndLinks() {
     try {
         const [genresRes, linksRes] = await Promise.all([
@@ -124,7 +116,6 @@ async function loadGenresAndLinks() {
         renderGenreSelect();
     } catch (err) { console.error(err); }
 }
-
 function renderGenreSelect() {
     const container = document.getElementById('genre-select');
     if (!container) return;
@@ -137,13 +128,11 @@ function renderGenreSelect() {
         container.appendChild(option);
     });
 }
-
 function getSelectedGenres() {
     const select = document.getElementById('genre-select');
     if (!select || !select.value) return [];
     return [parseInt(select.value)];
 }
-
 async function loadUserStatus() {
     const userId = localStorage.getItem('currentUserId');
     if (!userId) return;
@@ -162,43 +151,35 @@ async function loadUserStatus() {
     } catch (err) { console.error(err); }
     if (typeof renderCatalog === 'function') renderCatalog();
 }
-
-function showCartModal() {
+window.showCartModal = function () {
     const modal = document.getElementById('cart-modal');
     if (!modal) return;
-    document.getElementById('cart-product-name').innerText = currentProductForCart.name;
+    document.getElementById('cart-product-name').innerText = window.currentProductForCart.name;
     document.getElementById('cart-quantity').value = 1;
     modal.style.display = 'block';
-}
-
-function hideCartModal() {
+};
+window.hideCartModal = function () {
     const modal = document.getElementById('cart-modal');
     if (modal) modal.style.display = 'none';
-    currentProductForCart = null;
-}
-
-function showReviewModal() {
+    window.currentProductForCart = null;
+};
+window.showReviewModal = function () {
     const modal = document.getElementById('review-modal');
     if (!modal) return;
-    document.getElementById('review-product-name').innerText = currentProductForReview.name;
+    document.getElementById('review-product-name').innerText = window.currentProductForReview.name;
     document.getElementById('review-rating').value = 5;
     document.getElementById('review-text').value = '';
     modal.style.display = 'block';
-}
-
-function hideReviewModal() {
+};
+window.hideReviewModal = function () {
     const modal = document.getElementById('review-modal');
     if (modal) modal.style.display = 'none';
-    currentProductForReview = null;
-}
-
+    window.currentProductForReview = null;
+};
 async function loadAllArtists() {
     const resp = await fetch(ARTISTS_URL);
-    if (resp.ok) {
-        allArtists = await resp.json();
-    }
+    if (resp.ok) allArtists = await resp.json();
 }
-
 async function loadManufacturerNameDatalist() {
     const datalist = document.getElementById('manufacturer-name-datalist');
     if (!datalist) return;
@@ -213,7 +194,6 @@ async function loadManufacturerNameDatalist() {
         });
     }
 }
-
 async function loadManufacturerCountryDatalist() {
     const datalist = document.getElementById('manufacturer-country-datalist');
     if (!datalist) return;
@@ -228,7 +208,6 @@ async function loadManufacturerCountryDatalist() {
         });
     }
 }
-
 async function loadGenreNameDatalist() {
     const datalist = document.getElementById('genre-name-datalist');
     if (!datalist) return;
@@ -243,15 +222,6 @@ async function loadGenreNameDatalist() {
         });
     }
 }
-
-function getSelectedGenres() {
-    const select = document.getElementById('genre-select');
-    if (!select || !select.value) return [];
-    const genreId = parseInt(select.value);
-    if (isNaN(genreId)) return [];
-    return [genreId];
-}
-
 loadManufacturerNameDatalist();
 loadManufacturerCountryDatalist();
 loadGenreNameDatalist();
