@@ -10,6 +10,7 @@ const ARTISTS_URL = 'https://localhost:7062/api/Artists';
 const ARTIST_MERCH_URL = 'https://localhost:7062/api/ArtistMerches';
 const PRODUCTS_FILTER_URL = 'https://localhost:7062/api/Products/filter';
 
+
 let manufacturers = [];
 let allProducts = [];
 let genres = [];
