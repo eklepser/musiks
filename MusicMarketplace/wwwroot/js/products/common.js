@@ -18,9 +18,9 @@ let userWishlistIds = [];
 let userCartIds = [];
 let userCartObjects = [];
 let userReviewProductIds = [];
-window.currentProductForCart = null;
-window.currentProductForReview = null;
-window.currentProductForRemove = null;
+let currentProductForCart = null;
+let currentProductForReview = null;
+let currentProductForRemove = null;
 function showToast(message, type = 'success') {
     let container = document.getElementById('toast-container');
     if (!container) {
@@ -131,7 +131,9 @@ function renderGenreSelect() {
 function getSelectedGenres() {
     const select = document.getElementById('genre-select');
     if (!select || !select.value) return [];
-    return [parseInt(select.value)];
+    const genreId = parseInt(select.value);
+    if (isNaN(genreId)) return [];
+    return [genreId];
 }
 async function loadUserStatus() {
     const userId = localStorage.getItem('currentUserId');
@@ -151,34 +153,36 @@ async function loadUserStatus() {
     } catch (err) { console.error(err); }
     if (typeof renderCatalog === 'function') renderCatalog();
 }
-window.showCartModal = function () {
+function showCartModal() {
     const modal = document.getElementById('cart-modal');
     if (!modal) return;
-    document.getElementById('cart-product-name').innerText = window.currentProductForCart.name;
+    document.getElementById('cart-product-name').innerText = currentProductForCart.name;
     document.getElementById('cart-quantity').value = 1;
     modal.style.display = 'block';
-};
-window.hideCartModal = function () {
+}
+function hideCartModal() {
     const modal = document.getElementById('cart-modal');
     if (modal) modal.style.display = 'none';
-    window.currentProductForCart = null;
-};
-window.showReviewModal = function () {
+    currentProductForCart = null;
+}
+function showReviewModal() {
     const modal = document.getElementById('review-modal');
     if (!modal) return;
-    document.getElementById('review-product-name').innerText = window.currentProductForReview.name;
+    document.getElementById('review-product-name').innerText = currentProductForReview.name;
     document.getElementById('review-rating').value = 5;
     document.getElementById('review-text').value = '';
     modal.style.display = 'block';
-};
-window.hideReviewModal = function () {
+}
+function hideReviewModal() {
     const modal = document.getElementById('review-modal');
     if (modal) modal.style.display = 'none';
-    window.currentProductForReview = null;
-};
+    currentProductForReview = null;
+}
 async function loadAllArtists() {
     const resp = await fetch(ARTISTS_URL);
-    if (resp.ok) allArtists = await resp.json();
+    if (resp.ok) {
+        allArtists = await resp.json();
+    }
 }
 async function loadManufacturerNameDatalist() {
     const datalist = document.getElementById('manufacturer-name-datalist');
