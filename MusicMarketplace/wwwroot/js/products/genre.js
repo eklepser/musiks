@@ -1,18 +1,13 @@
 ﻿let genreEditId = null;
-
 async function loadGenresTable() {
     const searchName = document.getElementById('genre-search-name');
     const sortBy = document.getElementById('genre-sort');
-
     if (!searchName || !sortBy) return;
-
     const searchNameValue = searchName.value.trim();
     const sortByValue = sortBy.value;
-
     let url = `https://localhost:7062/api/Genres/filter?`;
     if (searchNameValue) url += `searchName=${encodeURIComponent(searchNameValue)}&`;
     if (sortByValue) url += `sortBy=${sortByValue}&`;
-
     try {
         const resp = await fetch(url);
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
@@ -54,7 +49,6 @@ async function loadGenresTable() {
         if (countSpan) countSpan.innerText = '0';
     }
 }
-
 function fillGenreForm(item) {
     const nameInput = document.getElementById('genre-name');
     const descInput = document.getElementById('genre-description');
@@ -62,9 +56,7 @@ function fillGenreForm(item) {
     const formTitle = document.getElementById('genre-form-title');
     const submitBtn = document.getElementById('genre-submit');
     const cancelBtn = document.getElementById('genre-cancel');
-
     if (!nameInput || !descInput || !editIdInput || !formTitle || !submitBtn || !cancelBtn) return;
-
     nameInput.value = item.name;
     descInput.value = item.description || '';
     editIdInput.value = item.genre_id;
@@ -74,7 +66,6 @@ function fillGenreForm(item) {
     cancelBtn.style.display = 'inline-block';
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-
 function clearGenreForm() {
     const nameInput = document.getElementById('genre-name');
     const descInput = document.getElementById('genre-description');
@@ -82,7 +73,6 @@ function clearGenreForm() {
     const formTitle = document.getElementById('genre-form-title');
     const submitBtn = document.getElementById('genre-submit');
     const cancelBtn = document.getElementById('genre-cancel');
-
     if (nameInput) nameInput.value = '';
     if (descInput) descInput.value = '';
     if (editIdInput) editIdInput.value = '';
@@ -91,7 +81,6 @@ function clearGenreForm() {
     if (submitBtn) submitBtn.innerText = 'Добавить';
     if (cancelBtn) cancelBtn.style.display = 'none';
 }
-
 function validateGenreFields(name, description) {
     let err = validateRequiredString(name, 'Название', 2, 50, true);
     if (err) return err;
@@ -101,24 +90,19 @@ function validateGenreFields(name, description) {
     }
     return null;
 }
-
 async function saveGenre() {
     const editId = document.getElementById('genre-edit-id');
     const nameInput = document.getElementById('genre-name');
     const descInput = document.getElementById('genre-description');
-
     if (!editId || !nameInput || !descInput) return;
-
     const id = editId.value;
     const name = nameInput.value.trim();
     const description = descInput.value.trim();
-
     const validationError = validateGenreFields(name, description);
     if (validationError) {
         showToast(validationError, 'error');
         return;
     }
-
     const data = {
         name: name,
         description: description === '' ? null : description
@@ -132,24 +116,14 @@ async function saveGenre() {
     }
     try {
         const resp = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        if (resp.status === 409) {
+        if (!resp.ok) {
             const error = await resp.json();
-            showToast(error.message || 'Такой жанр уже существует', 'error');
+            let msg = 'Ошибка сохранения';
+            if (error.message) msg = error.message;
+            else if (error.errors) msg = Object.values(error.errors).flat().join(' ');
+            showToast(msg, 'error');
             return;
         }
-        if (resp.status === 400) {
-            const error = await resp.json();
-            let errorMsg = 'Ошибка валидации';
-            if (error.errors) {
-                const firstError = Object.values(error.errors)[0];
-                if (firstError && firstError[0]) errorMsg = firstError[0];
-            } else if (error.message) {
-                errorMsg = error.message;
-            }
-            showToast(errorMsg, 'error');
-            return;
-        }
-        if (!resp.ok) throw new Error('Ошибка ' + resp.status);
         let newId = id;
         if (!id) newId = (await resp.json()).genre_id;
         clearGenreForm();
@@ -160,17 +134,15 @@ async function saveGenre() {
         showToast('Ошибка сохранения', 'error');
     }
 }
-
 async function deleteGenre(id, name) {
     if (!confirm(`Удалить жанр «${name}» (ID ${id})?`)) return;
     try {
         const resp = await fetch(`${GENRES_URL}/${id}`, { method: 'DELETE' });
-        if (resp.status === 409) {
+        if (!resp.ok) {
             const error = await resp.json();
-            showToast(error.message || 'Невозможно удалить жанр, так как он используется в товарах', 'error');
+            showToast(error.message || 'Невозможно удалить жанр', 'error');
             return;
         }
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
         clearGenreForm();
         await loadGenresTable();
         await loadGenresAndLinks();
@@ -179,10 +151,8 @@ async function deleteGenre(id, name) {
         showToast('Ошибка удаления', 'error');
     }
 }
-
 const genreApplyBtn = document.getElementById('genre-apply-filters');
 if (genreApplyBtn) genreApplyBtn.addEventListener('click', () => loadGenresTable());
-
 const genreClearBtn = document.getElementById('genre-clear-filters');
 if (genreClearBtn) genreClearBtn.addEventListener('click', () => {
     const searchName = document.getElementById('genre-search-name');

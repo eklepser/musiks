@@ -19,7 +19,6 @@
     }
     return null;
 }
-
 function validateOptionalString(value, fieldName, maxLength = 200) {
     if (value && typeof value === 'string') {
         const trimmed = value.trim();
@@ -32,7 +31,6 @@ function validateOptionalString(value, fieldName, maxLength = 200) {
     }
     return null;
 }
-
 function validatePositiveInteger(value, fieldName) {
     const num = Number(value);
     if (isNaN(num) || !Number.isInteger(num) || num <= 0) {
@@ -40,7 +38,6 @@ function validatePositiveInteger(value, fieldName) {
     }
     return null;
 }
-
 function validateNonNegativeInteger(value, fieldName) {
     const num = Number(value);
     if (isNaN(num) || !Number.isInteger(num) || num < 0) {
@@ -48,7 +45,6 @@ function validateNonNegativeInteger(value, fieldName) {
     }
     return null;
 }
-
 function validatePositiveNumber(value, fieldName) {
     const num = parseFloat(value);
     if (isNaN(num) || num <= 0) {
@@ -59,7 +55,6 @@ function validatePositiveNumber(value, fieldName) {
     }
     return null;
 }
-
 function validatePrice(value) {
     const num = parseFloat(value);
     if (isNaN(num)) {
@@ -76,15 +71,17 @@ function validatePrice(value) {
     }
     return null;
 }
-
 function validateStock(value) {
-    const num = Number(value);
+    const str = String(value).trim();
+    if (str === '') {
+        return 'Укажите остаток';
+    }
+    const num = Number(str);
     if (isNaN(num) || !Number.isInteger(num) || num < 0) {
         return 'Остаток должен быть целым неотрицательным числом';
     }
     return null;
 }
-
 function validateYear(value, fieldName) {
     if (!value) return null;
     const year = Number(value);
@@ -94,7 +91,6 @@ function validateYear(value, fieldName) {
     }
     return null;
 }
-
 function validateContactInfo(value) {
     if (!value || typeof value !== 'string' || value.trim() === '') {
         return 'Контактные данные обязательны';
@@ -108,7 +104,6 @@ function validateContactInfo(value) {
     }
     return null;
 }
-
 function validateConcertDatetime(datetimeLocal) {
     if (!datetimeLocal) return 'Дата и время обязательны';
     const date = new Date(datetimeLocal);

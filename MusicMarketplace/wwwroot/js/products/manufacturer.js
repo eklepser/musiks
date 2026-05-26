@@ -1,21 +1,16 @@
 ﻿let manufacturerEditId = null;
-
 async function loadManufacturersTable() {
     const searchName = document.getElementById('manufacturer-search-name');
     const searchCountry = document.getElementById('manufacturer-search-country');
     const sortBy = document.getElementById('manufacturer-sort');
-
     if (!searchName || !searchCountry || !sortBy) return;
-
     const searchNameValue = searchName.value.trim();
     const searchCountryValue = searchCountry.value.trim();
     const sortByValue = sortBy.value;
-
     let url = `https://localhost:7062/api/Manufacturers/filter?`;
     if (searchNameValue) url += `searchName=${encodeURIComponent(searchNameValue)}&`;
     if (searchCountryValue) url += `searchCountry=${encodeURIComponent(searchCountryValue)}&`;
     if (sortByValue) url += `sortBy=${sortByValue}&`;
-
     try {
         const resp = await fetch(url);
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
@@ -58,7 +53,6 @@ async function loadManufacturersTable() {
         if (countSpan) countSpan.innerText = '0';
     }
 }
-
 function fillManufacturerForm(item) {
     const nameInput = document.getElementById('manufacturer-name');
     const contactInput = document.getElementById('manufacturer-contact');
@@ -67,9 +61,7 @@ function fillManufacturerForm(item) {
     const formTitle = document.getElementById('manufacturer-form-title');
     const submitBtn = document.getElementById('manufacturer-submit');
     const cancelBtn = document.getElementById('manufacturer-cancel');
-
     if (!nameInput || !contactInput || !countryInput || !editIdInput || !formTitle || !submitBtn || !cancelBtn) return;
-
     nameInput.value = item.name;
     contactInput.value = item.contact_info || '';
     countryInput.value = item.country || '';
@@ -80,7 +72,6 @@ function fillManufacturerForm(item) {
     cancelBtn.style.display = 'inline-block';
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-
 function clearManufacturerForm() {
     const nameInput = document.getElementById('manufacturer-name');
     const contactInput = document.getElementById('manufacturer-contact');
@@ -89,7 +80,6 @@ function clearManufacturerForm() {
     const formTitle = document.getElementById('manufacturer-form-title');
     const submitBtn = document.getElementById('manufacturer-submit');
     const cancelBtn = document.getElementById('manufacturer-cancel');
-
     if (nameInput) nameInput.value = '';
     if (contactInput) contactInput.value = '';
     if (countryInput) countryInput.value = '';
@@ -99,38 +89,34 @@ function clearManufacturerForm() {
     if (submitBtn) submitBtn.innerText = 'Добавить';
     if (cancelBtn) cancelBtn.style.display = 'none';
 }
-
 function validateManufacturerFields(name, contact, country) {
     let err = validateRequiredString(name, 'Название', 2, 100, true);
     if (err) return err;
-    err = validateContactInfo(contact);
-    if (err) return err;
+    if (contact && contact.trim() !== '') {
+        err = validateContactInfo(contact);
+        if (err) return err;
+    }
     if (country && country.trim() !== '') {
         err = validateOptionalString(country, 'Страна', 50);
         if (err) return err;
     }
     return null;
 }
-
 async function saveManufacturer() {
     const editId = document.getElementById('manufacturer-edit-id');
     const nameInput = document.getElementById('manufacturer-name');
     const contactInput = document.getElementById('manufacturer-contact');
     const countryInput = document.getElementById('manufacturer-country');
-
     if (!editId || !nameInput || !contactInput || !countryInput) return;
-
     const id = editId.value;
     const name = nameInput.value.trim();
     const contact = contactInput.value.trim();
     const country = countryInput.value.trim();
-
     const validationError = validateManufacturerFields(name, contact, country);
     if (validationError) {
         showToast(validationError, 'error');
         return;
     }
-
     const data = {
         name: name,
         contact_info: contact,
@@ -145,24 +131,14 @@ async function saveManufacturer() {
     }
     try {
         const resp = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        if (resp.status === 409) {
+        if (!resp.ok) {
             const error = await resp.json();
-            showToast(error.message || 'Такой производитель уже существует', 'error');
+            let msg = 'Ошибка сохранения';
+            if (error.message) msg = error.message;
+            else if (error.errors) msg = Object.values(error.errors).flat().join(' ');
+            showToast(msg, 'error');
             return;
         }
-        if (resp.status === 400) {
-            const error = await resp.json();
-            let errorMsg = 'Ошибка валидации';
-            if (error.errors) {
-                const firstError = Object.values(error.errors)[0];
-                if (firstError && firstError[0]) errorMsg = firstError[0];
-            } else if (error.message) {
-                errorMsg = error.message;
-            }
-            showToast(errorMsg, 'error');
-            return;
-        }
-        if (!resp.ok) throw new Error('Ошибка ' + resp.status);
         let newId = id;
         if (!id) newId = (await resp.json()).manufacturer_id;
         clearManufacturerForm();
@@ -182,17 +158,15 @@ async function saveManufacturer() {
         showToast('Ошибка сохранения', 'error');
     }
 }
-
 async function deleteManufacturer(id, name) {
     if (!confirm(`Удалить производителя «${name}» (ID ${id})?`)) return;
     try {
         const resp = await fetch(`${MANUFACTURERS_URL}/${id}`, { method: 'DELETE' });
-        if (resp.status === 409) {
+        if (!resp.ok) {
             const error = await resp.json();
-            showToast(error.message || 'Невозможно удалить производителя, так как есть связанные товары', 'error');
+            showToast(error.message || 'Невозможно удалить производителя', 'error');
             return;
         }
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
         clearManufacturerForm();
         await loadManufacturersTable();
         const filterSelect = document.getElementById('filter-manufacturer');
@@ -210,10 +184,8 @@ async function deleteManufacturer(id, name) {
         showToast('Ошибка удаления', 'error');
     }
 }
-
 const manufacturerApplyBtn = document.getElementById('manufacturer-apply-filters');
 if (manufacturerApplyBtn) manufacturerApplyBtn.addEventListener('click', () => loadManufacturersTable());
-
 const manufacturerClearBtn = document.getElementById('manufacturer-clear-filters');
 if (manufacturerClearBtn) manufacturerClearBtn.addEventListener('click', () => {
     const searchName = document.getElementById('manufacturer-search-name');

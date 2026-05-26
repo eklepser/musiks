@@ -1,7 +1,6 @@
 ﻿async function loadAllItems() {
-    await renderCatalog();
-}
-
+   await renderCatalog();
+    }
 async function getProductGenreNames(productId) {
     try {
         const resp = await fetch(PRODUCT_GENRES_URL);
@@ -16,7 +15,6 @@ async function getProductGenreNames(productId) {
     }
     return '';
 }
-
 async function renderCatalog() {
     const searchName = document.getElementById('search-name').value.trim();
     const filterType = document.getElementById('filter-type').value;
@@ -27,7 +25,6 @@ async function renderCatalog() {
     const priceMax = document.getElementById('price-max').value;
     const sortBy = document.getElementById('sort-by').value;
     const selectedGenres = getSelectedGenres();
-
     const params = [];
     if (searchName) params.push(`searchName=${encodeURIComponent(searchName)}`);
     if (filterType) params.push(`type=${filterType}`);
@@ -38,13 +35,13 @@ async function renderCatalog() {
     if (priceMax) params.push(`priceMax=${priceMax}`);
     if (sortBy) params.push(`sortBy=${sortBy}`);
     if (selectedGenres.length) params.push(`selectedGenres=${encodeURIComponent(selectedGenres.join(','))}`);
-
     const url = `${PRODUCTS_FILTER_URL}?${params.join('&')}`;
-
     try {
         const resp = await fetch(url);
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const items = await resp.json();
+        const typeOrder = { 'clothing': 1, 'accessory': 2, 'ticket': 3 };
+        items.sort((a, b) => (typeOrder[a.type] || 99) - (typeOrder[b.type] || 99));
         const countSpan = document.getElementById('found-count');
         if (countSpan) countSpan.innerText = items.length;
         const tbody = document.getElementById('catalog-tbody');
@@ -61,11 +58,9 @@ async function renderCatalog() {
             row.insertCell(3).textContent = item.price;
             row.insertCell(4).textContent = item.stock;
             row.insertCell(5).textContent = getManufacturerName(item.manufacturer_id);
-
             let genresText = await getProductGenreNames(item.product_id);
             if (!genresText) genresText = '—';
             row.insertCell(6).textContent = genresText;
-
             let extraLines = [];
             if (item.type === 'ticket') {
                 extraLines.push(`Концерт: ${item.concert_title || item.concert_id}`);
@@ -95,13 +90,11 @@ async function renderCatalog() {
             const extraCell = row.insertCell(7);
             extraCell.style.whiteSpace = 'pre-wrap';
             extraCell.textContent = extraText;
-
             const actions = row.insertCell(8);
             const topRow = document.createElement('div');
             topRow.className = 'action-buttons-row';
             const bottomRow = document.createElement('div');
             bottomRow.className = 'action-buttons-row';
-
             const inWishlist = userWishlistIds && userWishlistIds.includes(item.product_id);
             const wishBtn = document.createElement('button');
             wishBtn.textContent = '❤️';
@@ -114,7 +107,6 @@ async function renderCatalog() {
                 wishBtn.title = 'В вишлист';
                 wishBtn.onclick = () => { if (typeof addToWishlist === 'function') addToWishlist(item.product_id, item.name); };
             }
-
             const inCart = userCartIds && userCartIds.includes(item.product_id);
             const cartBtn = document.createElement('button');
             cartBtn.textContent = '🛒';
@@ -127,9 +119,7 @@ async function renderCatalog() {
                 cartBtn.title = 'В корзину';
                 cartBtn.onclick = () => { if (typeof showCartModal === 'function') { currentProductForCart = { id: item.product_id, name: item.name }; showCartModal(); } };
             }
-
             topRow.append(wishBtn, cartBtn);
-
             const editBtn = document.createElement('button');
             editBtn.textContent = 'Ред.';
             editBtn.className = 'edit-btn';
@@ -156,19 +146,16 @@ async function renderCatalog() {
         document.getElementById('catalog-tbody').innerHTML = '<tr><td colspan="9" class="centered-message">Ошибка загрузки</td></tr>';
     }
 }
-
 function refreshCatalogFilters() {
     if (typeof loadManufacturersForSelect === 'function') loadManufacturersForSelect('filter-manufacturer');
     renderCatalog();
 }
-
 function hideEditPanel() {
     document.getElementById('edit-panel').style.display = 'none';
     document.getElementById('edit-ticket-form').style.display = 'none';
     document.getElementById('edit-clothing-form').style.display = 'none';
     document.getElementById('edit-accessory-form').style.display = 'none';
 }
-
 async function loadProductNameDatalist() {
     const resp = await fetch(`${PRODUCTS_FILTER_URL}/names`);
     if (resp.ok) {
@@ -184,7 +171,6 @@ async function loadProductNameDatalist() {
         }
     }
 }
-
 async function loadArtistsForSelect() {
     const resp = await fetch(ARTISTS_URL);
     if (resp.ok) {
@@ -201,7 +187,6 @@ async function loadArtistsForSelect() {
         }
     }
 }
-
 document.getElementById('clear-filters').addEventListener('click', () => {
     document.getElementById('search-name').value = '';
     document.getElementById('filter-type').value = '';
@@ -214,6 +199,5 @@ document.getElementById('clear-filters').addEventListener('click', () => {
     document.getElementById('sort-by').value = '';
     renderCatalog();
 });
-
 loadProductNameDatalist();
 loadArtistsForSelect();

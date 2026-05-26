@@ -1,6 +1,5 @@
 ﻿let accessoryEditId = null;
 let selectedArtistsForAccessory = [];
-
 function ensureArtistIdsArray(artistIds) {
     if (Array.isArray(artistIds)) return artistIds;
     if (typeof artistIds === 'string') {
@@ -14,7 +13,6 @@ function ensureArtistIdsArray(artistIds) {
     if (artistIds === null || artistIds === undefined) return [];
     return [artistIds];
 }
-
 function renderAccessorySelectedArtists() {
     const container = document.getElementById('accessory-selected-artists-list');
     if (!container) return;
@@ -28,7 +26,6 @@ function renderAccessorySelectedArtists() {
     });
     container.innerHTML = names.join(', ');
 }
-
 function renderEditAccessorySelectedArtists() {
     const container = document.getElementById('edit-accessory-selected-artists-list');
     if (!container) return;
@@ -42,12 +39,11 @@ function renderEditAccessorySelectedArtists() {
     });
     container.innerHTML = names.join(', ');
 }
-
 function clearAccessoryForm() {
     document.getElementById('accessory-name').value = '';
     document.getElementById('accessory-price').value = '';
     document.getElementById('accessory-description').value = '';
-    document.getElementById('accessory-stock').value = '';
+    document.getElementById('accessory-stock').value = '0';
     document.getElementById('accessory-manufacturer-id').value = '';
     document.getElementById('accessory-material').value = '';
     document.getElementById('accessory-color').value = '';
@@ -62,7 +58,6 @@ function clearAccessoryForm() {
     document.getElementById('accessory-submit').innerText = 'Добавить';
     document.getElementById('accessory-cancel').style.display = 'none';
 }
-
 function fillEditAccessoryForm(a) {
     hideEditPanel();
     document.getElementById('edit-accessory-id').value = a.accessory_id;
@@ -83,7 +78,6 @@ function fillEditAccessoryForm(a) {
     loadProductGenresForEdit(a.product_id, 'accessory');
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-
 function validateAccessoryFields(name, price, stock, manufacturerId, material, color, type, weight, description) {
     let err = validateRequiredString(name, 'Название', 2, 200, true);
     if (err) return err;
@@ -92,12 +86,18 @@ function validateAccessoryFields(name, price, stock, manufacturerId, material, c
     err = validateStock(stock);
     if (err) return err;
     if (!manufacturerId) return 'Выберите производителя';
-    err = validateOptionalString(material, 'Материал', 50);
-    if (err) return err;
-    err = validateOptionalString(color, 'Цвет', 30);
-    if (err) return err;
-    err = validateOptionalString(type, 'Тип аксессуара', 50);
-    if (err) return err;
+    if (material && material.trim()) {
+        err = validateOptionalString(material, 'Материал', 50);
+        if (err) return err;
+    }
+    if (color && color.trim()) {
+        err = validateOptionalString(color, 'Цвет', 30);
+        if (err) return err;
+    }
+    if (type && type.trim()) {
+        err = validateOptionalString(type, 'Тип аксессуара', 50);
+        if (err) return err;
+    }
     if (weight && weight.trim() !== '') {
         err = validatePositiveNumber(weight, 'Вес');
         if (err) return err;
@@ -108,7 +108,6 @@ function validateAccessoryFields(name, price, stock, manufacturerId, material, c
     }
     return null;
 }
-
 async function saveEditAccessory() {
     const id = document.getElementById('edit-accessory-id').value;
     const manufacturerId = parseInt(document.getElementById('edit-accessory-manufacturer-id').value);
@@ -124,13 +123,11 @@ async function saveEditAccessory() {
     const type = document.getElementById('edit-accessory-type').value.trim();
     const weight = document.getElementById('edit-accessory-weight').value;
     const description = document.getElementById('edit-accessory-description').value.trim();
-
     const validationError = validateAccessoryFields(name, price, stock, manufacturerId, material, color, type, weight, description);
     if (validationError) {
         showToast(validationError, 'error');
         return;
     }
-
     const data = {
         accessory_id: parseInt(id),
         name: name,
@@ -145,7 +142,6 @@ async function saveEditAccessory() {
         artistIds: selectedArtistsForAccessory,
         genreIds: window.selectedGenresForAccessory
     };
-
     try {
         const resp = await fetch(`${ACCESSORIES_URL}/${id}`, {
             method: 'PUT',
@@ -157,16 +153,8 @@ async function saveEditAccessory() {
             showToast(error.message || 'Такой аксессуар уже существует', 'error');
             return;
         }
-        if (resp.status === 400) {
-            const error = await resp.json();
-            let errorMsg = 'Ошибка валидации';
-            if (error.errors) {
-                const firstError = Object.values(error.errors)[0];
-                if (firstError && firstError[0]) errorMsg = firstError[0];
-            } else if (error.message) {
-                errorMsg = error.message;
-            }
-            showToast(errorMsg, 'error');
+        if (resp.status === 400 || resp.status === 422) {
+            showToast('Ошибка валидации данных', 'error');
             return;
         }
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
@@ -174,10 +162,9 @@ async function saveEditAccessory() {
         hideEditPanel();
         showToast(`Запись «${name}» (ID ${id}) обновлена`, 'success');
     } catch (err) {
-        showToast(err, 'error');
+        showToast('Ошибка соединения', 'error');
     }
 }
-
 async function saveAccessory() {
     const name = document.getElementById('accessory-name').value.trim();
     const price = document.getElementById('accessory-price').value;
@@ -188,13 +175,11 @@ async function saveAccessory() {
     const type = document.getElementById('accessory-type').value.trim();
     const weight = document.getElementById('accessory-weight').value;
     const description = document.getElementById('accessory-description').value.trim();
-
     const validationError = validateAccessoryFields(name, price, stock, manufacturerId, material, color, type, weight, description);
     if (validationError) {
         showToast(validationError, 'error');
         return;
     }
-
     const id = document.getElementById('accessory-edit-id').value;
     const data = {
         name: name,
@@ -209,7 +194,6 @@ async function saveAccessory() {
         artistIds: selectedArtistsForAccessory,
         genreIds: window.selectedGenresForAccessory
     };
-
     let url = ACCESSORIES_URL, method = 'POST', isUpdate = false;
     if (id) {
         data.accessory_id = parseInt(id);
@@ -217,7 +201,6 @@ async function saveAccessory() {
         method = 'PUT';
         isUpdate = true;
     }
-
     try {
         const resp = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         if (resp.status === 409) {
@@ -225,16 +208,8 @@ async function saveAccessory() {
             showToast(error.message || 'Такой аксессуар уже существует', 'error');
             return;
         }
-        if (resp.status === 400) {
-            const error = await resp.json();
-            let errorMsg = 'Ошибка валидации';
-            if (error.errors) {
-                const firstError = Object.values(error.errors)[0];
-                if (firstError && firstError[0]) errorMsg = firstError[0];
-            } else if (error.message) {
-                errorMsg = error.message;
-            }
-            showToast(errorMsg, 'error');
+        if (resp.status === 400 || resp.status === 422) {
+            showToast('Ошибка валидации данных', 'error');
             return;
         }
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
@@ -254,7 +229,6 @@ async function saveAccessory() {
         showToast('Ошибка сохранения', 'error');
     }
 }
-
 async function deleteAccessory(id, name) {
     if (!confirm(`Удалить аксессуар «${name}» (ID ${id})?`)) return;
     try {
@@ -272,7 +246,6 @@ async function deleteAccessory(id, name) {
         showToast('Ошибка удаления', 'error');
     }
 }
-
 function openAccessoryArtistsModal() {
     const modal = document.getElementById('artists-merch-modal');
     const artistsListDiv = document.getElementById('modal-merch-artists-list');
@@ -310,7 +283,6 @@ function openAccessoryArtistsModal() {
     });
     modal.style.display = 'block';
 }
-
 function addAccessoryArtistFromModal() {
     const artistId = parseInt(document.getElementById('modal-merch-artist-select').value);
     if (!artistId) return;
@@ -323,15 +295,12 @@ function addAccessoryArtistFromModal() {
         showToast('Исполнитель уже выбран', 'warning');
     }
 }
-
 function closeArtistsMerchModal() {
     const modal = document.getElementById('artists-merch-modal');
     if (modal) modal.style.display = 'none';
 }
-
 document.getElementById('modal-merch-add-artist')?.addEventListener('click', addAccessoryArtistFromModal);
 document.getElementById('modal-merch-close')?.addEventListener('click', closeArtistsMerchModal);
-
 window.addEventListener('click', (e) => {
     const modal = document.getElementById('artists-merch-modal');
     if (e.target === modal && modal) modal.style.display = 'none';

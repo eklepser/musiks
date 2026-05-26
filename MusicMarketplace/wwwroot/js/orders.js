@@ -1,6 +1,5 @@
 ﻿const API_URL = 'https://localhost:7062/api/Orders';
 const USERS_URL = 'https://localhost:7062/api/Users';
-
 const tbody = document.getElementById('order-tbody');
 const errorDiv = document.getElementById('error-message');
 const successDiv = document.getElementById('success-message');
@@ -12,9 +11,7 @@ const submitBtn = document.getElementById('submit-btn');
 const cancelBtn = document.getElementById('cancel-btn');
 const editIdField = document.getElementById('edit-id');
 const formTitle = document.getElementById('form-title');
-
 let currentEditId = null;
-
 function showError(text) {
     errorDiv.textContent = text; errorDiv.classList.add('show'); successDiv.classList.remove('show');
     setTimeout(() => errorDiv.classList.remove('show'), 5000);
@@ -78,7 +75,7 @@ async function renderTable() {
         }
     } catch (err) {
         showError('Ошибка загрузки: ' + err.message);
-        tbody.innerHTML = '<td><td colspan="6">Ошибка загрузки数据</tbody>';
+        tbody.innerHTML = '<tr><td colspan="6">Ошибка загрузки данных</tr></tr>';
     }
 }
 function fillFormForEdit(order) {
@@ -91,32 +88,37 @@ function fillFormForEdit(order) {
     formTitle.textContent = 'Редактировать заказ';
     submitBtn.textContent = 'Сохранить';
     cancelBtn.style.display = 'inline-block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 async function createOrder() {
     if (!validateForm()) return false;
-    const data = { user_id: parseInt(userIdSelect.value), order_date: orderDateInput.value, status: statusSelect.value, total_amount: parseFloat(totalAmountInput.value) };
+    const data = { user_id: parseInt(userIdSelect.value), order_date: orderDateInput.value, status: statusSelect.value || 'pending', total_amount: parseFloat(totalAmountInput.value) };
     try {
         const resp = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        if (resp.status === 409) {
-            const conflict = await resp.json();
-            showError(conflict.message || 'Заказ с такими данными уже существует');
+        if (!resp.ok) {
+            const error = await resp.json();
+            let msg = 'Ошибка добавления';
+            if (error.message) msg = error.message;
+            else if (error.errors) msg = Object.values(error.errors).flat().join(' ');
+            showError(msg);
             return false;
         }
-        if (!resp.ok) throw new Error('Ошибка ' + resp.status);
         clearForm(); await renderTable(); showSuccess('Заказ добавлен'); return true;
     } catch (err) { showError('Ошибка добавления: ' + err.message); return false; }
 }
 async function updateOrder(id) {
     if (!validateForm()) return false;
-    const data = { order_id: id, user_id: parseInt(userIdSelect.value), order_date: orderDateInput.value, status: statusSelect.value, total_amount: parseFloat(totalAmountInput.value) };
+    const data = { order_id: id, user_id: parseInt(userIdSelect.value), order_date: orderDateInput.value, status: statusSelect.value || 'pending', total_amount: parseFloat(totalAmountInput.value) };
     try {
         const resp = await fetch(`${API_URL}/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        if (resp.status === 409) {
-            const conflict = await resp.json();
-            showError(conflict.message || 'Заказ с такими данными уже существует');
+        if (!resp.ok) {
+            const error = await resp.json();
+            let msg = 'Ошибка обновления';
+            if (error.message) msg = error.message;
+            else if (error.errors) msg = Object.values(error.errors).flat().join(' ');
+            showError(msg);
             return false;
         }
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
         clearForm(); await renderTable(); showSuccess('Заказ обновлён'); return true;
     } catch (err) { showError('Ошибка обновления: ' + err.message); return false; }
 }
@@ -124,7 +126,14 @@ async function deleteOrder(id) {
     if (!confirm('Удалить заказ?')) return;
     try {
         const resp = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        if (!resp.ok) {
+            const error = await resp.json();
+            let msg = 'Ошибка удаления';
+            if (error.message) msg = error.message;
+            else if (error.errors) msg = Object.values(error.errors).flat().join(' ');
+            showError(msg);
+            return;
+        }
         await renderTable(); showSuccess('Заказ удалён');
     } catch (err) { showError('Ошибка удаления: ' + err.message); }
 }
