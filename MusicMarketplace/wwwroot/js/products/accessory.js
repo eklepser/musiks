@@ -174,7 +174,7 @@ async function saveEditAccessory() {
         hideEditPanel();
         showToast(`Запись «${name}» (ID ${id}) обновлена`, 'success');
     } catch (err) {
-        showToast('Ошибка соединения', 'error');
+        showToast(err, 'error');
     }
 }
 

@@ -45,6 +45,6 @@ public class AccessoryCreateUpdateDto
     public string? color { get; set; }
     public string? accessory_type { get; set; }
     public decimal? weight { get; set; }
-    public List<int>? artistIds { get; set; }
-    public List<int>? genreIds { get; set; }
+    public List<int>? artistIds { get; set; } = new List<int>();
+    public List<int>? genreIds { get; set; } = new List<int>();
 }

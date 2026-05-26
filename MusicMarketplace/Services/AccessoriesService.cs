@@ -63,7 +63,7 @@ namespace MusicMarketplace.Services
                 artistsJson,
                 genresJson
             );
-            return result > 0;
+            return true;
         }
 
         public async Task<bool> DeleteAsync(int id)
