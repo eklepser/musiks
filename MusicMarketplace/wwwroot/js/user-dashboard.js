@@ -2,6 +2,7 @@
 window.cartData = [];
 window.reviewsData = [];
 window.ordersData = [];
+window.currentProductForRemove = null;
 
 async function getCurrentUser() {
     const userId = localStorage.getItem('currentUserId');
@@ -73,11 +74,13 @@ async function loadOrders() {
     const dateFrom = document.getElementById('orders-date-from').value;
     const dateTo = document.getElementById('orders-date-to').value;
     const sortBy = document.getElementById('orders-sort').value;
+
     let url = `https://localhost:7062/api/Orders/byUser/${user.user_id}/detailed?`;
     if (status) url += `status=${status}&`;
-    if (dateFrom) url += `dateFrom=${dateFrom}&`;
-    if (dateTo) url += `dateTo=${dateTo}&`;
+    if (dateFrom) url += `dateFrom=${encodeURIComponent(dateFrom)}&`;
+    if (dateTo) url += `dateTo=${encodeURIComponent(dateTo)}&`;
     if (sortBy) url += `sortBy=${sortBy}&`;
+
     try {
         const resp = await fetch(url);
         if (resp.ok) {
@@ -114,11 +117,11 @@ function renderWishlist() {
         const cartBtn = document.createElement('button');
         cartBtn.textContent = '🛒 В корзину';
         cartBtn.style.background = '#28a745';
-        cartBtn.onclick = () => addToCart(item.product_id, item.name, 1);
+        cartBtn.onclick = () => window.addToCart(item.product_id, item.name, 1);
         const delBtn = document.createElement('button');
         delBtn.textContent = 'Удалить';
         delBtn.className = 'delete-btn';
-        delBtn.onclick = () => removeFromWishlist(item.product_id);
+        delBtn.onclick = () => window.removeFromWishlist(item.product_id);
         btnRow.append(cartBtn, delBtn);
         actions.appendChild(btnRow);
     });
@@ -171,7 +174,7 @@ function renderReviews() {
         const delBtn = document.createElement('button');
         delBtn.textContent = 'Удалить';
         delBtn.className = 'delete-btn';
-        delBtn.onclick = () => deleteReviewFromDashboard(r.product_id);
+        delBtn.onclick = () => window.deleteReview(r.product_id);
         btnRow.appendChild(delBtn);
         actions.appendChild(btnRow);
     });
@@ -189,23 +192,47 @@ function renderOrders() {
         const row = tbody.insertRow();
         row.insertCell(0).textContent = order.order_id;
         row.insertCell(1).textContent = new Date(order.order_date).toLocaleString();
-        row.insertCell(2).textContent = order.status === 'pending' ? 'Ожидает' : (order.status === 'completed' ? 'Завершён' : 'Отменён');
+
+        const statusCell = row.insertCell(2);
+        statusCell.textContent = order.status === 'pending' ? 'Ожидает' : (order.status === 'completed' ? 'Завершён' : 'Отменён');
+        if (order.status === 'pending') statusCell.style.fontWeight = 'bold';
+
         row.insertCell(3).textContent = order.total_amount?.toFixed(2);
         const actions = row.insertCell(4);
-        const btnRow = document.createElement('div');
-        btnRow.className = 'action-buttons-row';
+
+        const topRow = document.createElement('div');
+        topRow.className = 'action-buttons-row';
         const detailsBtn = document.createElement('button');
         detailsBtn.textContent = 'Детали';
         detailsBtn.onclick = () => showOrderDetails(order.order_id);
-        btnRow.appendChild(detailsBtn);
-        actions.appendChild(btnRow);
+        topRow.appendChild(detailsBtn);
+
+        const bottomRow = document.createElement('div');
+        bottomRow.className = 'action-buttons-row';
+        if (order.status === 'pending') {
+            const completeBtn = document.createElement('button');
+            completeBtn.textContent = 'Завершить';
+            completeBtn.style.background = '#28a745';
+            completeBtn.onclick = () => completeOrder(order.order_id);
+            bottomRow.appendChild(completeBtn);
+
+            const cancelBtn = document.createElement('button');
+            cancelBtn.textContent = 'Отменить';
+            cancelBtn.style.background = '#dc3545';
+            cancelBtn.style.marginLeft = '5px';
+            cancelBtn.onclick = () => cancelOrder(order.order_id);
+            bottomRow.appendChild(cancelBtn);
+        }
+
+        actions.append(topRow, bottomRow);
     });
     renderPurchasedItems(window.ordersData || []);
 }
 
 function renderPurchasedItems(orders) {
+    const completedOrders = (orders || []).filter(o => o.status === 'completed');
     const items = [];
-    orders.forEach(order => {
+    completedOrders.forEach(order => {
         if (order.items && order.items.length) {
             order.items.forEach(item => {
                 items.push({
@@ -223,7 +250,7 @@ function renderPurchasedItems(orders) {
     if (!tbody) return;
     tbody.innerHTML = '';
     if (items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Нет товаров в выбранных заказах</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Нет товаров в завершённых заказах</td></tr>';
         return;
     }
     items.forEach(item => {
@@ -247,7 +274,7 @@ function renderPurchasedItems(orders) {
             reviewBtn.style.background = '#17a2b8';
             reviewBtn.onclick = () => {
                 window.currentProductForReview = { id: item.product_id, name: item.product_name };
-                showReviewModal();
+                window.showReviewModal();
             };
         }
         btnRow.appendChild(reviewBtn);
@@ -258,7 +285,7 @@ function renderPurchasedItems(orders) {
 async function showOrderDetails(orderId) {
     const order = window.ordersData.find(o => o.order_id === orderId);
     if (!order) {
-        showToast('Заказ не найден', 'error');
+        window.showToast('Заказ не найден', 'error');
         return;
     }
     const items = order.items || [];
@@ -287,6 +314,41 @@ function closeOrderModal() {
     document.getElementById('order-details-modal').style.display = 'none';
 }
 
+function showRemoveFromCartModal(productId, productName, currentQuantity) {
+    window.currentProductForRemove = { id: productId, name: productName, currentQuantity: currentQuantity };
+    const modal = document.getElementById('remove-from-cart-modal');
+    if (!modal) return;
+    document.getElementById('remove-cart-product-name').innerText = productName;
+    document.getElementById('remove-cart-quantity').value = 1;
+    document.getElementById('remove-cart-quantity').max = currentQuantity;
+    document.getElementById('remove-cart-max').innerText = currentQuantity;
+    modal.style.display = 'block';
+}
+
+function hideRemoveFromCartModal() {
+    const modal = document.getElementById('remove-from-cart-modal');
+    if (modal) modal.style.display = 'none';
+    window.currentProductForRemove = null;
+}
+
+async function removeFromCartWithQuantity(productId, quantity) {
+    const userId = localStorage.getItem('currentUserId');
+    if (!userId) return;
+    try {
+        const resp = await fetch(`https://localhost:7062/api/Carts/${userId}/${productId}?quantity=${quantity}`, { method: 'DELETE' });
+        if (resp.ok) {
+            window.hideRemoveFromCartModal();
+            await loadCart();
+            if (typeof window.loadUserStatus === 'function') await window.loadUserStatus();
+            window.showToast(`Удалено ${quantity} шт.`, 'success');
+        } else {
+            window.showToast('Ошибка удаления', 'error');
+        }
+    } catch (e) {
+        window.showToast('Ошибка сети', 'error');
+    }
+}
+
 async function removeFromWishlist(productId) {
     const user = await getCurrentUser();
     if (!user) return;
@@ -295,9 +357,9 @@ async function removeFromWishlist(productId) {
         const resp = await fetch(`https://localhost:7062/api/Wishlists/${user.user_id}/${productId}`, { method: 'DELETE' });
         if (resp.ok) {
             await loadWishlist();
-            if (typeof showToast === 'function') showToast('Товар удалён из вишлиста', 'success');
+            if (typeof window.showToast === 'function') window.showToast('Товар удалён из вишлиста', 'success');
         } else {
-            if (typeof showToast === 'function') showToast('Ошибка удаления', 'error');
+            if (typeof window.showToast === 'function') window.showToast('Ошибка удаления', 'error');
         }
     } catch (e) { console.error(e); }
 }
@@ -310,11 +372,11 @@ async function deleteReviewFromDashboard(productId) {
         const resp = await fetch(`https://localhost:7062/api/Reviews/${user.user_id}/${productId}`, { method: 'DELETE' });
         if (resp.ok) {
             await loadReviews();
-            if (typeof loadUserStatus === 'function') await loadUserStatus();
+            if (typeof window.loadUserStatus === 'function') await window.loadUserStatus();
             await loadOrders();
-            if (typeof showToast === 'function') showToast('Отзыв удалён', 'success');
+            if (typeof window.showToast === 'function') window.showToast('Отзыв удалён', 'success');
         } else {
-            if (typeof showToast === 'function') showToast('Ошибка удаления', 'error');
+            if (typeof window.showToast === 'function') window.showToast('Ошибка удаления', 'error');
         }
     } catch (e) { console.error(e); }
 }
@@ -322,11 +384,11 @@ async function deleteReviewFromDashboard(productId) {
 async function checkout() {
     const user = await getCurrentUser();
     if (!user) {
-        showToast('Сначала выберите пользователя', 'error');
+        window.showToast('Сначала выберите пользователя', 'error');
         return;
     }
     if (!window.cartData || window.cartData.length === 0) {
-        showToast('Корзина пуста', 'error');
+        window.showToast('Корзина пуста', 'error');
         return;
     }
     if (!confirm('Оформить заказ?')) return;
@@ -338,21 +400,46 @@ async function checkout() {
         if (!resp.ok) {
             const errorText = await resp.text();
             let msg = 'Ошибка оформления заказа';
-            try {
-                const errorObj = JSON.parse(errorText);
-                if (errorObj.message) msg = errorObj.message;
-            } catch (e) { msg = errorText; }
-            showToast(msg, 'error');
+            try { const obj = JSON.parse(errorText); if (obj.message) msg = obj.message; } catch { }
+            window.showToast(msg, 'error');
             return;
         }
         const result = await resp.json();
-        showToast(`Заказ №${result.orderId} оформлен на сумму ${result.totalAmount}`, 'success');
+        window.showToast(`Заказ №${result.orderId} оформлен на сумму ${result.totalAmount}`, 'success');
         await loadCart();
         await loadOrders();
         document.querySelector('.tab-btn[data-tab="orders"]').click();
     } catch (err) {
-        showToast('Ошибка сети', 'error');
+        window.showToast('Ошибка сети', 'error');
     }
+}
+
+async function completeOrder(orderId) {
+    if (!confirm('Завершить заказ?')) return;
+    try {
+        const resp = await fetch(`https://localhost:7062/api/Orders/${orderId}/complete`, { method: 'PUT' });
+        if (resp.ok) {
+            window.showToast('Заказ успешно завершён', 'success');
+            await loadOrders();
+        } else {
+            const err = await resp.json();
+            window.showToast(err.message || 'Ошибка завершения', 'error');
+        }
+    } catch (e) { window.showToast('Ошибка сети', 'error'); }
+}
+
+async function cancelOrder(orderId) {
+    if (!confirm('Отменить заказ? Остаток товаров на складе будет восстановлен.')) return;
+    try {
+        const resp = await fetch(`https://localhost:7062/api/Orders/${orderId}/cancel`, { method: 'PUT' });
+        if (resp.ok) {
+            window.showToast('Заказ отменён, товары возвращены на склад', 'success');
+            await loadOrders();
+        } else {
+            const err = await resp.json();
+            window.showToast(err.message || 'Ошибка отмены', 'error');
+        }
+    } catch (e) { window.showToast('Ошибка сети', 'error'); }
 }
 
 function clearAllTables() {
@@ -388,7 +475,7 @@ async function loadDashboard() {
     }
     const profileTitle = document.querySelector('#user-profile h2') || document.querySelector('.profile-header h2') || document.getElementById('profile-title');
     if (profileTitle) profileTitle.textContent = `${user.full_name} (${user.login})`;
-    if (typeof loadUserStatus === 'function') await loadUserStatus();
+    if (typeof window.loadUserStatus === 'function') await window.loadUserStatus();
     await Promise.all([loadWishlist(), loadCart(), loadReviews(), loadOrders()]);
     showActiveTab();
 }
@@ -441,32 +528,35 @@ document.addEventListener('DOMContentLoaded', () => {
         const modal = document.getElementById('order-details-modal');
         if (e.target === modal) modal.style.display = 'none';
     });
+
     const cartConfirmBtn = document.getElementById('cart-confirm-btn');
     if (cartConfirmBtn) {
         cartConfirmBtn.addEventListener('click', () => {
             if (window.currentProductForCart) {
                 const quantity = parseInt(document.getElementById('cart-quantity').value);
-                addToCart(window.currentProductForCart.id, window.currentProductForCart.name, quantity);
-                hideCartModal();
+                window.addToCart(window.currentProductForCart.id, window.currentProductForCart.name, quantity);
+                window.hideCartModal();
             }
         });
     }
     const cartCancelBtn = document.getElementById('cart-cancel-btn');
-    if (cartCancelBtn) cartCancelBtn.addEventListener('click', hideCartModal);
+    if (cartCancelBtn) cartCancelBtn.addEventListener('click', window.hideCartModal);
+
     const reviewConfirmBtn = document.getElementById('review-confirm-btn');
     if (reviewConfirmBtn) {
         reviewConfirmBtn.addEventListener('click', () => {
             if (window.currentProductForReview) {
                 const rating = parseInt(document.getElementById('review-rating').value);
                 const reviewText = document.getElementById('review-text').value;
-                addReview(window.currentProductForReview.id, window.currentProductForReview.name, rating, reviewText);
-                hideReviewModal();
+                window.addReview(window.currentProductForReview.id, window.currentProductForReview.name, rating, reviewText);
+                window.hideReviewModal();
                 loadReviews();
             }
         });
     }
     const reviewCancelBtn = document.getElementById('review-cancel-btn');
-    if (reviewCancelBtn) reviewCancelBtn.addEventListener('click', hideReviewModal);
+    if (reviewCancelBtn) reviewCancelBtn.addEventListener('click', window.hideReviewModal);
+
     const removeCartConfirm = document.getElementById('remove-cart-confirm-btn');
     if (removeCartConfirm) {
         removeCartConfirm.addEventListener('click', () => {
@@ -475,7 +565,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (quantity && quantity > 0 && quantity <= window.currentProductForRemove.currentQuantity) {
                     removeFromCartWithQuantity(window.currentProductForRemove.id, quantity);
                 } else {
-                    showToast('Некорректное количество', 'error');
+                    window.showToast('Некорректное количество', 'error');
                 }
             }
         });

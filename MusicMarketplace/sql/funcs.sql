@@ -1182,3 +1182,50 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION get_product_names() RETURNS TABLE (name VARCHAR) AS $$
 BEGIN RETURN QUERY SELECT p.name FROM "Product" p; END;
 $$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION get_filtered_orders_with_items(
+    p_user_id INT,
+    p_status VARCHAR,
+    p_date_from DATE,
+    p_date_to DATE,
+    p_sort_by VARCHAR
+)
+RETURNS TABLE (
+    order_id INT, user_id INT, user_name VARCHAR, user_login VARCHAR,
+    order_date TIMESTAMP, status VARCHAR, total_amount DECIMAL, items_json TEXT
+) AS $$
+DECLARE order_record RECORD; items_json TEXT; items_array JSONB; query_text TEXT;
+BEGIN
+    query_text := 'SELECT o.order_id, o.user_id, u.full_name, u.login, o.order_date, o.status, o.total_amount FROM "Order" o JOIN "User" u ON o.user_id = u.user_id WHERE o.user_id = ' || p_user_id;
+    
+    IF p_status IS NOT NULL THEN 
+        query_text := query_text || ' AND o.status = ''' || p_status || ''''; 
+    END IF;
+    
+    IF p_date_from IS NOT NULL THEN 
+        query_text := query_text || ' AND o.order_date >= ''' || p_date_from || ''''; 
+    END IF;
+    
+    IF p_date_to IS NOT NULL THEN 
+        query_text := query_text || ' AND o.order_date < ''' || p_date_to || ''' + INTERVAL ''1 day'''; 
+    END IF;
+    
+    IF p_sort_by = 'date_asc' THEN query_text := query_text || ' ORDER BY o.order_date ASC';
+    ELSIF p_sort_by = 'total_desc' THEN query_text := query_text || ' ORDER BY o.total_amount DESC';
+    ELSIF p_sort_by = 'total_asc' THEN query_text := query_text || ' ORDER BY o.total_amount ASC';
+    ELSE query_text := query_text || ' ORDER BY o.order_date DESC'; 
+    END IF;
+
+    FOR order_record IN EXECUTE query_text LOOP
+        SELECT jsonb_agg(jsonb_build_object('product_id', oi.product_id, 'product_name', p.name, 'quantity', oi.quantity, 'unit_price', oi.unit_price, 'total_price', oi.quantity * oi.unit_price)) 
+        INTO items_array 
+        FROM "OrderItem" oi 
+        JOIN "Product" p ON oi.product_id = p.product_id 
+        WHERE oi.order_id = order_record.order_id;
+        
+        items_json := COALESCE(items_array::TEXT, '[]');
+        RETURN QUERY SELECT order_record.order_id, order_record.user_id, order_record.full_name, order_record.login, order_record.order_date, order_record.status, order_record.total_amount, items_json;
+    END LOOP;
+END;
+$$ LANGUAGE plpgsql;

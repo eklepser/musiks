@@ -34,9 +34,13 @@ namespace MusicMarketplace.Controllers
         }
 
         [HttpGet("byUser/{userId}/detailed")]
-        public async Task<IActionResult> GetOrdersWithItems(int userId)
+        public async Task<IActionResult> GetOrdersWithItems(int userId,
+            [FromQuery] string? status = null,
+            [FromQuery] DateTime? dateFrom = null,
+            [FromQuery] DateTime? dateTo = null,
+            [FromQuery] string? sortBy = null)
         {
-            var orders = await _ordersService.GetOrdersWithItemsAsync(userId);
+            var orders = await _ordersService.GetFilteredOrdersWithItemsAsync(userId, status, dateFrom, dateTo, sortBy);
             return Ok(orders);
         }
 
@@ -84,6 +88,22 @@ namespace MusicMarketplace.Controllers
             {
                 return NotFound(new { message = ex.Message });
             }
+        }
+
+        [HttpPut("{id}/complete")]
+        public async Task<IActionResult> CompleteOrder(int id)
+        {
+            var success = await _ordersService.CompleteAsync(id);
+            if (!success) return BadRequest(new { message = "Заказ не может быть завершён" });
+            return Ok();
+        }
+
+        [HttpPut("{id}/cancel")]
+        public async Task<IActionResult> CancelOrder(int id)
+        {
+            var success = await _ordersService.CancelAsync(id);
+            if (!success) return BadRequest(new { message = "Заказ не может быть отменён" });
+            return Ok();
         }
     }
 }
