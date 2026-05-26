@@ -1,8 +1,7 @@
 ﻿function getCurrentUserId() {
-    const savedId = localStorage.getItem('currentUserId');
-    return savedId ? parseInt(savedId) : null;
-}
-
+        const savedId = localStorage.getItem('currentUserId');
+        return savedId ? parseInt(savedId) : null;
+    }
 window.addToWishlist = async function (productId, productName) {
     const userId = getCurrentUserId();
     if (!userId) {
@@ -29,7 +28,6 @@ window.addToWishlist = async function (productId, productName) {
         return false;
     }
 };
-
 window.removeFromWishlist = async function (productId) {
     const userId = getCurrentUserId();
     if (!userId) return;
@@ -40,7 +38,6 @@ window.removeFromWishlist = async function (productId) {
         showToast('Товар удалён из вишлиста', 'success');
     } else showToast('Ошибка удаления', 'error');
 };
-
 window.addToCart = async function (productId, productName, quantity = 1) {
     const userId = getCurrentUserId();
     if (!userId) {
@@ -69,7 +66,6 @@ window.addToCart = async function (productId, productName, quantity = 1) {
         } else {
             showToast(`Товар «${productName}» добавлен в корзину`, 'success');
         }
-        if (typeof loadUserStatus === 'function') await loadUserStatus();
         if (typeof loadCart === 'function') await loadCart();
         return true;
     } catch (err) {
@@ -77,7 +73,6 @@ window.addToCart = async function (productId, productName, quantity = 1) {
         return false;
     }
 };
-
 window.showRemoveFromCartModal = function (productId, productName, currentQuantity) {
     if (currentQuantity <= 1) {
         removeFromCart(productId);
@@ -92,13 +87,11 @@ window.showRemoveFromCartModal = function (productId, productName, currentQuanti
     document.getElementById('remove-cart-max').innerText = currentQuantity;
     modal.style.display = 'block';
 };
-
 window.hideRemoveFromCartModal = function () {
     const modal = document.getElementById('remove-from-cart-modal');
     if (modal) modal.style.display = 'none';
     currentProductForRemove = null;
 };
-
 window.removeFromCartWithQuantity = async function (productId, quantity) {
     const userId = getCurrentUserId();
     if (!userId) return;
@@ -110,7 +103,6 @@ window.removeFromCartWithQuantity = async function (productId, quantity) {
         hideRemoveFromCartModal();
     } else showToast('Ошибка удаления', 'error');
 };
-
 window.removeFromCart = async function (productId) {
     const userId = getCurrentUserId();
     if (!userId) return;
@@ -121,7 +113,6 @@ window.removeFromCart = async function (productId) {
         showToast('Товар удалён из корзины', 'success');
     } else showToast('Ошибка удаления', 'error');
 };
-
 window.addReview = async function (productId, productName, rating, reviewText) {
     const userId = getCurrentUserId();
     if (!userId) {
@@ -153,7 +144,6 @@ window.addReview = async function (productId, productName, rating, reviewText) {
         return false;
     }
 };
-
 window.deleteReview = async function (productId) {
     const userId = getCurrentUserId();
     if (!userId) return;

@@ -1,6 +1,6 @@
 ﻿async function loadAllItems() {
-   await renderCatalog();
-    }
+    await renderCatalog();
+}
 async function getProductGenreNames(productId) {
     try {
         const resp = await fetch(PRODUCT_GENRES_URL);
@@ -40,8 +40,6 @@ async function renderCatalog() {
         const resp = await fetch(url);
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const items = await resp.json();
-        const typeOrder = { 'clothing': 1, 'accessory': 2, 'ticket': 3 };
-        items.sort((a, b) => (typeOrder[a.type] || 99) - (typeOrder[b.type] || 99));
         const countSpan = document.getElementById('found-count');
         if (countSpan) countSpan.innerText = items.length;
         const tbody = document.getElementById('catalog-tbody');
@@ -86,8 +84,8 @@ async function renderCatalog() {
                     if (artists && artists.trim()) extraLines.push(`Исполнители: ${artists}`);
                 }
             }
-            const extraText = extraLines.length ? extraLines.join('\n') : '—';
-            const extraCell = row.insertCell(7);
+            const extraText = extraLines.length ? extraLines.join('') : '—';
+const extraCell = row.insertCell(7);
             extraCell.style.whiteSpace = 'pre-wrap';
             extraCell.textContent = extraText;
             const actions = row.insertCell(8);
@@ -107,18 +105,11 @@ async function renderCatalog() {
                 wishBtn.title = 'В вишлист';
                 wishBtn.onclick = () => { if (typeof addToWishlist === 'function') addToWishlist(item.product_id, item.name); };
             }
-            const inCart = userCartIds && userCartIds.includes(item.product_id);
             const cartBtn = document.createElement('button');
             cartBtn.textContent = '🛒';
-            if (inCart) {
-                cartBtn.style.background = '#28a745';
-                cartBtn.title = 'Удалить из корзины';
-                cartBtn.onclick = () => { if (typeof showRemoveFromCartModal === 'function') showRemoveFromCartModal(item.product_id, item.name); };
-            } else {
-                cartBtn.style.background = '#28a745';
-                cartBtn.title = 'В корзину';
-                cartBtn.onclick = () => { if (typeof showCartModal === 'function') { currentProductForCart = { id: item.product_id, name: item.name }; showCartModal(); } };
-            }
+            cartBtn.style.background = '#28a745';
+            cartBtn.title = 'В корзину';
+            cartBtn.onclick = () => { if (typeof showCartModal === 'function') { currentProductForCart = { id: item.product_id, name: item.name }; showCartModal(); } };
             topRow.append(wishBtn, cartBtn);
             const editBtn = document.createElement('button');
             editBtn.textContent = 'Ред.';

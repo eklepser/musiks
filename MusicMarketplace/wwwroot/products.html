@@ -12,10 +12,11 @@
             <li><a href="/products">Товары</a></li>
             <li><a href="/artists">Исполнители</a></li>
             <li><a href="/user">Мой профиль</a></li>
-            <li style="margin-left: auto;">
+            <li style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
                 <select id="user-select">
                     <option value="">-- Выберите пользователя --</option>
                 </select>
+                <button id="manage-users-btn" title="Управление пользователями" style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 5px;">⚙️👤</button>
             </li>
         </ul>
     </div>
@@ -191,12 +192,37 @@
                     <tr><th>ID</th><th>Тип</th><th>Название</th><th>Цена</th><th>Остаток</th><th>Производитель</th><th>Жанры</th><th>Доп. параметры</th><th>Действия</th></tr>
                 </thead>
                 <tbody id="catalog-tbody">
-                    <tr><td colspan="9" class="centered-message">Загрузка...–
-                </tbody>
+                    <tr><td colspan="9" class="centered-message">Загрузка...</td></tr>
                 </tbody>
             </table>
         </div>
         <div id="add-tab" class="tab-content">
+            <div class="add-section">
+                <h3>Добавление билета</h3>
+                <div class="form-card">
+                    <input type="hidden" id="ticket-edit-id">
+                    <div class="form-group-row">
+                        <input type="text" id="ticket-name" placeholder="Название*" required>
+                        <input type="number" id="ticket-price" placeholder="Цена*" step="0.01" required>
+<textarea id="ticket-description" placeholder="Описание"></textarea>
+                        <select id="ticket-manufacturer-id" required><option value="">Производитель*</option></select>
+                        <input type="number" id="ticket-stock" placeholder="Остаток">
+                        <select id="ticket-concert-id" required><option value="">Концерт*</option></select>
+                        <input type="text" id="ticket-price-category" placeholder="Тип места">
+                    </div>
+                    <div class="form-group-row" style="align-items: center;">
+                        <label style="margin-right: 15px;">Жанры:</label>
+                        <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
+                            <div id="ticket-selected-genres-list" style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 8px; min-height: 40px; background: #f9f9f9;"></div>
+                            <button type="button" id="open-ticket-genres-modal-btn" class="genres-btn">Выбрать жанры</button>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button id="ticket-submit">Добавить</button>
+                        <button id="ticket-cancel" style="display:none;">Отмена</button>
+                    </div>
+                </div>
+            </div>
             <div class="add-section">
                 <h3>Добавление одежды</h3>
                 <div class="form-card">
@@ -205,7 +231,7 @@
                         <input type="text" id="clothing-name" placeholder="Название*" required>
                         <input type="number" id="clothing-price" placeholder="Цена*" step="0.01" required>
 <textarea id="clothing-description" placeholder="Описание"></textarea>
-                        <input type="number" id="clothing-stock" placeholder="Остаток" value="0">
+                        <input type="number" id="clothing-stock" placeholder="Остаток">
                         <select id="clothing-manufacturer-id" required><option value="">Производитель*</option></select>
                         <input type="text" id="clothing-material" placeholder="Материал">
                         <input type="text" id="clothing-color" placeholder="Цвет">
@@ -253,7 +279,7 @@
                         <input type="text" id="accessory-name" placeholder="Название*" required>
                         <input type="number" id="accessory-price" placeholder="Цена*" step="0.01" required>
 <textarea id="accessory-description" placeholder="Описание"></textarea>
-                        <input type="number" id="accessory-stock" placeholder="Остаток" value="0">
+                        <input type="number" id="accessory-stock" placeholder="Остаток">
                         <select id="accessory-manufacturer-id" required><option value="">Производитель*</option></select>
                         <input type="text" id="accessory-material" placeholder="Материал">
                         <input type="text" id="accessory-color" placeholder="Цвет">
@@ -277,32 +303,6 @@
                     <div class="form-actions">
                         <button id="accessory-submit">Добавить</button>
                         <button id="accessory-cancel" style="display:none;">Отмена</button>
-                    </div>
-                </div>
-            </div>
-            <div class="add-section">
-                <h3>Добавление билета</h3>
-                <div class="form-card">
-                    <input type="hidden" id="ticket-edit-id">
-                    <div class="form-group-row">
-                        <input type="text" id="ticket-name" placeholder="Название*" required>
-                        <input type="number" id="ticket-price" placeholder="Цена*" step="0.01" required>
-<textarea id="ticket-description" placeholder="Описание"></textarea>
-                        <select id="ticket-manufacturer-id" required><option value="">Производитель*</option></select>
-                        <input type="number" id="ticket-stock" placeholder="Остаток" value="0">
-                        <select id="ticket-concert-id" required><option value="">Концерт*</option></select>
-                        <input type="text" id="ticket-price-category" placeholder="Тип места">
-                    </div>
-                    <div class="form-group-row" style="align-items: center;">
-                        <label style="margin-right: 15px;">Жанры:</label>
-                        <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
-                            <div id="ticket-selected-genres-list" style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 8px; min-height: 40px; background: #f9f9f9;"></div>
-                            <button type="button" id="open-ticket-genres-modal-btn" class="genres-btn">Выбрать жанры</button>
-                        </div>
-                    </div>
-                    <div class="form-actions">
-                        <button id="ticket-submit">Добавить</button>
-                        <button id="ticket-cancel" style="display:none;">Отмена</button>
                     </div>
                 </div>
             </div>
@@ -346,10 +346,8 @@
                     <tr><th>ID</th><th>Название</th><th>Контакты</th><th>Страна</th><th>Действия</th></tr>
                 </thead>
                 <tbody id="manufacturers-tbody">
-                <td>
-                <td colspan="5" class="centered-message">
-                    Загрузка...–</tbody>
-                    </tbody>
+                    <tr><td colspan="5" class="centered-message">Загрузка...</td></tr>
+                </tbody>
             </table>
         </div>
         <div id="genres-tab" class="tab-content">
@@ -388,8 +386,7 @@
                     <tr><th>ID</th><th>Название</th><th>Описание</th><th>Действия</th></tr>
                 </thead>
                 <tbody id="genres-tbody">
-                    <tr><td colspan="4" class="centered-message">Загрузка...–
-                </tbody>
+                    <tr><td colspan="4" class="centered-message">Загрузка...</td></tr>
                 </tbody>
             </table>
         </div>

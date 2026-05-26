@@ -1,8 +1,15 @@
-﻿async function getCurrentUser() {
+﻿window.wishlistData =[];
+window.cartData = [];
+window.reviewsData = [];
+window.ordersData = [];
+
+async function getCurrentUser() {
     const userId = localStorage.getItem('currentUserId');
     if (!userId) return null;
-    const resp = await fetch(`https://localhost:7062/api/Users/${userId}`);
-    if (resp.ok) return await resp.json();
+    try {
+        const resp = await fetch(`https://localhost:7062/api/Users/${userId}`);
+        if (resp.ok) return await resp.json();
+    } catch (e) { console.error(e); }
     return null;
 }
 
@@ -14,11 +21,13 @@ async function loadWishlist() {
     let url = `https://localhost:7062/api/Wishlists/byUser/${user.user_id}/filter?`;
     if (searchName) url += `searchName=${encodeURIComponent(searchName)}&`;
     if (sortBy) url += `sortBy=${sortBy}&`;
-    const resp = await fetch(url);
-    if (resp.ok) {
-        window.wishlistData = await resp.json();
-        renderWishlist();
-    }
+    try {
+        const resp = await fetch(url);
+        if (resp.ok) {
+            window.wishlistData = await resp.json();
+            renderWishlist();
+        }
+    } catch (e) { console.error(e); }
 }
 
 async function loadCart() {
@@ -29,11 +38,13 @@ async function loadCart() {
     let url = `https://localhost:7062/api/Carts/byUser/${user.user_id}/filter?`;
     if (searchName) url += `searchName=${encodeURIComponent(searchName)}&`;
     if (sortBy) url += `sortBy=${sortBy}&`;
-    const resp = await fetch(url);
-    if (resp.ok) {
-        window.cartData = await resp.json();
-        renderCart();
-    }
+    try {
+        const resp = await fetch(url);
+        if (resp.ok) {
+            window.cartData = await resp.json();
+            renderCart();
+        }
+    } catch (e) { console.error(e); }
 }
 
 async function loadReviews() {
@@ -46,11 +57,13 @@ async function loadReviews() {
     if (search) url += `searchName=${encodeURIComponent(search)}&`;
     if (rating) url += `rating=${rating}&`;
     if (sortBy) url += `sortBy=${sortBy}&`;
-    const resp = await fetch(url);
-    if (resp.ok) {
-        window.reviewsData = await resp.json();
-        renderReviews();
-    }
+    try {
+        const resp = await fetch(url);
+        if (resp.ok) {
+            window.reviewsData = await resp.json();
+            renderReviews();
+        }
+    } catch (e) { console.error(e); }
 }
 
 async function loadOrders() {
@@ -65,30 +78,28 @@ async function loadOrders() {
     if (dateFrom) url += `dateFrom=${dateFrom}&`;
     if (dateTo) url += `dateTo=${dateTo}&`;
     if (sortBy) url += `sortBy=${sortBy}&`;
-    const resp = await fetch(url);
-    if (resp.ok) {
-        let orders = await resp.json();
-        orders = orders.map(order => {
-            let items = [];
-            if (order.items_json) {
-                try {
-                    items = JSON.parse(order.items_json);
-                } catch (e) {
-                    console.error('Ошибка парсинга items_json', e);
+    try {
+        const resp = await fetch(url);
+        if (resp.ok) {
+            let orders = await resp.json();
+            window.ordersData = orders.map(order => {
+                let items = [];
+                if (order.items_json) {
+                    try { items = JSON.parse(order.items_json); } catch (e) { console.error(e); }
                 }
-            }
-            return { ...order, items };
-        });
-        window.ordersData = orders;
-        renderOrders();
-    }
+                return { ...order, items };
+            });
+            renderOrders();
+        }
+    } catch (e) { console.error(e); }
 }
 
 function renderWishlist() {
     const tbody = document.getElementById('wishlist-tbody');
+    if (!tbody) return;
     tbody.innerHTML = '';
     if (!window.wishlistData || window.wishlistData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Вишлист пуст</tbody>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Вишлист пуст</td></tr>';
         return;
     }
     window.wishlistData.forEach(item => {
@@ -115,9 +126,10 @@ function renderWishlist() {
 
 function renderCart() {
     const tbody = document.getElementById('cart-tbody');
+    if (!tbody) return;
     tbody.innerHTML = '';
     if (!window.cartData || window.cartData.length === 0) {
-        tbody.innerHTML = '<table><td colspan="6" style="text-align: center;">Корзина пуста</tbody>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Корзина пуста</td></tr>';
         return;
     }
     window.cartData.forEach(item => {
@@ -141,9 +153,10 @@ function renderCart() {
 
 function renderReviews() {
     const tbody = document.getElementById('reviews-tbody');
+    if (!tbody) return;
     tbody.innerHTML = '';
     if (!window.reviewsData || window.reviewsData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Отзывов нет</tbody>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Отзывов нет</td></tr>';
         return;
     }
     window.reviewsData.forEach(r => {
@@ -166,26 +179,27 @@ function renderReviews() {
 
 function renderOrders() {
     const tbody = document.getElementById('orders-tbody');
+    if (!tbody) return;
     tbody.innerHTML = '';
     if (!window.ordersData || window.ordersData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Нет заказов</tbody>';
-    } else {
-        window.ordersData.forEach(order => {
-            const row = tbody.insertRow();
-            row.insertCell(0).textContent = order.order_id;
-            row.insertCell(1).textContent = new Date(order.order_date).toLocaleString();
-            row.insertCell(2).textContent = order.status === 'pending' ? 'Ожидает' : (order.status === 'completed' ? 'Завершён' : 'Отменён');
-            row.insertCell(3).textContent = order.total_amount?.toFixed(2);
-            const actions = row.insertCell(4);
-            const btnRow = document.createElement('div');
-            btnRow.className = 'action-buttons-row';
-            const detailsBtn = document.createElement('button');
-            detailsBtn.textContent = 'Детали';
-            detailsBtn.onclick = () => showOrderDetails(order.order_id);
-            btnRow.appendChild(detailsBtn);
-            actions.appendChild(btnRow);
-        });
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Нет заказов</td></tr>';
+        return;
     }
+    window.ordersData.forEach(order => {
+        const row = tbody.insertRow();
+        row.insertCell(0).textContent = order.order_id;
+        row.insertCell(1).textContent = new Date(order.order_date).toLocaleString();
+        row.insertCell(2).textContent = order.status === 'pending' ? 'Ожидает' : (order.status === 'completed' ? 'Завершён' : 'Отменён');
+        row.insertCell(3).textContent = order.total_amount?.toFixed(2);
+        const actions = row.insertCell(4);
+        const btnRow = document.createElement('div');
+        btnRow.className = 'action-buttons-row';
+        const detailsBtn = document.createElement('button');
+        detailsBtn.textContent = 'Детали';
+        detailsBtn.onclick = () => showOrderDetails(order.order_id);
+        btnRow.appendChild(detailsBtn);
+        actions.appendChild(btnRow);
+    });
     renderPurchasedItems(window.ordersData || []);
 }
 
@@ -206,9 +220,10 @@ function renderPurchasedItems(orders) {
         }
     });
     const tbody = document.getElementById('purchased-items-tbody');
+    if (!tbody) return;
     tbody.innerHTML = '';
     if (items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Нет товаров в выбранных заказах</tbody>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Нет товаров в выбранных заказах</td></tr>';
         return;
     }
     items.forEach(item => {
@@ -222,7 +237,7 @@ function renderPurchasedItems(orders) {
         const actions = row.insertCell(6);
         const btnRow = document.createElement('div');
         btnRow.className = 'action-buttons-row';
-        const hasReview = userReviewProductIds && userReviewProductIds.includes(item.product_id);
+        const hasReview = window.userReviewProductIds && window.userReviewProductIds.includes(item.product_id);
         const reviewBtn = document.createElement('button');
         reviewBtn.textContent = hasReview ? 'Отзыв оставлен' : 'Оставить отзыв';
         if (hasReview) {
@@ -231,7 +246,7 @@ function renderPurchasedItems(orders) {
         } else {
             reviewBtn.style.background = '#17a2b8';
             reviewBtn.onclick = () => {
-                currentProductForReview = { id: item.product_id, name: item.product_name };
+                window.currentProductForReview = { id: item.product_id, name: item.product_name };
                 showReviewModal();
             };
         }
@@ -255,7 +270,7 @@ async function showOrderDetails(orderId) {
     const tbody = document.getElementById('modal-order-items-tbody');
     tbody.innerHTML = '';
     if (items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4">Нет товаров</tbody>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Нет товаров</td></tr>';
     } else {
         items.forEach(item => {
             const row = tbody.insertRow();
@@ -276,24 +291,32 @@ async function removeFromWishlist(productId) {
     const user = await getCurrentUser();
     if (!user) return;
     if (!confirm('Удалить из вишлиста?')) return;
-    const resp = await fetch(`https://localhost:7062/api/Wishlists/${user.user_id}/${productId}`, { method: 'DELETE' });
-    if (resp.ok) {
-        await loadWishlist();
-        if (typeof showToast === 'function') showToast('Товар удалён из вишлиста', 'success');
-    } else if (typeof showToast === 'function') showToast('Ошибка удаления', 'error');
+    try {
+        const resp = await fetch(`https://localhost:7062/api/Wishlists/${user.user_id}/${productId}`, { method: 'DELETE' });
+        if (resp.ok) {
+            await loadWishlist();
+            if (typeof showToast === 'function') showToast('Товар удалён из вишлиста', 'success');
+        } else {
+            if (typeof showToast === 'function') showToast('Ошибка удаления', 'error');
+        }
+    } catch (e) { console.error(e); }
 }
 
 async function deleteReviewFromDashboard(productId) {
     const user = await getCurrentUser();
     if (!user) return;
     if (!confirm('Удалить отзыв?')) return;
-    const resp = await fetch(`https://localhost:7062/api/Reviews/${user.user_id}/${productId}`, { method: 'DELETE' });
-    if (resp.ok) {
-        await loadReviews();
-        await loadUserStatus();
-        await loadOrders();
-        if (typeof showToast === 'function') showToast('Отзыв удалён', 'success');
-    } else if (typeof showToast === 'function') showToast('Ошибка удаления', 'error');
+    try {
+        const resp = await fetch(`https://localhost:7062/api/Reviews/${user.user_id}/${productId}`, { method: 'DELETE' });
+        if (resp.ok) {
+            await loadReviews();
+            if (typeof loadUserStatus === 'function') await loadUserStatus();
+            await loadOrders();
+            if (typeof showToast === 'function') showToast('Отзыв удалён', 'success');
+        } else {
+            if (typeof showToast === 'function') showToast('Ошибка удаления', 'error');
+        }
+    } catch (e) { console.error(e); }
 }
 
 async function checkout() {
@@ -313,8 +336,13 @@ async function checkout() {
             headers: { 'Content-Type': 'application/json' }
         });
         if (!resp.ok) {
-            const error = await resp.text();
-            showToast(error || 'Ошибка оформления заказа', 'error');
+            const errorText = await resp.text();
+            let msg = 'Ошибка оформления заказа';
+            try {
+                const errorObj = JSON.parse(errorText);
+                if (errorObj.message) msg = errorObj.message;
+            } catch (e) { msg = errorText; }
+            showToast(msg, 'error');
             return;
         }
         const result = await resp.json();
@@ -328,25 +356,31 @@ async function checkout() {
 }
 
 function clearAllTables() {
-    document.getElementById('wishlist-tbody').innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</tbody>';
-    document.getElementById('cart-tbody').innerHTML = '<tr><td colspan="6" style="text-align: center;">Выберите пользователя</tbody>';
-    document.getElementById('reviews-tbody').innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</tbody>';
-    document.getElementById('orders-tbody').innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</tbody>';
-    document.getElementById('purchased-items-tbody').innerHTML = '<tr><td colspan="7" style="text-align: center;">Выберите пользователя</tbody>';
+    const wishTbody = document.getElementById('wishlist-tbody');
+    if (wishTbody) wishTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</td></tr>';
+    const cartTbody = document.getElementById('cart-tbody');
+    if (cartTbody) cartTbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Выберите пользователя</td></tr>';
+    const revTbody = document.getElementById('reviews-tbody');
+    if (revTbody) revTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</td></tr>';
+    const ordTbody = document.getElementById('orders-tbody');
+    if (ordTbody) ordTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</td></tr>';
+    const purTbody = document.getElementById('purchased-items-tbody');
+    if (purTbody) purTbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Выберите пользователя</td></tr>';
 }
 
 function showActiveTab() {
-    const activeTab = document.querySelector('.tab-btn.active').dataset.tab;
-    if (activeTab === 'wishlist') renderWishlist();
-    else if (activeTab === 'cart') renderCart();
-    else if (activeTab === 'orders') renderOrders();
-    else if (activeTab === 'reviews') renderReviews();
+    const activeTab = document.querySelector('.tab-btn.active');
+    if (!activeTab) return;
+    const tabId = activeTab.dataset.tab;
+    if (tabId === 'wishlist') renderWishlist();
+    else if (tabId === 'cart') renderCart();
+    else if (tabId === 'orders') renderOrders();
+    else if (tabId === 'reviews') renderReviews();
 }
 
 async function loadDashboard() {
     const user = await getCurrentUser();
     if (!user) {
-        document.getElementById('user-info').innerHTML = 'Выберите пользователя';
         clearAllTables();
         const profileTitle = document.querySelector('#user-profile h2') || document.querySelector('.profile-header h2') || document.getElementById('profile-title');
         if (profileTitle) profileTitle.textContent = 'Мой профиль';
@@ -354,7 +388,7 @@ async function loadDashboard() {
     }
     const profileTitle = document.querySelector('#user-profile h2') || document.querySelector('.profile-header h2') || document.getElementById('profile-title');
     if (profileTitle) profileTitle.textContent = `${user.full_name} (${user.login})`;
-    await loadUserStatus();
+    if (typeof loadUserStatus === 'function') await loadUserStatus();
     await Promise.all([loadWishlist(), loadCart(), loadReviews(), loadOrders()]);
     showActiveTab();
 }
@@ -392,7 +426,8 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         btn.classList.add('active');
-        document.getElementById(`${btn.dataset.tab}-tab`).classList.add('active');
+        const tabContent = document.getElementById(`${btn.dataset.tab}-tab`);
+        if (tabContent) tabContent.classList.add('active');
         showActiveTab();
     });
 });
@@ -406,27 +441,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const modal = document.getElementById('order-details-modal');
         if (e.target === modal) modal.style.display = 'none';
     });
-
     const cartConfirmBtn = document.getElementById('cart-confirm-btn');
     if (cartConfirmBtn) {
         cartConfirmBtn.addEventListener('click', () => {
-            if (currentProductForCart) {
+            if (window.currentProductForCart) {
                 const quantity = parseInt(document.getElementById('cart-quantity').value);
-                addToCart(currentProductForCart.id, currentProductForCart.name, quantity);
+                addToCart(window.currentProductForCart.id, window.currentProductForCart.name, quantity);
                 hideCartModal();
             }
         });
     }
     const cartCancelBtn = document.getElementById('cart-cancel-btn');
     if (cartCancelBtn) cartCancelBtn.addEventListener('click', hideCartModal);
-
     const reviewConfirmBtn = document.getElementById('review-confirm-btn');
     if (reviewConfirmBtn) {
         reviewConfirmBtn.addEventListener('click', () => {
-            if (currentProductForReview) {
+            if (window.currentProductForReview) {
                 const rating = parseInt(document.getElementById('review-rating').value);
                 const reviewText = document.getElementById('review-text').value;
-                addReview(currentProductForReview.id, currentProductForReview.name, rating, reviewText);
+                addReview(window.currentProductForReview.id, window.currentProductForReview.name, rating, reviewText);
                 hideReviewModal();
                 loadReviews();
             }
@@ -434,14 +467,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const reviewCancelBtn = document.getElementById('review-cancel-btn');
     if (reviewCancelBtn) reviewCancelBtn.addEventListener('click', hideReviewModal);
-
     const removeCartConfirm = document.getElementById('remove-cart-confirm-btn');
     if (removeCartConfirm) {
         removeCartConfirm.addEventListener('click', () => {
-            if (currentProductForRemove) {
+            if (window.currentProductForRemove) {
                 const quantity = parseInt(document.getElementById('remove-cart-quantity').value);
-                if (quantity && quantity > 0 && quantity <= currentProductForRemove.currentQuantity) {
-                    removeFromCartWithQuantity(currentProductForRemove.id, quantity);
+                if (quantity && quantity > 0 && quantity <= window.currentProductForRemove.currentQuantity) {
+                    removeFromCartWithQuantity(window.currentProductForRemove.id, quantity);
                 } else {
                     showToast('Некорректное количество', 'error');
                 }

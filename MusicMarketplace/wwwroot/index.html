@@ -13,10 +13,11 @@
             <li><a href="/products">Товары</a></li>
             <li><a href="/artists">Исполнители</a></li>
             <li><a href="/user">Мой профиль</a></li>
-            <li style="margin-left: auto;">
+            <li style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
                 <select id="user-select">
                     <option value="">-- Выберите пользователя --</option>
                 </select>
+                <button id="manage-users-btn" title="Управление пользователями" style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 5px;">⚙️👤</button>
             </li>
         </ul>
     </div>
@@ -24,7 +25,6 @@
         <h1>Добро пожаловать в панель управления музыкальным маркетплейсом</h1>
         <p>Выберите раздел в меню для управления данными.</p>
     </div>
-
     <script src="js/toast.js"></script>
     <script src="js/user-menu.js"></script>
     <script>initUserMenu();</script>
