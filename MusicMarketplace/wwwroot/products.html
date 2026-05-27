@@ -12,7 +12,7 @@
             <li><a href="/products">Товары</a></li>
             <li><a href="/artists">Исполнители</a></li>
             <li><a href="/user">Мой профиль</a></li>
-            <li style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
+            <li style="margin-left: auto; display: flex; align-items: center; gap: 15px;">
                 <select id="user-select">
                     <option value="">-- Выберите пользователя --</option>
                 </select>
@@ -465,8 +465,8 @@
                 <small>Максимум: <span id="remove-cart-max"></span></small>
             </div>
             <div class="form-group">
-                <button id="remove-cart-confirm-btn">Удалить</button>
-                <button id="remove-cart-cancel-btn">Отмена</button>
+                <button id="remove-cart-confirm-btn" class="delete-btn">Удалить</button>
+                <button id="remove-cart-cancel-btn" class="cancel-btn">Отмена</button>
             </div>
         </div>
     </div>
@@ -491,6 +491,28 @@
             <div class="form-group">
                 <button id="review-confirm-btn">Отправить</button>
                 <button id="review-cancel-btn">Отмена</button>
+            </div>
+        </div>
+    </div>
+    <div id="checkout-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Подтверждение заказа</h3>
+            <div id="checkout-user-info"></div>
+            <table style="width: 100%;">
+                <thead>
+                    <tr><th>Товар</th><th>Кол-во</th><th>Цена</th><th>Сумма</th></tr>
+                </thead>
+                <tbody id="checkout-items-tbody"></tbody>
+                <tfoot>
+                    <tr style="font-weight: bold; background: #f0f0f0;">
+                        <td colspan="3" style="text-align: right;">Итого:</td>
+                        <td id="checkout-total">0.00</td>
+                    </tr>
+                </tfoot>
+            </table>
+            <div class="form-group" style="justify-content: center; gap: 15px; margin-top: 20px;">
+                <button id="checkout-confirm-btn" class="checkout-btn">Подтвердить заказ</button>
+                <button id="checkout-cancel-btn" class="cancel-btn">Отмена</button>
             </div>
         </div>
     </div>

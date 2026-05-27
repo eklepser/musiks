@@ -110,7 +110,7 @@ async function renderCatalog() {
             }
             topRow.append(wishBtn, cartBtn);
             const editBtn = document.createElement('button');
-            editBtn.textContent = 'Ред.';
+            editBtn.textContent = 'Редактировать';
             editBtn.className = 'edit-btn';
             editBtn.onclick = () => {
                 if (item.type === 'ticket' && typeof fillEditTicketForm === 'function') fillEditTicketForm(item);

@@ -28,7 +28,6 @@ body {
     padding: 0 25px;
 }
 
-/* Навигация */
 .nav-menu {
     background: #2c2c2c;
     padding: 18px 25px;
@@ -69,7 +68,6 @@ body {
             box-shadow: 0 2px 5px rgba(123,44,191,0.3);
         }
 
-    /* Ссылка управления пользователями */
     .nav-menu .users-link {
         display: inline-block;
         padding: 15px 20px;
@@ -82,7 +80,7 @@ body {
     }
 
         .nav-menu .users-link:hover {
-            background: #667eea;
+            background: #7b2cbf;
             color: white;
         }
 
@@ -92,7 +90,6 @@ body {
             box-shadow: 0 2px 5px rgba(123,44,191,0.3);
         }
 
-    /* Кнопка управления пользователями */
     .nav-menu .manage-users-btn {
         background: transparent;
         border: none;
@@ -105,11 +102,17 @@ body {
     }
 
         .nav-menu .manage-users-btn:hover {
-            background: #667eea;
+            background: #7b2cbf;
             color: white;
         }
 
-/* Выбор пользователя */
+    .nav-menu li:last-child {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-left: auto;
+    }
+
 #user-select {
     padding: 10px 15px;
     font-size: 16px;
@@ -127,7 +130,6 @@ body {
         border-color: #7b2cbf;
     }
 
-/* Карточки */
 .form-card, .filters-card {
     background: #fff;
     padding: 25px;
@@ -159,7 +161,6 @@ body {
     text-align: center;
 }
 
-/* Кнопки */
 button {
     padding: 10px 20px;
     border: none;
@@ -194,13 +195,22 @@ button {
         background: #b02a37;
     }
 
+.cancel-btn {
+    background: #6c757d;
+    color: white;
+}
+
+    .cancel-btn:hover {
+        background: #5a6268;
+    }
+
 .genres-btn, .artists-btn {
-    background: #6c5ce7;
+    background: #7b2cbf;
     white-space: nowrap;
 }
 
     .genres-btn:hover, .artists-btn:hover {
-        background: #5a4bcf;
+        background: #5a1d8f;
     }
 
 .wishlist-btn {
@@ -209,7 +219,7 @@ button {
 }
 
     .wishlist-btn.active {
-        background: #dc3545;
+        background: #7b2cbf;
         color: white;
     }
 
@@ -219,16 +229,11 @@ button {
 }
 
     .cart-btn.active {
-        background: #dc3545;
+        background: #7b2cbf;
     }
 
 .complete-btn {
     background: #28a745;
-    color: white;
-}
-
-.cancel-btn {
-    background: #dc3545;
     color: white;
 }
 
@@ -253,7 +258,6 @@ button {
         background: #218838;
     }
 
-/* Формы */
 .form-actions {
     margin-top: 20px;
 }
@@ -304,7 +308,6 @@ textarea {
     min-height: 80px;
 }
 
-/* Валидация */
 .form-card input.is-invalid,
 .form-card select.is-invalid,
 .form-card textarea.is-invalid {
@@ -319,7 +322,6 @@ textarea {
     background-color: #f0fff0 !important;
 }
 
-/* Таблицы */
 table {
     width: 100%;
     border-collapse: collapse;
@@ -365,7 +367,6 @@ table td:last-child {
         margin-bottom: 10px;
     }
 
-/* Табы */
 .tab-buttons {
     display: flex;
     gap: 12px;
@@ -402,7 +403,6 @@ table td:last-child {
         display: block;
     }
 
-/* Фильтры */
 .filter-group-container.hidden {
     display: none;
 }
@@ -438,7 +438,6 @@ table td:last-child {
         color: #333;
     }
 
-/* Модальные окна */
 .modal {
     display: none;
     position: fixed;
@@ -452,9 +451,9 @@ table td:last-child {
 
 .modal-content {
     background: #fff;
-    margin: 12% auto;
-    padding: 25px;
-    width: 450px;
+    margin: 8% auto;
+    padding: 30px;
+    width: 500px;
     max-width: 90%;
     border-radius: 16px;
     box-shadow: 0 10px 25px rgba(0,0,0,0.2);
@@ -462,7 +461,11 @@ table td:last-child {
 
     .modal-content h3 {
         margin-top: 0;
+        margin-bottom: 20px;
         font-weight: 700;
+        color: #2c2c2c;
+        border-bottom: 2px solid #7b2cbf;
+        padding-bottom: 10px;
     }
 
     .modal-content select {
@@ -471,7 +474,25 @@ table td:last-child {
         margin: 15px 0;
     }
 
-/* Модальное окно подтверждения */
+    .modal-content .form-group {
+        margin-bottom: 20px;
+        display: flex;
+        gap: 15px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+        .modal-content .form-group label {
+            font-weight: 600;
+            min-width: 100px;
+        }
+
+        .modal-content .form-group input,
+        .modal-content .form-group select,
+        .modal-content .form-group textarea {
+            flex: 1;
+        }
+
 .confirm-modal-content {
     text-align: center;
     max-width: 400px;
@@ -481,18 +502,17 @@ table td:last-child {
     display: flex;
     gap: 15px;
     justify-content: center;
-    margin-top: 20px;
+    margin-top: 25px;
 }
 
     .confirm-buttons .delete-btn {
-        background: #dc3545;
+        background: #7b2cbf;
     }
 
     .confirm-buttons .edit-btn {
         background: #6c757d;
     }
 
-/* Списки выбора */
 .artist-list, .genre-list {
     max-height: 220px;
     overflow-y: auto;
@@ -523,11 +543,15 @@ table td:last-child {
 }
 
     .selected-artist-item button, .selected-genre-item button {
-        background: #dc3545;
+        background: #7b2cbf;
         color: white;
         padding: 4px 10px;
         font-size: 12px;
     }
+
+        .selected-artist-item button:hover, .selected-genre-item button:hover {
+            background: #5a1d8f;
+        }
 
 .selected-list-container {
     display: flex;
@@ -549,12 +573,12 @@ table td:last-child {
     color: #999;
 }
 
-/* Сетка для форм */
 .form-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
     margin-bottom: 20px;
+    margin-top: 15px;
 }
 
 .form-grid-item {
@@ -566,6 +590,7 @@ table td:last-child {
     .form-grid-item label {
         font-weight: 500;
         margin: 0;
+        margin-bottom: 5px;
     }
 
     .form-grid-item .selected-list-container {
@@ -583,7 +608,6 @@ table td:last-child {
         flex: 0 0 auto;
     }
 
-/* Поля */
 .form-group-row .year-field,
 #artist-debut-year {
     min-width: 180px;
@@ -593,7 +617,6 @@ table td:last-child {
     min-width: 150px;
 }
 
-/* Поле пароля */
 .password-field {
     display: flex;
     align-items: center;
@@ -610,7 +633,6 @@ table td:last-child {
     display: none;
 }
 
-/* Добавление секции */
 .add-section {
     margin-top: 40px;
     border-top: 2px solid #ddd;
@@ -634,7 +656,6 @@ table td:last-child {
     margin-bottom: 15px;
 }
 
-/* Убираем стрелки в числовых полях */
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button {
     opacity: 0.5;
@@ -645,7 +666,6 @@ input[type=number] {
     appearance: textfield;
 }
 
-/* Toast уведомления */
 .toast-notification {
     transition: opacity 0.3s ease, transform 0.3s ease;
     opacity: 0;
@@ -693,15 +713,19 @@ input[type=number] {
     gap: 10px;
 }
 
-/* Детали заказа */
-#order-details-modal table {
+#order-details-modal table,
+#checkout-modal table {
     width: 100%;
     table-layout: auto;
+    margin: 15px 0;
 }
 
 #order-details-modal th,
-#order-details-modal td {
+#order-details-modal td,
+#checkout-modal th,
+#checkout-modal td {
     word-break: break-word;
+    padding: 10px;
 }
 
     #order-details-modal th:first-child {
@@ -719,3 +743,51 @@ input[type=number] {
     #order-details-modal th:last-child {
         width: 25%;
     }
+
+    #checkout-modal th:first-child {
+        width: 50%;
+    }
+
+    #checkout-modal th:nth-child(2) {
+        width: 15%;
+    }
+
+    #checkout-modal th:nth-child(3) {
+        width: 15%;
+    }
+
+    #checkout-modal th:last-child {
+        width: 20%;
+    }
+
+#checkout-user-info {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    border-left: 4px solid #7b2cbf;
+}
+
+    #checkout-user-info strong {
+        color: #7b2cbf;
+    }
+
+.modal-content .form-group {
+    justify-content: center;
+}
+
+#checkout-modal .modal-content {
+    width: 650px;
+}
+
+#order-details-modal .modal-content {
+    width: 600px;
+}
+
+.form-card h2, .form-card h3 {
+    margin-bottom: 20px;
+}
+
+.form-card h3 {
+    margin-bottom: 15px;
+}

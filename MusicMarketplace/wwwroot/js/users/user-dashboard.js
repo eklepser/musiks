@@ -99,7 +99,7 @@ function renderWishlist() {
     if (!tbody) return;
     tbody.innerHTML = '';
     if (!window.wishlistData || window.wishlistData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Вишлист пуст</tbody>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Вишлист пуст</td></tr>';
         return;
     }
     window.wishlistData.forEach(item => {
@@ -129,7 +129,7 @@ function renderCart() {
     if (!tbody) return;
     tbody.innerHTML = '';
     if (!window.cartData || window.cartData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Корзина пуста</tbody>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Корзина пуста</td></tr>';
         return;
     }
     window.cartData.forEach(item => {
@@ -156,7 +156,7 @@ function renderReviews() {
     if (!tbody) return;
     tbody.innerHTML = '';
     if (!window.reviewsData || window.reviewsData.length === 0) {
-        tbody.innerHTML = '<td><td colspan="5" style="text-align: center;">Отзывов нет</tbody>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Отзывов нет</td></tr>';
         return;
     }
     window.reviewsData.forEach(r => {
@@ -182,28 +182,24 @@ function renderOrders() {
     if (!tbody) return;
     tbody.innerHTML = '';
     if (!window.ordersData || window.ordersData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Нет заказов</tbody>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Нет заказов</td></tr>';
         return;
     }
     window.ordersData.forEach(order => {
         const row = tbody.insertRow();
         row.insertCell(0).textContent = order.order_id;
         row.insertCell(1).textContent = new Date(order.order_date).toLocaleString();
-
         const statusCell = row.insertCell(2);
         statusCell.textContent = order.status === 'pending' ? 'Ожидает' : (order.status === 'completed' ? 'Завершён' : 'Отменён');
         if (order.status === 'pending') statusCell.style.fontWeight = 'bold';
-
         row.insertCell(3).textContent = order.total_amount?.toFixed(2);
         const actions = row.insertCell(4);
-
         const topRow = document.createElement('div');
         topRow.className = 'action-buttons-row';
         const detailsBtn = document.createElement('button');
         detailsBtn.textContent = 'Детали';
         detailsBtn.onclick = () => window.showOrderDetails(order.order_id);
         topRow.appendChild(detailsBtn);
-
         const bottomRow = document.createElement('div');
         bottomRow.className = 'action-buttons-row';
         if (order.status === 'pending') {
@@ -212,7 +208,6 @@ function renderOrders() {
             completeBtn.classList.add('complete-btn');
             completeBtn.onclick = () => window.completeOrder(order.order_id);
             bottomRow.appendChild(completeBtn);
-
             const cancelBtn = document.createElement('button');
             cancelBtn.textContent = 'Отменить';
             cancelBtn.classList.add('cancel-btn');
@@ -245,7 +240,7 @@ function renderPurchasedItems(orders) {
     if (!tbody) return;
     tbody.innerHTML = '';
     if (items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Нет товаров в завершённых заказах</tbody>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Нет товаров в завершённых заказах</td></tr>';
         return;
     }
     items.forEach(item => {
@@ -292,7 +287,7 @@ window.showOrderDetails = async function (orderId) {
     const tbody = document.getElementById('modal-order-items-tbody');
     tbody.innerHTML = '';
     if (items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Нет товаров</tbody>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Нет товаров</td></tr>';
     } else {
         items.forEach(item => {
             const row = tbody.insertRow();
@@ -337,7 +332,43 @@ window.cancelOrder = async function (orderId) {
     } catch (e) { window.showToast('Ошибка сети', 'error'); }
 };
 
-window.checkout = async function () {
+function showCheckoutModal() {
+    if (!window.cartData || window.cartData.length === 0) {
+        showToast('Корзина пуста', 'error');
+        return;
+    }
+    const modal = document.getElementById('checkout-modal');
+    const userInfoDiv = document.getElementById('checkout-user-info');
+    const itemsTbody = document.getElementById('checkout-items-tbody');
+    const totalSpan = document.getElementById('checkout-total');
+    getCurrentUser().then(user => {
+        if (user) {
+            userInfoDiv.innerHTML = `<strong>Пользователь:</strong> ${user.full_name} (${user.login})<br><strong>Email:</strong> ${user.email}`;
+        } else {
+            userInfoDiv.innerHTML = '<strong>Пользователь не выбран</strong>';
+        }
+    });
+    itemsTbody.innerHTML = '';
+    let total = 0;
+    window.cartData.forEach(item => {
+        const row = itemsTbody.insertRow();
+        row.insertCell(0).textContent = item.name;
+        row.insertCell(1).textContent = item.quantity;
+        row.insertCell(2).textContent = item.price.toFixed(2);
+        const sum = item.price * item.quantity;
+        row.insertCell(3).textContent = sum.toFixed(2);
+        total += sum;
+    });
+    totalSpan.textContent = total.toFixed(2);
+    modal.style.display = 'block';
+}
+
+function hideCheckoutModal() {
+    const modal = document.getElementById('checkout-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+async function confirmCheckout() {
     const user = await getCurrentUser();
     if (!user) {
         showToast('Сначала выберите пользователя', 'error');
@@ -347,7 +378,6 @@ window.checkout = async function () {
         showToast('Корзина пуста', 'error');
         return;
     }
-    if (!confirm('Оформить заказ?')) return;
     try {
         const resp = await fetch(`https://localhost:7062/api/Carts/checkout/${user.user_id}`, {
             method: 'POST',
@@ -363,6 +393,7 @@ window.checkout = async function () {
             return;
         }
         const result = await resp.json();
+        hideCheckoutModal();
         showToast(`Заказ №${result.orderId} оформлен на сумму ${result.totalAmount}`, 'success');
         await loadCart();
         await loadOrders();
@@ -370,19 +401,23 @@ window.checkout = async function () {
     } catch (err) {
         showToast('Ошибка сети', 'error');
     }
+}
+
+window.checkout = function () {
+    showCheckoutModal();
 };
 
 function clearAllTables() {
     const wishTbody = document.getElementById('wishlist-tbody');
-    if (wishTbody) wishTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</tbody>';
+    if (wishTbody) wishTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</td></tr>';
     const cartTbody = document.getElementById('cart-tbody');
-    if (cartTbody) cartTbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Выберите пользователя</tbody>';
+    if (cartTbody) cartTbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Выберите пользователя</td></tr>';
     const revTbody = document.getElementById('reviews-tbody');
-    if (revTbody) revTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</tbody>';
+    if (revTbody) revTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</td></tr>';
     const ordTbody = document.getElementById('orders-tbody');
-    if (ordTbody) ordTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</tbody>';
+    if (ordTbody) ordTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</td></tr>';
     const purTbody = document.getElementById('purchased-items-tbody');
-    if (purTbody) purTbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Выберите пользователя</tbody>';
+    if (purTbody) purTbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Выберите пользователя</td></tr>';
 }
 
 function showActiveTab() {
@@ -461,7 +496,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const modal = document.getElementById('order-details-modal');
         if (e.target === modal) modal.style.display = 'none';
     });
-
     const cartConfirmBtn = document.getElementById('cart-confirm-btn');
     if (cartConfirmBtn) {
         cartConfirmBtn.addEventListener('click', () => {
@@ -474,7 +508,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const cartCancelBtn = document.getElementById('cart-cancel-btn');
     if (cartCancelBtn) cartCancelBtn.addEventListener('click', window.hideCartModal);
-
     const reviewConfirmBtn = document.getElementById('review-confirm-btn');
     if (reviewConfirmBtn) {
         reviewConfirmBtn.addEventListener('click', () => {
@@ -489,7 +522,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const reviewCancelBtn = document.getElementById('review-cancel-btn');
     if (reviewCancelBtn) reviewCancelBtn.addEventListener('click', window.hideReviewModal);
-
     const removeCartConfirm = document.getElementById('remove-cart-confirm-btn');
     if (removeCartConfirm) {
         removeCartConfirm.addEventListener('click', () => {
@@ -505,9 +537,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const removeCartCancel = document.getElementById('remove-cart-cancel-btn');
     if (removeCartCancel) removeCartCancel.addEventListener('click', window.hideRemoveFromCartModal);
+    const checkoutConfirmBtn = document.getElementById('checkout-confirm-btn');
+    if (checkoutConfirmBtn) checkoutConfirmBtn.addEventListener('click', confirmCheckout);
+    const checkoutCancelBtn = document.getElementById('checkout-cancel-btn');
+    if (checkoutCancelBtn) checkoutCancelBtn.addEventListener('click', hideCheckoutModal);
+    window.addEventListener('click', (e) => {
+        const modal = document.getElementById('checkout-modal');
+        if (e.target === modal) modal.style.display = 'none';
+    });
 });
 
-// Добавьте эту функцию для стилизации модального окна заказа
 function initOrderModalStyles() {
     const modalContent = document.querySelector('#order-details-modal .modal-content');
     if (modalContent) {
@@ -528,7 +567,6 @@ function initOrderModalStyles() {
     }
 }
 
-// Вызовите эту функцию после открытия модального окна
 const originalShowOrderDetails = window.showOrderDetails;
 window.showOrderDetails = async function (orderId) {
     await originalShowOrderDetails(orderId);

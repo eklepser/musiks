@@ -74,7 +74,7 @@ async function renderTable() {
             row.insertCell(3).textContent = order.status;
             row.insertCell(4).textContent = order.total_amount?.toFixed(2);
             const actions = row.insertCell(5);
-            const editBtn = document.createElement('button'); editBtn.textContent = 'Ред.'; editBtn.className = 'edit-btn';
+            const editBtn = document.createElement('button'); editBtn.textContent = 'Редактировать'; editBtn.className = 'edit-btn';
             editBtn.onclick = () => fillFormForEdit(order);
             const delBtn = document.createElement('button'); delBtn.textContent = 'Удалить'; delBtn.className = 'delete-btn';
             delBtn.onclick = () => deleteOrder(order.order_id);

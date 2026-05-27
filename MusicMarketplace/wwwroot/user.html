@@ -12,7 +12,7 @@
             <li><a href="/products">Товары</a></li>
             <li><a href="/artists">Исполнители</a></li>
             <li><a href="/user">Мой профиль</a></li>
-            <li style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
+            <li style="margin-left: auto; display: flex; align-items: center; gap: 15px;">
                 <select id="user-select"><option value="">-- Выберите пользователя --</option></select>
                 <button id="manage-users-btn" title="Управление пользователями" class="manage-users-btn">⚙️👤</button>
             </li>
@@ -82,11 +82,13 @@
         </div>
     </div>
     <div id="order-details-modal" class="modal" style="display:none;">
-        <div class="modal-content" style="width:600px;max-width:90%;">
+        <div class="modal-content">
             <h3>Детали заказа №<span id="modal-order-id"></span></h3>
             <div><p><strong>Дата:</strong> <span id="modal-order-date"></span></p><p><strong>Статус:</strong> <span id="modal-order-status"></span></p><p><strong>Сумма:</strong> <span id="modal-order-total"></span></p><p><strong>Пользователь:</strong> <span id="modal-user-name"></span></p></div>
-            <table style="width:100%;"><thead><tr><th style="width:45%;">Товар</th><th style="width:15%;">Кол-во</th><th style="width:20%;">Цена</th><th style="width:20%;">Сумма</th></tr></thead><tbody id="modal-order-items-tbody"></tbody></table>
-            <button id="modal-order-close">Закрыть</button>
+            <table style="width:100%;"><thead><tr><th>Товар</th><th>Кол-во</th><th>Цена</th><th>Сумма</th></tr></thead><tbody id="modal-order-items-tbody"></tbody></table>
+            <div class="form-group" style="justify-content: center; margin-top: 20px;">
+                <button id="modal-order-close" class="cancel-btn">Закрыть</button>
+            </div>
         </div>
     </div>
     <div id="cart-modal" class="modal" style="display:none;">
@@ -94,7 +96,7 @@
             <h3>Добавление в корзину</h3>
             <p id="cart-product-name"></p>
             <div class="form-group"><label>Количество:</label><input type="number" id="cart-quantity" value="1" min="1" data-numeric="true"></div>
-            <div class="form-group"><button id="cart-confirm-btn">Добавить</button><button id="cart-cancel-btn">Отмена</button></div>
+            <div class="form-group"><button id="cart-confirm-btn">Добавить</button><button id="cart-cancel-btn" class="cancel-btn">Отмена</button></div>
         </div>
     </div>
     <div id="remove-from-cart-modal" class="modal" style="display:none;">
@@ -102,7 +104,7 @@
             <h3>Удаление из корзины</h3>
             <p id="remove-cart-product-name"></p>
             <div class="form-group"><label>Количество для удаления:</label><input type="number" id="remove-cart-quantity" value="1" min="1" data-numeric="true"><small>Максимум: <span id="remove-cart-max"></span></small></div>
-            <div class="form-group"><button id="remove-cart-confirm-btn">Удалить</button><button id="remove-cart-cancel-btn">Отмена</button></div>
+            <div class="form-group"><button id="remove-cart-confirm-btn" class="delete-btn">Удалить</button><button id="remove-cart-cancel-btn" class="cancel-btn">Отмена</button></div>
         </div>
     </div>
     <div id="review-modal" class="modal" style="display:none;">
@@ -111,7 +113,29 @@
             <p id="review-product-name"></p>
             <div class="form-group"><label>Оценка (1-5):</label><select id="review-rating"><option value="5">5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select></div>
             <div class="form-group"><label>Текст отзыва:</label><textarea id="review-text" rows="3" maxlength="1000"></textarea></div>
-            <div class="form-group"><button id="review-confirm-btn">Отправить</button><button id="review-cancel-btn">Отмена</button></div>
+            <div class="form-group"><button id="review-confirm-btn">Отправить</button><button id="review-cancel-btn" class="cancel-btn">Отмена</button></div>
+        </div>
+    </div>
+    <div id="checkout-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Подтверждение заказа</h3>
+            <div id="checkout-user-info"></div>
+            <table style="width: 100%;">
+                <thead>
+                    <tr><th>Товар</th><th>Кол-во</th><th>Цена</th><th>Сумма</th></tr>
+                </thead>
+                <tbody id="checkout-items-tbody"></tbody>
+                <tfoot>
+                    <tr style="font-weight: bold; background: #f0f0f0;">
+                        <td colspan="3" style="text-align: right;">Итого:
+                        <td id="checkout-total">0.00</td>
+                    </tr>
+                </tfoot>
+            </table>
+            <div class="form-group" style="justify-content: center; gap: 15px; margin-top: 20px;">
+                <button id="checkout-confirm-btn" class="checkout-btn">Подтвердить заказ</button>
+                <button id="checkout-cancel-btn" class="cancel-btn">Отмена</button>
+            </div>
         </div>
     </div>
     <script src="js/validation.js"></script>

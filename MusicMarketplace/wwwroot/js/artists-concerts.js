@@ -177,7 +177,7 @@ async function renderArtists() {
         if (!tbody) return;
         tbody.innerHTML = '';
         if (artists.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Нет数据</tbody>';
+            tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Нет данных</tbody>';
             if (countSpan) countSpan.innerText = '0';
             return;
         }
@@ -193,7 +193,7 @@ async function renderArtists() {
             const btnRow = document.createElement('div');
             btnRow.className = 'action-buttons-row';
             const editBtn = document.createElement('button');
-            editBtn.textContent = 'Ред.';
+            editBtn.textContent = 'Редактировать';
             editBtn.className = 'edit-btn';
             editBtn.onclick = () => fillArtistForm(artist);
             const delBtn = document.createElement('button');
@@ -205,7 +205,7 @@ async function renderArtists() {
         });
     } catch (err) {
         const tbody = document.getElementById('artists-tbody');
-        if (tbody) tbody.innerHTML = '<table><td colspan="6" class="centered-message">Ошибка загрузки</tbody>';
+        if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Ошибка загрузки</tbody>';
     }
 }
 
@@ -248,7 +248,7 @@ async function renderConcerts() {
             const btnRow = document.createElement('div');
             btnRow.className = 'action-buttons-row';
             const editBtn = document.createElement('button');
-            editBtn.textContent = 'Ред.';
+            editBtn.textContent = 'Редактировать';
             editBtn.className = 'edit-btn';
             editBtn.onclick = () => fillConcertForm(concert);
             const delBtn = document.createElement('button');

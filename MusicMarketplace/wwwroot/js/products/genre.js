@@ -17,7 +17,7 @@ async function loadGenresTable() {
         if (!tbody) return;
         tbody.innerHTML = '';
         if (items.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="centered-message">Нет данных</tbody>';
+            tbody.innerHTML = '<tr><td colspan="4" class="centered-message">Нет данных</td></tr>';
             const countSpan = document.getElementById('genre-found-count');
             if (countSpan) countSpan.innerText = '0';
             return;
@@ -33,7 +33,7 @@ async function loadGenresTable() {
             const btnRow = document.createElement('div');
             btnRow.className = 'action-buttons-row';
             const editBtn = document.createElement('button');
-            editBtn.textContent = 'Ред.';
+            editBtn.textContent = 'Редактировать';
             editBtn.className = 'edit-btn';
             editBtn.onclick = () => fillGenreForm(item);
             const delBtn = document.createElement('button');
@@ -45,7 +45,7 @@ async function loadGenresTable() {
         });
     } catch (err) {
         const tbody = document.getElementById('genres-tbody');
-        if (tbody) tbody.innerHTML = '<tr><td colspan="4" class="centered-message">Ошибка загрузки</tbody>';
+        if (tbody) tbody.innerHTML = '<tr><td colspan="4" class="centered-message">Ошибка загрузки</td></tr>';
         const countSpan = document.getElementById('genre-found-count');
         if (countSpan) countSpan.innerText = '0';
     }

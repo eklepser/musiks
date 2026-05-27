@@ -41,7 +41,7 @@ function renderUsersTable() {
         btnRow.className = 'action-buttons-row';
 
         const editBtn = document.createElement('button');
-        editBtn.textContent = 'Ред.';
+        editBtn.textContent = 'Редактировать';
         editBtn.className = 'edit-btn';
         editBtn.onclick = () => fillUserForm(user);
 
@@ -230,6 +230,16 @@ document.getElementById('apply-filters')?.addEventListener('click', () => {
     renderUsersTable();
 });
 document.getElementById('clear-filters')?.addEventListener('click', () => {
+    document.getElementById('sort-by').value = 'date_desc';
+    renderUsersTable();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadUsers();
+    setTimeout(function () {
+        if (typeof window.initToggleFilters === 'function') window.initToggleFilters();
+    }, 100);
+});
     document.getElementById('sort-by').value = 'date_desc';
     renderUsersTable();
 });

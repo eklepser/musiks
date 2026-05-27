@@ -406,7 +406,7 @@ function showConfirmModal(options) {
                     <p id="confirm-message">Вы уверены?</p>
                     <div class="confirm-buttons">
                         <button id="confirm-yes-btn" class="delete-btn">Да, удалить</button>
-                        <button id="confirm-no-btn" class="edit-btn">Отмена</button>
+                        <button id="confirm-no-btn" class="cancel-btn">Отмена</button>
                     </div>
                 </div>
             `;
