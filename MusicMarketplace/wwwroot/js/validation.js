@@ -333,7 +333,7 @@ const POPULAR_LANGUAGES = [
 function initCountrySelect() {
     const countrySelect = document.getElementById('artist-country');
     if (countrySelect) {
-        countrySelect.innerHTML = '<option value="">-- Выберите страну --</option>';
+        countrySelect.innerHTML = '<option value="">Не указано</option>';
         POPULAR_COUNTRIES.forEach(country => {
             const option = document.createElement('option');
             option.value = country;
@@ -343,7 +343,7 @@ function initCountrySelect() {
     }
     const manufacturerCountrySelect = document.getElementById('manufacturer-country');
     if (manufacturerCountrySelect) {
-        manufacturerCountrySelect.innerHTML = '<option value="">-- Выберите страну --</option>';
+        manufacturerCountrySelect.innerHTML = '<option value="">Не указано</option>';
         POPULAR_COUNTRIES.forEach(country => {
             const option = document.createElement('option');
             option.value = country;
@@ -356,13 +356,14 @@ function initCountrySelect() {
 function initLanguageSelect() {
     const languageSelect = document.getElementById('artist-language');
     if (languageSelect) {
-        languageSelect.innerHTML = '<option value="">-- Выберите язык --</option>';
+        languageSelect.innerHTML = '<option value="">Не указано</option>';
         POPULAR_LANGUAGES.forEach(lang => {
             const option = document.createElement('option');
             option.value = lang;
             option.textContent = lang;
             languageSelect.appendChild(option);
         });
+        languageSelect.value = 'Instrumental';
     }
 }
 
@@ -390,16 +391,6 @@ function updateArtistFilterLanguages(availableLanguages) {
         opt.textContent = lang;
         select.appendChild(opt);
     });
-}
-
-function initAllValidations() {
-    initNumericInputs();
-    initLettersOnlyInputs();
-    initToggleFilters();
-    setTimeout(function () {
-        if (typeof initCountrySelect === 'function') initCountrySelect();
-        if (typeof initLanguageSelect === 'function') initLanguageSelect();
-    }, 50);
 }
 
 function showConfirmModal(options) {
@@ -459,7 +450,15 @@ function showConfirmModal(options) {
     });
 }
 
-window.showConfirmModal = showConfirmModal;
+function initAllValidations() {
+    initNumericInputs();
+    initLettersOnlyInputs();
+    initToggleFilters();
+    setTimeout(function () {
+        if (typeof initCountrySelect === 'function') initCountrySelect();
+        if (typeof initLanguageSelect === 'function') initLanguageSelect();
+    }, 50);
+}
 
 window.filterNumericInput = filterNumericInput;
 window.filterLettersOnly = filterLettersOnly;
@@ -473,5 +472,6 @@ window.initCountrySelect = initCountrySelect;
 window.initLanguageSelect = initLanguageSelect;
 window.updateArtistFilterCountries = updateArtistFilterCountries;
 window.updateArtistFilterLanguages = updateArtistFilterLanguages;
+window.showConfirmModal = showConfirmModal;
 window.POPULAR_COUNTRIES = POPULAR_COUNTRIES;
 window.POPULAR_LANGUAGES = POPULAR_LANGUAGES;

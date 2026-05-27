@@ -13,7 +13,7 @@
             <li><a href="/products">Товары</a></li>
             <li><a href="/artists">Исполнители</a></li>
             <li><a href="/user">Мой профиль</a></li>
-            <li style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
+            <li style="margin-left: auto; display: flex; align-items: center; gap: 0;">
                 <select id="user-select">
                     <option value="">-- Выберите пользователя --</option>
                 </select>
@@ -34,11 +34,11 @@
                 <div class="form-group-row">
                     <input type="text" id="artist-name" placeholder="Имя*" required minlength="2" maxlength="100" data-letters-only="true">
                     <select id="artist-country">
-                        <option value="">-- Выберите страну --</option>
+                        <option value="">Не указано</option>
                     </select>
                     <input type="number" id="artist-debut-year" class="year-field" placeholder="Год дебюта" min="1900" max="2026" data-numeric="true">
                     <select id="artist-language">
-                        <option value="">-- Выберите язык --</option>
+                        <option value="">Не указано</option>
                     </select>
                 </div>
                 <div class="form-actions">
