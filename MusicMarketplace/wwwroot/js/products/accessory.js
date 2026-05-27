@@ -1,5 +1,6 @@
 ﻿let accessoryEditId = null;
 let selectedArtistsForAccessory = [];
+
 function ensureArtistIdsArray(artistIds) {
     if (Array.isArray(artistIds)) return artistIds;
     if (typeof artistIds === 'string') {
@@ -13,11 +14,12 @@ function ensureArtistIdsArray(artistIds) {
     if (artistIds === null || artistIds === undefined) return [];
     return [artistIds];
 }
+
 function renderAccessorySelectedArtists() {
     const container = document.getElementById('accessory-selected-artists-list');
     if (!container) return;
     if (!selectedArtistsForAccessory.length) {
-        container.innerHTML = '<span style="color: #999;">Исполнители не выбраны</span>';
+        container.innerHTML = '<span class="placeholder-text">Исполнители не выбраны</span>';
         return;
     }
     const names = selectedArtistsForAccessory.map(id => {
@@ -26,11 +28,12 @@ function renderAccessorySelectedArtists() {
     });
     container.innerHTML = names.join(', ');
 }
+
 function renderEditAccessorySelectedArtists() {
     const container = document.getElementById('edit-accessory-selected-artists-list');
     if (!container) return;
     if (!selectedArtistsForAccessory.length) {
-        container.innerHTML = '<span style="color: #999;">Исполнители не выбраны</span>';
+        container.innerHTML = '<span class="placeholder-text">Исполнители не выбраны</span>';
         return;
     }
     const names = selectedArtistsForAccessory.map(id => {
@@ -39,6 +42,7 @@ function renderEditAccessorySelectedArtists() {
     });
     container.innerHTML = names.join(', ');
 }
+
 function clearAccessoryForm() {
     document.getElementById('accessory-name').value = '';
     document.getElementById('accessory-price').value = '';
@@ -58,6 +62,7 @@ function clearAccessoryForm() {
     document.getElementById('accessory-submit').innerText = 'Добавить';
     document.getElementById('accessory-cancel').style.display = 'none';
 }
+
 function fillEditAccessoryForm(a) {
     hideEditPanel();
     document.getElementById('edit-accessory-id').value = a.accessory_id;
@@ -78,6 +83,7 @@ function fillEditAccessoryForm(a) {
     loadProductGenresForEdit(a.product_id, 'accessory');
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
 function validateAccessoryFields(name, price, stock, manufacturerId, material, color, type, weight, description) {
     let err = validateRequiredString(name, 'Название', 2, 200, true);
     if (err) return err;
@@ -108,6 +114,7 @@ function validateAccessoryFields(name, price, stock, manufacturerId, material, c
     }
     return null;
 }
+
 async function saveEditAccessory() {
     const id = document.getElementById('edit-accessory-id').value;
     const manufacturerId = parseInt(document.getElementById('edit-accessory-manufacturer-id').value);
@@ -165,6 +172,7 @@ async function saveEditAccessory() {
         showToast('Ошибка соединения', 'error');
     }
 }
+
 async function saveAccessory() {
     const name = document.getElementById('accessory-name').value.trim();
     const price = document.getElementById('accessory-price').value;
@@ -229,6 +237,7 @@ async function saveAccessory() {
         showToast('Ошибка сохранения', 'error');
     }
 }
+
 async function deleteAccessory(id, name) {
     if (!confirm(`Удалить аксессуар «${name}» (ID ${id})?`)) return;
     try {
@@ -246,6 +255,7 @@ async function deleteAccessory(id, name) {
         showToast('Ошибка удаления', 'error');
     }
 }
+
 function openAccessoryArtistsModal() {
     const modal = document.getElementById('artists-merch-modal');
     const artistsListDiv = document.getElementById('modal-merch-artists-list');
@@ -259,7 +269,7 @@ function openAccessoryArtistsModal() {
             const artist = allArtists.find(a => a.artist_id === artistId);
             const name = artist ? artist.name : `ID ${artistId}`;
             const div = document.createElement('div');
-            div.style.marginBottom = '5px';
+            div.className = 'selected-artist-item';
             div.innerHTML = `${name} <button class="remove-accessory-artist-from-modal" data-artist-id="${artistId}">Удалить</button>`;
             artistsListDiv.appendChild(div);
         });
@@ -283,6 +293,7 @@ function openAccessoryArtistsModal() {
     });
     modal.style.display = 'block';
 }
+
 function addAccessoryArtistFromModal() {
     const artistId = parseInt(document.getElementById('modal-merch-artist-select').value);
     if (!artistId) return;
@@ -295,10 +306,12 @@ function addAccessoryArtistFromModal() {
         showToast('Исполнитель уже выбран', 'warning');
     }
 }
+
 function closeArtistsMerchModal() {
     const modal = document.getElementById('artists-merch-modal');
     if (modal) modal.style.display = 'none';
 }
+
 document.getElementById('modal-merch-add-artist')?.addEventListener('click', addAccessoryArtistFromModal);
 document.getElementById('modal-merch-close')?.addEventListener('click', closeArtistsMerchModal);
 window.addEventListener('click', (e) => {

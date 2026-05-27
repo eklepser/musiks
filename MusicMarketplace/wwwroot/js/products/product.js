@@ -4,7 +4,7 @@ function renderTicketSelectedGenres() {
     const container = document.getElementById('ticket-selected-genres-list');
     if (!container) return;
     if (!window.selectedGenresForTicket || window.selectedGenresForTicket.length === 0) {
-        container.innerHTML = '<span style="color: #999;">Жанры не выбраны</span>';
+        container.innerHTML = '<span class="placeholder-text">Жанры не выбраны</span>';
         return;
     }
     const names = window.selectedGenresForTicket.map(id => {
@@ -18,7 +18,7 @@ function renderEditTicketSelectedGenres() {
     const container = document.getElementById('edit-ticket-selected-genres-list');
     if (!container) return;
     if (!window.selectedGenresForTicket || window.selectedGenresForTicket.length === 0) {
-        container.innerHTML = '<span style="color: #999;">Жанры не выбраны</span>';
+        container.innerHTML = '<span class="placeholder-text">Жанры не выбраны</span>';
         return;
     }
     const names = window.selectedGenresForTicket.map(id => {
@@ -32,7 +32,7 @@ function renderClothingSelectedGenres() {
     const container = document.getElementById('clothing-selected-genres-list');
     if (!container) return;
     if (!window.selectedGenresForClothing || window.selectedGenresForClothing.length === 0) {
-        container.innerHTML = '<span style="color: #999;">Жанры не выбраны</span>';
+        container.innerHTML = '<span class="placeholder-text">Жанры не выбраны</span>';
         return;
     }
     const names = window.selectedGenresForClothing.map(id => {
@@ -46,7 +46,7 @@ function renderEditClothingSelectedGenres() {
     const container = document.getElementById('edit-clothing-selected-genres-list');
     if (!container) return;
     if (!window.selectedGenresForClothing || window.selectedGenresForClothing.length === 0) {
-        container.innerHTML = '<span style="color: #999;">Жанры не выбраны</span>';
+        container.innerHTML = '<span class="placeholder-text">Жанры не выбраны</span>';
         return;
     }
     const names = window.selectedGenresForClothing.map(id => {
@@ -60,7 +60,7 @@ function renderAccessorySelectedGenres() {
     const container = document.getElementById('accessory-selected-genres-list');
     if (!container) return;
     if (!window.selectedGenresForAccessory || window.selectedGenresForAccessory.length === 0) {
-        container.innerHTML = '<span style="color: #999;">Жанры не выбраны</span>';
+        container.innerHTML = '<span class="placeholder-text">Жанры не выбраны</span>';
         return;
     }
     const names = window.selectedGenresForAccessory.map(id => {
@@ -74,7 +74,7 @@ function renderEditAccessorySelectedGenres() {
     const container = document.getElementById('edit-accessory-selected-genres-list');
     if (!container) return;
     if (!window.selectedGenresForAccessory || window.selectedGenresForAccessory.length === 0) {
-        container.innerHTML = '<span style="color: #999;">Жанры не выбраны</span>';
+        container.innerHTML = '<span class="placeholder-text">Жанры не выбраны</span>';
         return;
     }
     const names = window.selectedGenresForAccessory.map(id => {
@@ -98,7 +98,7 @@ function openTicketGenresModal() {
             const genre = genres.find(g => g.genre_id === genreId);
             const name = genre ? genre.name : `ID ${genreId}`;
             const div = document.createElement('div');
-            div.style.marginBottom = '5px';
+            div.className = 'selected-genre-item';
             div.innerHTML = `${name} <button class="remove-genre-from-modal" data-genre-id="${genreId}">Удалить</button>`;
             genresListDiv.appendChild(div);
         });
@@ -137,7 +137,7 @@ function openClothingGenresModal() {
             const genre = genres.find(g => g.genre_id === genreId);
             const name = genre ? genre.name : `ID ${genreId}`;
             const div = document.createElement('div');
-            div.style.marginBottom = '5px';
+            div.className = 'selected-genre-item';
             div.innerHTML = `${name} <button class="remove-genre-from-modal" data-genre-id="${genreId}">Удалить</button>`;
             genresListDiv.appendChild(div);
         });
@@ -176,7 +176,7 @@ function openAccessoryGenresModal() {
             const genre = genres.find(g => g.genre_id === genreId);
             const name = genre ? genre.name : `ID ${genreId}`;
             const div = document.createElement('div');
-            div.style.marginBottom = '5px';
+            div.className = 'selected-genre-item';
             div.innerHTML = `${name} <button class="remove-genre-from-modal" data-genre-id="${genreId}">Удалить</button>`;
             genresListDiv.appendChild(div);
         });

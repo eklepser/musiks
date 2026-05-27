@@ -12,24 +12,29 @@ const cancelBtn = document.getElementById('cancel-btn');
 const editIdField = document.getElementById('edit-id');
 const formTitle = document.getElementById('form-title');
 let currentEditId = null;
+
 function showError(text) {
     errorDiv.textContent = text; errorDiv.classList.add('show'); successDiv.classList.remove('show');
     setTimeout(() => errorDiv.classList.remove('show'), 5000);
 }
+
 function showSuccess(text) {
     successDiv.textContent = text; successDiv.classList.add('show'); errorDiv.classList.remove('show');
     setTimeout(() => successDiv.classList.remove('show'), 3000);
 }
+
 function clearForm() {
     userIdSelect.value = ''; orderDateInput.value = ''; statusSelect.value = 'pending'; totalAmountInput.value = '';
     editIdField.value = ''; currentEditId = null;
     formTitle.textContent = 'Добавить заказ'; submitBtn.textContent = 'Добавить'; cancelBtn.style.display = 'none';
 }
+
 function formatDateTimeLocal(dateString) {
     if (!dateString) return '';
     const d = new Date(dateString);
     return d.toISOString().slice(0, 16);
 }
+
 function validateForm() {
     const userId = userIdSelect.value;
     const orderDate = orderDateInput.value;
@@ -41,6 +46,7 @@ function validateForm() {
     if (totalAmount > 100000000) { showError('Сумма не может превышать 100 000 000'); return false; }
     return true;
 }
+
 async function loadUsers() {
     const resp = await fetch(USERS_URL);
     if (resp.ok) {
@@ -49,6 +55,7 @@ async function loadUsers() {
         users.forEach(u => { const opt = document.createElement('option'); opt.value = u.user_id; opt.textContent = `${u.full_name} (${u.login})`; userIdSelect.appendChild(opt); });
     }
 }
+
 async function renderTable() {
     try {
         const resp = await fetch(API_URL);
@@ -75,9 +82,10 @@ async function renderTable() {
         }
     } catch (err) {
         showError('Ошибка загрузки: ' + err.message);
-        tbody.innerHTML = '<tr><td colspan="6">Ошибка загрузки данных</tr></tr>';
+        tbody.innerHTML = '<tr><td colspan="6">Ошибка загрузки данных</tbody>';
     }
 }
+
 function fillFormForEdit(order) {
     userIdSelect.value = order.user_id;
     orderDateInput.value = formatDateTimeLocal(order.order_date);
@@ -90,6 +98,7 @@ function fillFormForEdit(order) {
     cancelBtn.style.display = 'inline-block';
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
 async function createOrder() {
     if (!validateForm()) return false;
     const data = { user_id: parseInt(userIdSelect.value), order_date: orderDateInput.value, status: statusSelect.value || 'pending', total_amount: parseFloat(totalAmountInput.value) };
@@ -106,6 +115,7 @@ async function createOrder() {
         clearForm(); await renderTable(); showSuccess('Заказ добавлен'); return true;
     } catch (err) { showError('Ошибка добавления: ' + err.message); return false; }
 }
+
 async function updateOrder(id) {
     if (!validateForm()) return false;
     const data = { order_id: id, user_id: parseInt(userIdSelect.value), order_date: orderDateInput.value, status: statusSelect.value || 'pending', total_amount: parseFloat(totalAmountInput.value) };
@@ -122,6 +132,7 @@ async function updateOrder(id) {
         clearForm(); await renderTable(); showSuccess('Заказ обновлён'); return true;
     } catch (err) { showError('Ошибка обновления: ' + err.message); return false; }
 }
+
 async function deleteOrder(id) {
     if (!confirm('Удалить заказ?')) return;
     try {
@@ -137,10 +148,15 @@ async function deleteOrder(id) {
         await renderTable(); showSuccess('Заказ удалён');
     } catch (err) { showError('Ошибка удаления: ' + err.message); }
 }
+
 async function onSubmit() {
     if (currentEditId !== null) await updateOrder(currentEditId);
     else await createOrder();
 }
+
 function onCancel() { clearForm(); }
-submitBtn.addEventListener('click', onSubmit); cancelBtn.addEventListener('click', onCancel);
-loadUsers(); renderTable();
+
+submitBtn.addEventListener('click', onSubmit);
+cancelBtn.addEventListener('click', onCancel);
+loadUsers();
+renderTable();

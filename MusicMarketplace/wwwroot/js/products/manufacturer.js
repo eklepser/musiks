@@ -1,4 +1,5 @@
 ﻿let manufacturerEditId = null;
+
 async function loadManufacturersTable() {
     const searchName = document.getElementById('manufacturer-search-name');
     const searchCountry = document.getElementById('manufacturer-search-country');
@@ -53,6 +54,7 @@ async function loadManufacturersTable() {
         if (countSpan) countSpan.innerText = '0';
     }
 }
+
 function fillManufacturerForm(item) {
     const nameInput = document.getElementById('manufacturer-name');
     const contactInput = document.getElementById('manufacturer-contact');
@@ -70,8 +72,12 @@ function fillManufacturerForm(item) {
     formTitle.innerText = 'Редактировать производителя';
     submitBtn.innerText = 'Сохранить';
     cancelBtn.style.display = 'inline-block';
+    nameInput.classList.remove('is-valid', 'is-invalid');
+    contactInput.classList.remove('is-valid', 'is-invalid');
+    countryInput.classList.remove('is-valid', 'is-invalid');
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
 function clearManufacturerForm() {
     const nameInput = document.getElementById('manufacturer-name');
     const contactInput = document.getElementById('manufacturer-contact');
@@ -80,28 +86,40 @@ function clearManufacturerForm() {
     const formTitle = document.getElementById('manufacturer-form-title');
     const submitBtn = document.getElementById('manufacturer-submit');
     const cancelBtn = document.getElementById('manufacturer-cancel');
-    if (nameInput) nameInput.value = '';
-    if (contactInput) contactInput.value = '';
-    if (countryInput) countryInput.value = '';
+    if (nameInput) {
+        nameInput.value = '';
+        nameInput.classList.remove('is-valid', 'is-invalid');
+    }
+    if (contactInput) {
+        contactInput.value = '';
+        contactInput.classList.remove('is-valid', 'is-invalid');
+    }
+    if (countryInput) {
+        countryInput.value = '';
+        countryInput.classList.remove('is-valid', 'is-invalid');
+    }
     if (editIdInput) editIdInput.value = '';
     manufacturerEditId = null;
     if (formTitle) formTitle.innerText = 'Добавить производителя';
     if (submitBtn) submitBtn.innerText = 'Добавить';
     if (cancelBtn) cancelBtn.style.display = 'none';
 }
+
 function validateManufacturerFields(name, contact, country) {
     let err = validateRequiredString(name, 'Название', 2, 100, true);
     if (err) return err;
-    if (contact && contact.trim() !== '') {
-        err = validateContactInfo(contact);
-        if (err) return err;
+    if (!contact || contact.trim() === '') {
+        return 'Контактные данные обязательны';
     }
+    err = validateContactInfo(contact);
+    if (err) return err;
     if (country && country.trim() !== '') {
         err = validateOptionalString(country, 'Страна', 50);
         if (err) return err;
     }
     return null;
 }
+
 async function saveManufacturer() {
     const editId = document.getElementById('manufacturer-edit-id');
     const nameInput = document.getElementById('manufacturer-name');
@@ -115,8 +133,13 @@ async function saveManufacturer() {
     const validationError = validateManufacturerFields(name, contact, country);
     if (validationError) {
         showToast(validationError, 'error');
+        setFieldValidity(nameInput, false, validationError);
+        setFieldValidity(contactInput, false, validationError);
         return;
     }
+    setFieldValidity(nameInput, true, '');
+    setFieldValidity(contactInput, true, '');
+    if (countryInput) setFieldValidity(countryInput, true, '');
     const data = {
         name: name,
         contact_info: contact,
@@ -158,6 +181,7 @@ async function saveManufacturer() {
         showToast('Ошибка сохранения', 'error');
     }
 }
+
 async function deleteManufacturer(id, name) {
     if (!confirm(`Удалить производителя «${name}» (ID ${id})?`)) return;
     try {
@@ -184,6 +208,7 @@ async function deleteManufacturer(id, name) {
         showToast('Ошибка удаления', 'error');
     }
 }
+
 const manufacturerApplyBtn = document.getElementById('manufacturer-apply-filters');
 if (manufacturerApplyBtn) manufacturerApplyBtn.addEventListener('click', () => loadManufacturersTable());
 const manufacturerClearBtn = document.getElementById('manufacturer-clear-filters');

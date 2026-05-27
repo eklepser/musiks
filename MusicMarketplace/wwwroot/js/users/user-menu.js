@@ -61,13 +61,30 @@ function onUserChange(userId, reload = true, showNotification = true) {
         .catch(err => console.error(err));
 }
 
+function openUsersManagement() {
+    window.location.href = '/users.html';
+}
+
 function initUserMenu() {
     const select = document.getElementById('user-select');
     if (select) {
-        select.addEventListener('change', (e) => onUserChange(parseInt(e.target.value), true, true));
+        select.removeEventListener('change', select._changeHandler);
+        select._changeHandler = (e) => onUserChange(parseInt(e.target.value), true, true);
+        select.addEventListener('change', select._changeHandler);
+    }
+    const manageBtn = document.getElementById('manage-users-btn');
+    if (manageBtn) {
+        manageBtn.removeEventListener('click', manageBtn._clickHandler);
+        manageBtn._clickHandler = openUsersManagement;
+        manageBtn.addEventListener('click', manageBtn._clickHandler);
     }
     loadUsers();
     highlightActiveNavItem();
+    setTimeout(function () {
+        if (typeof initToggleFilters === 'function') initToggleFilters();
+    }, 100);
 }
 
 window.initUserMenu = initUserMenu;
+window.onUserChange = onUserChange;
+window.openUsersManagement = openUsersManagement;

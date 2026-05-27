@@ -1,6 +1,7 @@
 ﻿async function loadAllItems() {
-        await renderCatalog();
-    }
+    await renderCatalog();
+}
+
 async function renderCatalog() {
     const searchName = document.getElementById('search-name').value.trim();
     const filterType = document.getElementById('filter-type').value;
@@ -11,6 +12,7 @@ async function renderCatalog() {
     const priceMax = document.getElementById('price-max').value;
     const sortBy = document.getElementById('sort-by').value;
     const selectedGenres = getSelectedGenres();
+
     const params = [];
     if (searchName) params.push(`searchName=${encodeURIComponent(searchName)}`);
     if (filterType) params.push(`type=${filterType}`);
@@ -21,12 +23,13 @@ async function renderCatalog() {
     if (priceMax) params.push(`priceMax=${priceMax}`);
     if (sortBy) params.push(`sortBy=${sortBy}`);
     if (selectedGenres.length) params.push(`selectedGenres=${encodeURIComponent(selectedGenres.join(','))}`);
+
     const url = `${PRODUCTS_FILTER_URL}?${params.join('&')}`;
+
     try {
         const resp = await fetch(url);
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         let items = await resp.json();
-        // 1. Сортировка по типу: Одежда(1) -> Аксессуары(2) -> Билеты(3)
         const typeOrder = { 'clothing': 1, 'accessory': 2, 'ticket': 3 };
         items.sort((a, b) => (typeOrder[a.type] || 99) - (typeOrder[b.type] || 99));
 
@@ -46,7 +49,6 @@ async function renderCatalog() {
             row.insertCell(3).textContent = item.price;
             row.insertCell(4).textContent = item.stock;
             row.insertCell(5).textContent = getManufacturerName(item.manufacturer_id);
-            // 2. Берём жанры сразу из ответа сервера
             row.insertCell(6).textContent = item.genre_names || '—';
             let extraLines = [];
             if (item.type === 'ticket') {
@@ -86,23 +88,23 @@ async function renderCatalog() {
             const wishBtn = document.createElement('button');
             wishBtn.textContent = '❤️';
             if (inWishlist) {
-                wishBtn.style.background = '#dc3545';
+                wishBtn.classList.add('wishlist-btn', 'active');
                 wishBtn.title = 'Удалить из вишлиста';
                 wishBtn.onclick = () => { if (typeof removeFromWishlist === 'function') removeFromWishlist(item.product_id); };
             } else {
-                wishBtn.style.background = '#ffc107';
+                wishBtn.classList.add('wishlist-btn');
                 wishBtn.title = 'В вишлист';
                 wishBtn.onclick = () => { if (typeof addToWishlist === 'function') addToWishlist(item.product_id, item.name); };
             }
             const inCart = userCartIds && userCartIds.includes(item.product_id);
             const cartBtn = document.createElement('button');
             cartBtn.textContent = '🛒';
+            cartBtn.classList.add('cart-btn');
             if (inCart) {
-                cartBtn.style.background = '#28a745';
+                cartBtn.classList.add('active');
                 cartBtn.title = 'Удалить из корзины';
                 cartBtn.onclick = () => { if (typeof showRemoveFromCartModal === 'function') showRemoveFromCartModal(item.product_id, item.name); };
             } else {
-                cartBtn.style.background = '#28a745';
                 cartBtn.title = 'В корзину';
                 cartBtn.onclick = () => { if (typeof showCartModal === 'function') { currentProductForCart = { id: item.product_id, name: item.name }; showCartModal(); } };
             }
@@ -133,16 +135,19 @@ async function renderCatalog() {
         document.getElementById('catalog-tbody').innerHTML = '<tr><td colspan="9" class="centered-message">Ошибка загрузки</td></tr>';
     }
 }
+
 function refreshCatalogFilters() {
     if (typeof loadManufacturersForSelect === 'function') loadManufacturersForSelect('filter-manufacturer');
     renderCatalog();
 }
+
 function hideEditPanel() {
     document.getElementById('edit-panel').style.display = 'none';
     document.getElementById('edit-ticket-form').style.display = 'none';
     document.getElementById('edit-clothing-form').style.display = 'none';
     document.getElementById('edit-accessory-form').style.display = 'none';
 }
+
 async function loadProductNameDatalist() {
     const resp = await fetch(`${PRODUCTS_FILTER_URL}/names`);
     if (resp.ok) {
@@ -158,6 +163,7 @@ async function loadProductNameDatalist() {
         }
     }
 }
+
 async function loadArtistsForSelect() {
     const resp = await fetch(ARTISTS_URL);
     if (resp.ok) {
@@ -174,6 +180,7 @@ async function loadArtistsForSelect() {
         }
     }
 }
+
 document.getElementById('clear-filters').addEventListener('click', () => {
     document.getElementById('search-name').value = '';
     document.getElementById('filter-type').value = '';
@@ -186,5 +193,6 @@ document.getElementById('clear-filters').addEventListener('click', () => {
     document.getElementById('sort-by').value = '';
     renderCatalog();
 });
+
 loadProductNameDatalist();
 loadArtistsForSelect();

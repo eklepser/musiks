@@ -92,6 +92,9 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         } else if (btn.dataset.tab === 'genres') {
             if (typeof loadGenresTable === 'function') loadGenresTable();
         }
+        setTimeout(function () {
+            if (typeof initToggleFilters === 'function') initToggleFilters();
+        }, 50);
     });
 });
 
@@ -195,3 +198,9 @@ if (typeof loadGenresTable === 'function') loadGenresTable();
 
 highlightActiveNavItem();
 loadUsersAndInit();
+
+setTimeout(function () {
+    if (typeof initAllValidations === 'function') {
+        initAllValidations();
+    }
+}, 100);

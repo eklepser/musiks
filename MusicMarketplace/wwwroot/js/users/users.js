@@ -21,7 +21,7 @@ function renderUsersTable() {
     tbody.innerHTML = '';
 
     if (usersData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Нет данных</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Нет данных</tbody>';
         document.getElementById('found-count').innerText = '0';
         return;
     }
@@ -129,11 +129,9 @@ function validateUserFields(login, email, fullName, password, isUpdate = false) 
     if (!fullName || fullName.trim() === '') return 'Полное имя обязательно';
     if (fullName.length < 2 || fullName.length > 100) return 'Полное имя должно содержать от 2 до 100 символов';
 
-    // Пароль обязателен только при создании нового пользователя
     if (!isUpdate && (!password || password.trim() === '')) {
         return 'Пароль обязателен при создании пользователя';
     }
-    // При редактировании пароль можно не указывать
     if (password && password.length < 6) {
         return 'Пароль должен содержать минимум 6 символов';
     }
@@ -226,7 +224,6 @@ async function deleteUser(id, name) {
 document.getElementById('user-submit')?.addEventListener('click', saveUser);
 document.getElementById('user-cancel')?.addEventListener('click', clearUserForm);
 document.getElementById('apply-filters')?.addEventListener('click', () => {
-    // Здесь можно добавить логику фильтрации, если нужно
     renderUsersTable();
 });
 document.getElementById('clear-filters')?.addEventListener('click', () => {
@@ -236,4 +233,7 @@ document.getElementById('clear-filters')?.addEventListener('click', () => {
 
 document.addEventListener('DOMContentLoaded', () => {
     loadUsers();
+    setTimeout(function () {
+        if (typeof window.initToggleFilters === 'function') window.initToggleFilters();
+    }, 100);
 });

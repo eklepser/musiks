@@ -13,6 +13,7 @@
     document.getElementById('ticket-submit').innerText = 'Добавить';
     document.getElementById('ticket-cancel').style.display = 'none';
 }
+
 function fillEditTicketForm(t) {
     hideEditPanel();
     document.getElementById('edit-ticket-id').value = t.ticket_id;
@@ -29,6 +30,7 @@ function fillEditTicketForm(t) {
     loadProductGenresForEdit(t.product_id, 'ticket');
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
 function validateTicketFields(name, price, stock, manufacturerId, concertId, priceCategory, description) {
     let err = validateRequiredString(name, 'Название', 2, 200, true);
     if (err) return err;
@@ -48,6 +50,7 @@ function validateTicketFields(name, price, stock, manufacturerId, concertId, pri
     }
     return null;
 }
+
 async function saveEditTicket() {
     const id = document.getElementById('edit-ticket-id').value;
     const manufacturerId = parseInt(document.getElementById('edit-ticket-manufacturer-id').value);
@@ -94,6 +97,7 @@ async function saveEditTicket() {
         showToast('Ошибка соединения', 'error');
     }
 }
+
 async function saveTicket() {
     const name = document.getElementById('ticket-name').value.trim();
     const price = document.getElementById('ticket-price').value;
@@ -150,6 +154,7 @@ async function saveTicket() {
         showToast('Ошибка сохранения', 'error');
     }
 }
+
 async function deleteTicket(id, name) {
     if (!confirm(`Удалить билет «${name}» (ID ${id})?`)) return;
     try {

@@ -17,7 +17,7 @@
                 <select id="user-select">
                     <option value="">-- Выберите пользователя --</option>
                 </select>
-                <a href="/users" style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 5px;">⚙️👤</a>
+                <button id="manage-users-btn" title="Управление пользователями" class="manage-users-btn">⚙️👤</button>
             </li>
         </ul>
     </div>
@@ -26,7 +26,15 @@
         <p>Выберите раздел в меню для управления данными.</p>
     </div>
     <script src="js/toast.js"></script>
+    <script src="js/validation.js"></script>
     <script src="js/users/user-menu.js"></script>
-    <script>initUserMenu();</script>
+    <script>
+        initUserMenu();
+        setTimeout(function () {
+            if (typeof initAllValidations === 'function') {
+                initAllValidations();
+            }
+        }, 100);
+    </script>
 </body>
 </html>

@@ -16,7 +16,7 @@
                 <select id="user-select">
                     <option value="">-- Выберите пользователя --</option>
                 </select>
-                <a href="/users" style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 5px;">⚙️👤</a>
+                <button id="manage-users-btn" title="Управление пользователями" class="manage-users-btn">⚙️👤</button>
             </li>
         </ul>
     </div>
@@ -35,18 +35,18 @@
                     <div class="form-card">
                         <input type="hidden" id="edit-ticket-id">
                         <div class="form-group-row">
-                            <input type="text" id="edit-ticket-name" placeholder="Название*" required>
-                            <input type="number" id="edit-ticket-price" placeholder="Цена*" step="0.01" required>
-<textarea id="edit-ticket-description" placeholder="Описание"></textarea>
+                            <input type="text" id="edit-ticket-name" placeholder="Название*" required minlength="2" maxlength="200">
+                            <input type="number" id="edit-ticket-price" placeholder="Цена*" step="0.01" min="0" required data-numeric="true">
+                            <textarea id="edit-ticket-description" placeholder="Описание" maxlength="1000"></textarea>
                             <select id="edit-ticket-manufacturer-id" required><option value="">Производитель*</option></select>
-                            <input type="number" id="edit-ticket-stock" placeholder="Остаток">
+                            <input type="number" id="edit-ticket-stock" placeholder="Остаток" min="0" data-numeric="true">
                             <select id="edit-ticket-concert-id" required><option value="">Концерт*</option></select>
-                            <input type="text" id="edit-ticket-price-category" placeholder="Тип места">
+                            <input type="text" id="edit-ticket-price-category" placeholder="Тип места" maxlength="50">
                         </div>
-                        <div class="form-group-row" style="align-items: center;">
-                            <label style="margin-right: 15px;">Жанры:</label>
-                            <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
-                                <div id="edit-ticket-selected-genres-list" style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 8px; min-height: 40px; background: #f9f9f9;"></div>
+                        <div class="form-group-row">
+                            <label>Жанры:</label>
+                            <div class="selected-list-container">
+                                <div id="edit-ticket-selected-genres-list" class="selected-list"></div>
                                 <button type="button" id="edit-ticket-genres-btn" class="genres-btn">Выбрать жанры</button>
                             </div>
                         </div>
@@ -60,13 +60,13 @@
                     <div class="form-card">
                         <input type="hidden" id="edit-clothing-id">
                         <div class="form-group-row">
-                            <input type="text" id="edit-clothing-name" placeholder="Название*" required>
-                            <input type="number" id="edit-clothing-price" placeholder="Цена*" step="0.01" required>
-<textarea id="edit-clothing-description" placeholder="Описание"></textarea>
-                            <input type="number" id="edit-clothing-stock" placeholder="Остаток">
+                            <input type="text" id="edit-clothing-name" placeholder="Название*" required minlength="2" maxlength="200">
+                            <input type="number" id="edit-clothing-price" placeholder="Цена*" step="0.01" min="0" required data-numeric="true">
+                            <textarea id="edit-clothing-description" placeholder="Описание" maxlength="1000"></textarea>
+                            <input type="number" id="edit-clothing-stock" placeholder="Остаток" min="0" data-numeric="true">
                             <select id="edit-clothing-manufacturer-id" required><option value="">Производитель*</option></select>
-                            <input type="text" id="edit-clothing-material" placeholder="Материал">
-                            <input type="text" id="edit-clothing-color" placeholder="Цвет">
+                            <input type="text" id="edit-clothing-material" placeholder="Материал" maxlength="50">
+                            <input type="text" id="edit-clothing-color" placeholder="Цвет" maxlength="30">
                             <select id="edit-clothing-size">
                                 <option value="">Размер</option>
                                 <option value="XS">XS</option>
@@ -83,17 +83,17 @@
                                 <option value="unisex">Унисекс</option>
                             </select>
                         </div>
-                        <div class="form-group-row" style="align-items: center;">
-                            <label style="margin-right: 15px;">Жанры:</label>
-                            <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
-                                <div id="edit-clothing-selected-genres-list" style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 8px; min-height: 40px; background: #f9f9f9;"></div>
+                        <div class="form-group-row">
+                            <label>Жанры:</label>
+                            <div class="selected-list-container">
+                                <div id="edit-clothing-selected-genres-list" class="selected-list"></div>
                                 <button type="button" id="edit-clothing-genres-btn" class="genres-btn">Выбрать жанры</button>
                             </div>
                         </div>
-                        <div class="form-group-row" style="align-items: center;">
-                            <label style="margin-right: 15px;">Исполнители:</label>
-                            <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
-                                <div id="edit-clothing-selected-artists-list" style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 8px; min-height: 40px; background: #f9f9f9;"></div>
+                        <div class="form-group-row">
+                            <label>Исполнители:</label>
+                            <div class="selected-list-container">
+                                <div id="edit-clothing-selected-artists-list" class="selected-list"></div>
                                 <button type="button" id="edit-clothing-artists-btn" class="artists-btn">Выбрать исполнителей</button>
                             </div>
                         </div>
@@ -107,27 +107,27 @@
                     <div class="form-card">
                         <input type="hidden" id="edit-accessory-id">
                         <div class="form-group-row">
-                            <input type="text" id="edit-accessory-name" placeholder="Название*" required>
-                            <input type="number" id="edit-accessory-price" placeholder="Цена*" step="0.01" required>
-<textarea id="edit-accessory-description" placeholder="Описание"></textarea>
-                            <input type="number" id="edit-accessory-stock" placeholder="Остаток">
+                            <input type="text" id="edit-accessory-name" placeholder="Название*" required minlength="2" maxlength="200">
+                            <input type="number" id="edit-accessory-price" placeholder="Цена*" step="0.01" min="0" required data-numeric="true">
+                            <textarea id="edit-accessory-description" placeholder="Описание" maxlength="1000"></textarea>
+                            <input type="number" id="edit-accessory-stock" placeholder="Остаток" min="0" data-numeric="true">
                             <select id="edit-accessory-manufacturer-id" required><option value="">Производитель*</option></select>
-                            <input type="text" id="edit-accessory-material" placeholder="Материал">
-                            <input type="text" id="edit-accessory-color" placeholder="Цвет">
-                            <input type="text" id="edit-accessory-type" placeholder="Тип">
-                            <input type="number" id="edit-accessory-weight" placeholder="Вес (г)" step="0.01">
+                            <input type="text" id="edit-accessory-material" placeholder="Материал" maxlength="50">
+                            <input type="text" id="edit-accessory-color" placeholder="Цвет" maxlength="30">
+                            <input type="text" id="edit-accessory-type" placeholder="Тип" maxlength="50">
+                            <input type="number" id="edit-accessory-weight" placeholder="Вес (г)" step="0.01" min="0" data-numeric="true">
                         </div>
-                        <div class="form-group-row" style="align-items: center;">
-                            <label style="margin-right: 15px;">Жанры:</label>
-                            <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
-                                <div id="edit-accessory-selected-genres-list" style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 8px; min-height: 40px; background: #f9f9f9;"></div>
+                        <div class="form-group-row">
+                            <label>Жанры:</label>
+                            <div class="selected-list-container">
+                                <div id="edit-accessory-selected-genres-list" class="selected-list"></div>
                                 <button type="button" id="edit-accessory-genres-btn" class="genres-btn">Выбрать жанры</button>
                             </div>
                         </div>
-                        <div class="form-group-row" style="align-items: center;">
-                            <label style="margin-right: 15px;">Исполнители:</label>
-                            <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
-                                <div id="edit-accessory-selected-artists-list" style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 8px; min-height: 40px; background: #f9f9f9;"></div>
+                        <div class="form-group-row">
+                            <label>Исполнители:</label>
+                            <div class="selected-list-container">
+                                <div id="edit-accessory-selected-artists-list" class="selected-list"></div>
                                 <button type="button" id="edit-accessory-artists-btn" class="artists-btn">Выбрать исполнителей</button>
                             </div>
                         </div>
@@ -139,49 +139,50 @@
                 </div>
             </div>
             <div class="filters-card">
-                <h3>Фильтры и сортировка</h3>
-                <div class="filter-group">
-                    <input type="text" id="search-name" placeholder="Поиск по названию" list="product-name-datalist">
-                    <datalist id="product-name-datalist"></datalist>
-                    <select id="filter-type">
-                        <option value="">Все типы</option>
-                        <option value="clothing">Одежда</option>
-                        <option value="accessory">Аксессуары</option>
-                        <option value="ticket">Билеты</option>
-                    </select>
-                    <select id="filter-manufacturer">
-                        <option value="">Все производители</option>
-                    </select>
-                    <select id="filter-artist">
-                        <option value="">Все артисты</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label><input type="checkbox" id="filter-in-stock"> В наличии</label>
-                </div>
-                <div class="filter-group">
-                    <input type="number" id="price-min" placeholder="Цена от" step="0.01">
-                    <input type="number" id="price-max" placeholder="Цена до" step="0.01">
-                </div>
-                <div class="filter-group">
-                    <label>Жанр:</label>
-                    <select id="genre-select">
-                        <option value="">Все жанры</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>Сортировка:</label>
-                    <select id="sort-by">
-                        <option value="">По умолчанию</option>
-                        <option value="price_asc">Цена по возрастанию</option>
-                        <option value="price_desc">Цена по убыванию</option>
-                        <option value="stock_asc">Остаток по возрастанию</option>
-                        <option value="stock_desc">Остаток по убыванию</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <button id="apply-filters">Применить</button>
-                    <button id="clear-filters">Сбросить</button>
+                <div class="filter-group-container">
+                    <div class="filter-group">
+                        <input type="text" id="search-name" placeholder="Поиск по названию" list="product-name-datalist" maxlength="200">
+                        <datalist id="product-name-datalist"></datalist>
+                        <select id="filter-type">
+                            <option value="">Все типы</option>
+                            <option value="clothing">Одежда</option>
+                            <option value="accessory">Аксессуары</option>
+                            <option value="ticket">Билеты</option>
+                        </select>
+                        <select id="filter-manufacturer">
+                            <option value="">Все производители</option>
+                        </select>
+                        <select id="filter-artist">
+                            <option value="">Все артисты</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label><input type="checkbox" id="filter-in-stock"> В наличии</label>
+                    </div>
+                    <div class="filter-group">
+                        <input type="number" id="price-min" placeholder="Цена от" step="0.01" min="0" data-numeric="true">
+                        <input type="number" id="price-max" placeholder="Цена до" step="0.01" min="0" data-numeric="true">
+                    </div>
+                    <div class="filter-group">
+                        <label>Жанр:</label>
+                        <select id="genre-select">
+                            <option value="">Все жанры</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Сортировка:</label>
+                        <select id="sort-by">
+                            <option value="">По умолчанию</option>
+                            <option value="price_asc">Цена по возрастанию</option>
+                            <option value="price_desc">Цена по убыванию</option>
+                            <option value="stock_asc">Остаток по возрастанию</option>
+                            <option value="stock_desc">Остаток по убыванию</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <button id="apply-filters">Применить</button>
+                        <button id="clear-filters">Сбросить</button>
+                    </div>
                 </div>
             </div>
             <div class="stats-card">
@@ -202,13 +203,13 @@
                 <div class="form-card">
                     <input type="hidden" id="clothing-edit-id">
                     <div class="form-group-row">
-                        <input type="text" id="clothing-name" placeholder="Название*" required>
-                        <input type="number" id="clothing-price" placeholder="Цена*" step="0.01" required>
-<textarea id="clothing-description" placeholder="Описание"></textarea>
-                        <input type="number" id="clothing-stock" placeholder="Остаток" value="0">
+                        <input type="text" id="clothing-name" placeholder="Название*" required minlength="2" maxlength="200">
+                        <input type="number" id="clothing-price" placeholder="Цена*" step="0.01" min="0" required data-numeric="true">
+                        <textarea id="clothing-description" placeholder="Описание" maxlength="1000"></textarea>
+                        <input type="number" id="clothing-stock" placeholder="Остаток" value="0" min="0" data-numeric="true">
                         <select id="clothing-manufacturer-id" required><option value="">Производитель*</option></select>
-                        <input type="text" id="clothing-material" placeholder="Материал">
-                        <input type="text" id="clothing-color" placeholder="Цвет">
+                        <input type="text" id="clothing-material" placeholder="Материал" maxlength="50">
+                        <input type="text" id="clothing-color" placeholder="Цвет" maxlength="30">
                         <select id="clothing-size">
                             <option value="">Размер</option>
                             <option value="XS">XS</option>
@@ -225,17 +226,17 @@
                             <option value="unisex" selected>Унисекс</option>
                         </select>
                     </div>
-                    <div class="form-group-row" style="align-items: center;">
-                        <label style="margin-right: 15px;">Жанры:</label>
-                        <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
-                            <div id="clothing-selected-genres-list" style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 8px; min-height: 40px; background: #f9f9f9;"></div>
+                    <div class="form-group-row">
+                        <label>Жанры:</label>
+                        <div class="selected-list-container">
+                            <div id="clothing-selected-genres-list" class="selected-list"></div>
                             <button type="button" id="open-clothing-genres-modal-btn" class="genres-btn">Выбрать жанры</button>
                         </div>
                     </div>
-                    <div class="form-group-row" style="align-items: center;">
-                        <label style="margin-right: 15px;">Исполнители:</label>
-                        <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
-                            <div id="clothing-selected-artists-list" style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 8px; min-height: 40px; background: #f9f9f9;"></div>
+                    <div class="form-group-row">
+                        <label>Исполнители:</label>
+                        <div class="selected-list-container">
+                            <div id="clothing-selected-artists-list" class="selected-list"></div>
                             <button type="button" id="open-clothing-artists-modal-btn" class="artists-btn">Выбрать исполнителей</button>
                         </div>
                     </div>
@@ -250,27 +251,27 @@
                 <div class="form-card">
                     <input type="hidden" id="accessory-edit-id">
                     <div class="form-group-row">
-                        <input type="text" id="accessory-name" placeholder="Название*" required>
-                        <input type="number" id="accessory-price" placeholder="Цена*" step="0.01" required>
-<textarea id="accessory-description" placeholder="Описание"></textarea>
-                        <input type="number" id="accessory-stock" placeholder="Остаток" value="0">
+                        <input type="text" id="accessory-name" placeholder="Название*" required minlength="2" maxlength="200">
+                        <input type="number" id="accessory-price" placeholder="Цена*" step="0.01" min="0" required data-numeric="true">
+                        <textarea id="accessory-description" placeholder="Описание" maxlength="1000"></textarea>
+                        <input type="number" id="accessory-stock" placeholder="Остаток" value="0" min="0" data-numeric="true">
                         <select id="accessory-manufacturer-id" required><option value="">Производитель*</option></select>
-                        <input type="text" id="accessory-material" placeholder="Материал">
-                        <input type="text" id="accessory-color" placeholder="Цвет">
-                        <input type="text" id="accessory-type" placeholder="Тип">
-                        <input type="number" id="accessory-weight" placeholder="Вес (г)" step="0.01">
+                        <input type="text" id="accessory-material" placeholder="Материал" maxlength="50">
+                        <input type="text" id="accessory-color" placeholder="Цвет" maxlength="30">
+                        <input type="text" id="accessory-type" placeholder="Тип" maxlength="50">
+                        <input type="number" id="accessory-weight" placeholder="Вес (г)" step="0.01" min="0" data-numeric="true">
                     </div>
-                    <div class="form-group-row" style="align-items: center;">
-                        <label style="margin-right: 15px;">Жанры:</label>
-                        <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
-                            <div id="accessory-selected-genres-list" style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 8px; min-height: 40px; background: #f9f9f9;"></div>
+                    <div class="form-group-row">
+                        <label>Жанры:</label>
+                        <div class="selected-list-container">
+                            <div id="accessory-selected-genres-list" class="selected-list"></div>
                             <button type="button" id="open-accessory-genres-modal-btn" class="genres-btn">Выбрать жанры</button>
                         </div>
                     </div>
-                    <div class="form-group-row" style="align-items: center;">
-                        <label style="margin-right: 15px;">Исполнители:</label>
-                        <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
-                            <div id="accessory-selected-artists-list" style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 8px; min-height: 40px; background: #f9f9f9;"></div>
+                    <div class="form-group-row">
+                        <label>Исполнители:</label>
+                        <div class="selected-list-container">
+                            <div id="accessory-selected-artists-list" class="selected-list"></div>
                             <button type="button" id="open-accessory-artists-modal-btn" class="artists-btn">Выбрать исполнителей</button>
                         </div>
                     </div>
@@ -285,18 +286,18 @@
                 <div class="form-card">
                     <input type="hidden" id="ticket-edit-id">
                     <div class="form-group-row">
-                        <input type="text" id="ticket-name" placeholder="Название*" required>
-                        <input type="number" id="ticket-price" placeholder="Цена*" step="0.01" required>
-<textarea id="ticket-description" placeholder="Описание"></textarea>
+                        <input type="text" id="ticket-name" placeholder="Название*" required minlength="2" maxlength="200">
+                        <input type="number" id="ticket-price" placeholder="Цена*" step="0.01" min="0" required data-numeric="true">
+                        <textarea id="ticket-description" placeholder="Описание" maxlength="1000"></textarea>
                         <select id="ticket-manufacturer-id" required><option value="">Производитель*</option></select>
-                        <input type="number" id="ticket-stock" placeholder="Остаток" value="0">
+                        <input type="number" id="ticket-stock" placeholder="Остаток" value="0" min="0" data-numeric="true">
                         <select id="ticket-concert-id" required><option value="">Концерт*</option></select>
-                        <input type="text" id="ticket-price-category" placeholder="Тип места">
+                        <input type="text" id="ticket-price-category" placeholder="Тип места" maxlength="50">
                     </div>
-                    <div class="form-group-row" style="align-items: center;">
-                        <label style="margin-right: 15px;">Жанры:</label>
-                        <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
-                            <div id="ticket-selected-genres-list" style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 8px; min-height: 40px; background: #f9f9f9;"></div>
+                    <div class="form-group-row">
+                        <label>Жанры:</label>
+                        <div class="selected-list-container">
+                            <div id="ticket-selected-genres-list" class="selected-list"></div>
                             <button type="button" id="open-ticket-genres-modal-btn" class="genres-btn">Выбрать жанры</button>
                         </div>
                     </div>
@@ -309,29 +310,30 @@
         </div>
         <div id="manufacturers-tab" class="tab-content">
             <div class="filters-card">
-                <h3>Фильтры и сортировка</h3>
-                <div class="filter-group">
-                    <input type="text" id="manufacturer-search-name" placeholder="Поиск по названию" list="manufacturer-name-datalist">
-                    <datalist id="manufacturer-name-datalist"></datalist>
-                    <input type="text" id="manufacturer-search-country" placeholder="Поиск по стране" list="manufacturer-country-datalist">
-                    <datalist id="manufacturer-country-datalist"></datalist>
-                    <select id="manufacturer-sort">
-                        <option value="name_asc" selected>Название А-Я</option>
-                        <option value="name_desc">Название Я-А</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <button id="manufacturer-apply-filters">Применить</button>
-                    <button id="manufacturer-clear-filters">Сбросить</button>
+                <div class="filter-group-container">
+                    <div class="filter-group">
+                        <input type="text" id="manufacturer-search-name" placeholder="Поиск по названию" list="manufacturer-name-datalist" maxlength="100">
+                        <datalist id="manufacturer-name-datalist"></datalist>
+                        <input type="text" id="manufacturer-search-country" placeholder="Поиск по стране" list="manufacturer-country-datalist" maxlength="50">
+                        <datalist id="manufacturer-country-datalist"></datalist>
+                        <select id="manufacturer-sort">
+                            <option value="name_asc" selected>Название А-Я</option>
+                            <option value="name_desc">Название Я-А</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <button id="manufacturer-apply-filters">Применить</button>
+                        <button id="manufacturer-clear-filters">Сбросить</button>
+                    </div>
                 </div>
             </div>
             <div class="form-card">
                 <h3 id="manufacturer-form-title">Добавить производителя</h3>
                 <input type="hidden" id="manufacturer-edit-id">
                 <div class="form-group">
-                    <input type="text" id="manufacturer-name" placeholder="Название*" required>
-                    <input type="text" id="manufacturer-contact" placeholder="Контактные данные*" required>
-                    <input type="text" id="manufacturer-country" placeholder="Страна">
+                    <input type="text" id="manufacturer-name" placeholder="Название*" required minlength="2" maxlength="100">
+                    <input type="text" id="manufacturer-contact" placeholder="Контактные данные*" required maxlength="200">
+                    <input type="text" id="manufacturer-country" placeholder="Страна" maxlength="50" list="manufacturer-country-datalist">
                 </div>
                 <div class="form-actions">
                     <button id="manufacturer-submit">Добавить</button>
@@ -352,26 +354,27 @@
         </div>
         <div id="genres-tab" class="tab-content">
             <div class="filters-card">
-                <h3>Фильтры и сортировка</h3>
-                <div class="filter-group">
-                    <input type="text" id="genre-search-name" placeholder="Поиск по названию" list="genre-name-datalist">
-                    <datalist id="genre-name-datalist"></datalist>
-                    <select id="genre-sort">
-                        <option value="name_asc" selected>Название А-Я</option>
-                        <option value="name_desc">Название Я-А</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <button id="genre-apply-filters">Применить</button>
-                    <button id="genre-clear-filters">Сбросить</button>
+                <div class="filter-group-container">
+                    <div class="filter-group">
+                        <input type="text" id="genre-search-name" placeholder="Поиск по названию" list="genre-name-datalist" maxlength="50">
+                        <datalist id="genre-name-datalist"></datalist>
+                        <select id="genre-sort">
+                            <option value="name_asc" selected>Название А-Я</option>
+                            <option value="name_desc">Название Я-А</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <button id="genre-apply-filters">Применить</button>
+                        <button id="genre-clear-filters">Сбросить</button>
+                    </div>
                 </div>
             </div>
             <div class="form-card">
                 <h3 id="genre-form-title">Добавить жанр</h3>
                 <input type="hidden" id="genre-edit-id">
                 <div class="form-group">
-                    <input type="text" id="genre-name" placeholder="Название*" required>
-<textarea id="genre-description" placeholder="Описание" rows="2"></textarea>
+                    <input type="text" id="genre-name" placeholder="Название*" required minlength="2" maxlength="50" data-letters-only="true">
+                    <textarea id="genre-description" placeholder="Описание" rows="2" maxlength="500"></textarea>
                 </div>
                 <div class="form-actions">
                     <button id="genre-submit">Добавить</button>
@@ -390,79 +393,79 @@
                 </tbody>
             </table>
         </div>
-        <div id="genres-modal" class="modal">
-            <div class="modal-content">
-                <h3>Выбор жанров для товара</h3>
-                <div id="modal-genres-list" class="genre-list"></div>
-                <select id="modal-genre-select">
-                    <option value="">-- Добавить жанр --</option>
+    </div>
+    <div id="genres-modal" class="modal">
+        <div class="modal-content">
+            <h3>Выбор жанров для товара</h3>
+            <div id="modal-genres-list" class="genre-list"></div>
+            <select id="modal-genre-select">
+                <option value="">-- Добавить жанр --</option>
+            </select>
+            <button id="modal-add-genre">Добавить</button>
+            <button id="modal-genre-close">Закрыть</button>
+        </div>
+    </div>
+    <div id="artists-merch-modal" class="modal">
+        <div class="modal-content">
+            <h3>Выбор исполнителей для товара</h3>
+            <div id="modal-merch-artists-list" class="artist-list"></div>
+            <select id="modal-merch-artist-select">
+                <option value="">-- Добавить исполнителя --</option>
+            </select>
+            <button id="modal-merch-add-artist">Добавить</button>
+            <button id="modal-merch-close">Закрыть</button>
+        </div>
+    </div>
+    <div id="cart-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Добавление в корзину</h3>
+            <p id="cart-product-name"></p>
+            <div class="form-group">
+                <label>Количество:</label>
+                <input type="number" id="cart-quantity" value="1" min="1" data-numeric="true">
+            </div>
+            <div class="form-group">
+                <button id="cart-confirm-btn">Добавить</button>
+                <button id="cart-cancel-btn">Отмена</button>
+            </div>
+        </div>
+    </div>
+    <div id="remove-from-cart-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Удаление из корзины</h3>
+            <p id="remove-cart-product-name"></p>
+            <div class="form-group">
+                <label>Количество для удаления:</label>
+                <input type="number" id="remove-cart-quantity" value="1" min="1" data-numeric="true">
+                <small>Максимум: <span id="remove-cart-max"></span></small>
+            </div>
+            <div class="form-group">
+                <button id="remove-cart-confirm-btn">Удалить</button>
+                <button id="remove-cart-cancel-btn">Отмена</button>
+            </div>
+        </div>
+    </div>
+    <div id="review-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Оставить отзыв</h3>
+            <p id="review-product-name"></p>
+            <div class="form-group">
+                <label>Оценка (1-5):</label>
+                <select id="review-rating">
+                    <option value="5">5</option>
+                    <option value="4">4</option>
+                    <option value="3">3</option>
+                    <option value="2">2</option>
+                    <option value="1">1</option>
                 </select>
-                <button id="modal-add-genre">Добавить</button>
-                <button id="modal-genre-close">Закрыть</button>
             </div>
-        </div>
-        <div id="artists-merch-modal" class="modal">
-            <div class="modal-content">
-                <h3>Выбор исполнителей для товара</h3>
-                <div id="modal-merch-artists-list" class="artist-list"></div>
-                <select id="modal-merch-artist-select">
-                    <option value="">-- Добавить исполнителя --</option>
-                </select>
-                <button id="modal-merch-add-artist">Добавить</button>
-                <button id="modal-merch-close">Закрыть</button>
+            <div class="form-group">
+                <label>Текст отзыва:</label>
+                <textarea id="review-text" rows="3" maxlength="1000"></textarea>
             </div>
-        </div>
-        <div id="cart-modal" class="modal" style="display: none;">
-            <div class="modal-content">
-                <h3>Добавление в корзину</h3>
-                <p id="cart-product-name"></p>
-                <div class="form-group">
-                    <label>Количество:</label>
-                    <input type="number" id="cart-quantity" value="1" min="1" style="width: 100%;">
-                </div>
-                <div class="form-group">
-                    <button id="cart-confirm-btn">Добавить</button>
-                    <button id="cart-cancel-btn">Отмена</button>
-                </div>
-            </div>
-        </div>
-        <div id="remove-from-cart-modal" class="modal" style="display: none;">
-            <div class="modal-content">
-                <h3>Удаление из корзины</h3>
-                <p id="remove-cart-product-name"></p>
-                <div class="form-group">
-                    <label>Количество для удаления:</label>
-                    <input type="number" id="remove-cart-quantity" value="1" min="1" style="width: 100%;">
-                    <small>Максимум: <span id="remove-cart-max"></span></small>
-                </div>
-                <div class="form-group">
-                    <button id="remove-cart-confirm-btn">Удалить</button>
-                    <button id="remove-cart-cancel-btn">Отмена</button>
-                </div>
-            </div>
-        </div>
-        <div id="review-modal" class="modal" style="display: none;">
-            <div class="modal-content">
-                <h3>Оставить отзыв</h3>
-                <p id="review-product-name"></p>
-                <div class="form-group">
-                    <label>Оценка (1-5):</label>
-                    <select id="review-rating" style="width: 100%;">
-                        <option value="5">5</option>
-                        <option value="4">4</option>
-                        <option value="3">3</option>
-                        <option value="2">2</option>
-                        <option value="1">1</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Текст отзыва:</label>
-<textarea id="review-text" rows="3" style="width: 100%;"></textarea>
-                </div>
-                <div class="form-group">
-                    <button id="review-confirm-btn">Отправить</button>
-                    <button id="review-cancel-btn">Отмена</button>
-                </div>
+            <div class="form-group">
+                <button id="review-confirm-btn">Отправить</button>
+                <button id="review-cancel-btn">Отмена</button>
             </div>
         </div>
     </div>
@@ -480,5 +483,11 @@
     <script src="js/products/product.js"></script>
     <script src="js/users/user-menu.js"></script>
     <script src="js/products/main.js"></script>
+    <script>
+        initUserMenu();
+        setTimeout(function () {
+            if (typeof initAllValidations === 'function') initAllValidations();
+        }, 100);
+    </script>
 </body>
 </html>

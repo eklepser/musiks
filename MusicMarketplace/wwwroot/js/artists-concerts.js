@@ -1,12 +1,15 @@
 ﻿const ARTISTS_FILTER_URL = 'https://localhost:7062/api/Artists/filter';
 const CONCERTS_FILTER_URL = 'https://localhost:7062/api/Concerts/filter';
 const CONCERTS_ARTISTS_URL = 'https://localhost:7062/api/Concerts/filter/artists';
+
 let allArtists = [];
 let allConcerts = [];
 let artistConcertLinks = [];
+
 let currentEditArtistId = null;
 let currentEditConcertId = null;
 let selectedArtistsForConcert = [];
+
 async function loadArtists() {
     const resp = await fetch('https://localhost:7062/api/Artists');
     if (resp.ok) {
@@ -16,6 +19,7 @@ async function loadArtists() {
         updateOpenArtistsButtonVisibility();
     }
 }
+
 async function loadConcerts() {
     const resp = await fetch('https://localhost:7062/api/Concerts');
     if (resp.ok) {
@@ -23,12 +27,14 @@ async function loadConcerts() {
         updateConcertFilterOptions();
     }
 }
+
 async function loadArtistConcerts() {
     const resp = await fetch('https://localhost:7062/api/ArtistConcerts');
     if (resp.ok) {
         artistConcertLinks = await resp.json();
     }
 }
+
 function updateModalArtistSelect() {
     const select = document.getElementById('modal-artist-select');
     if (!select) return;
@@ -40,12 +46,14 @@ function updateModalArtistSelect() {
         select.appendChild(opt);
     });
 }
+
 function updateOpenArtistsButtonVisibility() {
     const btn = document.getElementById('open-artists-modal-btn');
     if (btn) {
         btn.style.display = allArtists.length === 0 ? 'none' : 'inline-block';
     }
 }
+
 function updateArtistFilterOptions() {
     const countries = [...new Set(allArtists.map(a => a.country).filter(c => c))].sort();
     const languages = [...new Set(allArtists.map(a => a.language).filter(l => l))].sort();
@@ -66,6 +74,7 @@ function updateArtistFilterOptions() {
         names.forEach(name => { const opt = document.createElement('option'); opt.value = name; nameDatalist.appendChild(opt); });
     }
 }
+
 function updateConcertFilterOptions() {
     const venues = [...new Set(allConcerts.map(c => c.venue).filter(v => v))].sort();
     const titles = allConcerts.map(c => c.title);
@@ -80,17 +89,19 @@ function updateConcertFilterOptions() {
         titles.forEach(title => { const opt = document.createElement('option'); opt.value = title; titleDatalist.appendChild(opt); });
     }
 }
+
 function getArtistNamesByIds(artistIds) {
     return artistIds.map(id => {
         const artist = allArtists.find(a => a.artist_id === id);
         return artist ? artist.name : `ID ${id}`;
     }).join(', ');
 }
+
 function renderSelectedArtistsList() {
     const container = document.getElementById('selected-artists-list');
     if (!container) return;
     if (selectedArtistsForConcert.length === 0) {
-        container.innerHTML = '<span style="color: #999;">Исполнители не выбраны</span>';
+        container.innerHTML = '<span class="placeholder-text">Исполнители не выбраны</span>';
         return;
     }
     const names = selectedArtistsForConcert.map(id => {
@@ -99,16 +110,19 @@ function renderSelectedArtistsList() {
     });
     container.innerHTML = names.join(', ');
 }
+
 async function renderArtists() {
     const searchName = document.getElementById('artist-search-name')?.value.trim() || '';
     const searchCountry = document.getElementById('artist-search-country')?.value || '';
     const searchLanguage = document.getElementById('artist-search-language')?.value || '';
     const sortBy = document.getElementById('artist-sort')?.value || 'name_asc';
+
     let url = `${ARTISTS_FILTER_URL}?`;
     if (searchName) url += `searchName=${encodeURIComponent(searchName)}&`;
     if (searchCountry) url += `searchCountry=${encodeURIComponent(searchCountry)}&`;
     if (searchLanguage) url += `searchLanguage=${encodeURIComponent(searchLanguage)}&`;
     if (sortBy) url += `sortBy=${sortBy}&`;
+
     try {
         const resp = await fetch(url);
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
@@ -118,7 +132,7 @@ async function renderArtists() {
         if (!tbody) return;
         tbody.innerHTML = '';
         if (artists.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Нет данных</tbody>';
+            tbody.innerHTML = '<td><td colspan="6" class="centered-message">Нет данных</tbody>';
             if (countSpan) countSpan.innerText = '0';
             return;
         }
@@ -146,21 +160,24 @@ async function renderArtists() {
         });
     } catch (err) {
         const tbody = document.getElementById('artists-tbody');
-        if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Ошибка загрузки</td></tr>';
+        if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Ошибка загрузки</tbody>';
     }
 }
+
 async function renderConcerts() {
     const searchTitle = document.getElementById('concert-search-title')?.value.trim() || '';
     const searchVenue = document.getElementById('concert-search-venue')?.value || '';
     const searchStatus = document.getElementById('concert-search-status')?.value || '';
     const searchArtist = document.getElementById('concert-search-artist')?.value || '';
     const sortBy = document.getElementById('concert-sort')?.value || 'date_asc';
+
     let url = `${CONCERTS_FILTER_URL}?`;
     if (searchTitle) url += `searchTitle=${encodeURIComponent(searchTitle)}&`;
     if (searchVenue) url += `searchVenue=${encodeURIComponent(searchVenue)}&`;
     if (searchStatus) url += `status=${searchStatus}&`;
     if (searchArtist) url += `artistId=${searchArtist}&`;
     if (sortBy) url += `sortBy=${sortBy}&`;
+
     try {
         const resp = await fetch(url);
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
@@ -170,7 +187,7 @@ async function renderConcerts() {
         if (!tbody) return;
         tbody.innerHTML = '';
         if (concerts.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Нет данных</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Нет данных</tbody>';
             if (countSpan) countSpan.innerText = '0';
             return;
         }
@@ -198,9 +215,10 @@ async function renderConcerts() {
         }
     } catch (err) {
         const tbody = document.getElementById('concerts-tbody');
-        if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Ошибка загрузки</td></tr>';
+        if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Ошибка загрузки</tbody>';
     }
 }
+
 async function loadArtistOptions() {
     const resp = await fetch(CONCERTS_ARTISTS_URL);
     if (resp.ok) {
@@ -217,6 +235,7 @@ async function loadArtistOptions() {
         }
     }
 }
+
 function fillArtistForm(artist) {
     document.getElementById('artist-name').value = artist.name;
     document.getElementById('artist-country').value = artist.country || '';
@@ -229,6 +248,7 @@ function fillArtistForm(artist) {
     document.getElementById('artist-cancel').style.display = 'inline-block';
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
 function clearArtistForm() {
     document.getElementById('artist-name').value = '';
     document.getElementById('artist-country').value = '';
@@ -240,13 +260,19 @@ function clearArtistForm() {
     document.getElementById('artist-submit').innerText = 'Добавить';
     document.getElementById('artist-cancel').style.display = 'none';
 }
+
 async function saveArtist() {
     const id = document.getElementById('artist-edit-id').value;
     const name = document.getElementById('artist-name').value.trim();
-    if (!name) { showToast('Имя обязательно', 'error'); return; }
     const countryVal = document.getElementById('artist-country').value.trim();
     const debutVal = document.getElementById('artist-debut-year').value.trim();
     const languageVal = document.getElementById('artist-language').value.trim();
+    const yearError = validateYear(debutVal, 'Год дебюта');
+    if (yearError) {
+        showToast(yearError, 'error');
+        return;
+    }
+    if (!name) { showToast('Имя обязательно', 'error'); return; }
     const data = {
         name: name,
         country: countryVal === '' ? null : countryVal,
@@ -263,11 +289,15 @@ async function saveArtist() {
     try {
         const resp = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         if (!resp.ok) {
-            const error = await resp.json();
-            let msg = 'Ошибка сохранения';
-            if (error.message) msg = error.message;
-            else if (error.errors) msg = Object.values(error.errors).flat().join(' ');
-            showToast(msg, 'error');
+            let errorMsg = 'Ошибка сохранения';
+            try {
+                const error = await resp.json();
+                if (error.message) errorMsg = error.message;
+                else if (error.title && error.detail) errorMsg = error.detail;
+                else if (error.errors) errorMsg = Object.values(error.errors).flat().join(' ');
+            } catch (e) { errorMsg = await resp.text(); }
+            if (errorMsg.includes('debut_year') || errorMsg.includes('1900')) errorMsg = 'Год дебюта должен быть целым числом от 1900 до текущего года';
+            showToast(errorMsg, 'error');
             return;
         }
         await loadArtists();
@@ -278,6 +308,7 @@ async function saveArtist() {
         showToast('Ошибка сохранения', 'error');
     }
 }
+
 async function deleteArtist(id, name) {
     if (!confirm(`Удалить исполнителя «${name}» (ID ${id})?`)) return;
     try {
@@ -291,6 +322,7 @@ async function deleteArtist(id, name) {
         showToast('Ошибка удаления', 'error');
     }
 }
+
 function fillConcertForm(concert) {
     const datetimeLocal = concert.datetime ? concert.datetime.slice(0, 16) : '';
     document.getElementById('concert-title').value = concert.title;
@@ -306,6 +338,7 @@ function fillConcertForm(concert) {
     document.getElementById('concert-cancel').style.display = 'inline-block';
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
 function clearConcertForm() {
     document.getElementById('concert-title').value = '';
     document.getElementById('concert-venue').value = '';
@@ -318,6 +351,7 @@ function clearConcertForm() {
     document.getElementById('concert-submit').innerText = 'Добавить';
     document.getElementById('concert-cancel').style.display = 'none';
 }
+
 async function saveConcert() {
     const id = document.getElementById('concert-edit-id').value;
     const title = document.getElementById('concert-title').value.trim();
@@ -356,6 +390,7 @@ async function saveConcert() {
         showToast('Ошибка сохранения', 'error');
     }
 }
+
 async function deleteConcert(id, title) {
     if (!confirm(`Удалить концерт «${title}» (ID ${id})?`)) return;
     try {
@@ -370,6 +405,7 @@ async function deleteConcert(id, title) {
         showToast('Ошибка удаления', 'error');
     }
 }
+
 function openArtistsModal() {
     const modal = document.getElementById('artists-modal');
     const artistsListDiv = document.getElementById('modal-artists-list');
@@ -383,7 +419,7 @@ function openArtistsModal() {
             const artist = allArtists.find(a => a.artist_id === artistId);
             const name = artist ? artist.name : `ID ${artistId}`;
             const div = document.createElement('div');
-            div.style.marginBottom = '5px';
+            div.className = 'selected-artist-item';
             div.innerHTML = `${name} <button class="remove-artist-from-modal" data-artist-id="${artistId}">Удалить</button>`;
             artistsListDiv.appendChild(div);
         });
@@ -406,6 +442,7 @@ function openArtistsModal() {
     });
     modal.style.display = 'block';
 }
+
 function addArtistFromModal() {
     const artistId = parseInt(document.getElementById('modal-artist-select').value);
     if (!artistId) return;
@@ -417,10 +454,12 @@ function addArtistFromModal() {
         showToast('Исполнитель уже выбран', 'warning');
     }
 }
+
 function closeArtistsModal() {
     const modal = document.getElementById('artists-modal');
     if (modal) modal.style.display = 'none';
 }
+
 document.getElementById('artist-submit')?.addEventListener('click', saveArtist);
 document.getElementById('artist-cancel')?.addEventListener('click', clearArtistForm);
 document.getElementById('concert-submit')?.addEventListener('click', saveConcert);
@@ -474,6 +513,9 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
             await loadArtistOptions();
             renderConcerts();
         }
+        setTimeout(function () {
+            if (typeof initToggleFilters === 'function') initToggleFilters();
+        }, 50);
     });
 });
 loadArtists().then(renderArtists);
