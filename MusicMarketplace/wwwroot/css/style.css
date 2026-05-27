@@ -1095,3 +1095,76 @@ input[type=number] {
 .form-group-row select {
     min-width: 150px;
 }
+
+/* Подсветка ссылки управления пользователями */
+.nav-menu .users-link {
+    display: inline-block;
+    padding: 15px 20px;
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+    transition: all 0.3s;
+    font-size: 1rem;
+    background: transparent;
+}
+
+    .nav-menu .users-link:hover {
+        background: #667eea;
+        color: white;
+    }
+
+    .nav-menu .users-link.active {
+        background: #667eea;
+        color: white;
+    }
+
+/* Убираем лишние отступы для кнопки управления пользователями */
+.nav-menu .manage-users-btn {
+    background: transparent;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 15px 20px;
+    transition: all 0.3s;
+}
+
+    .nav-menu .manage-users-btn:hover {
+        background: #667eea;
+        color: white;
+    }
+
+/* Модальное окно подтверждения */
+.confirm-modal-content {
+    text-align: center;
+    max-width: 400px;
+}
+
+.confirm-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+    .confirm-buttons button {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+
+    .confirm-buttons .delete-btn {
+        background: #dc3545;
+        color: white;
+    }
+
+    .confirm-buttons .edit-btn {
+        background: #6c757d;
+        color: white;
+    }
+
+    .confirm-buttons .delete-btn:hover {
+        background: #c82333;
+    }
+
+    .confirm-buttons .edit-btn:hover {
+        background: #5a6268;
+    }

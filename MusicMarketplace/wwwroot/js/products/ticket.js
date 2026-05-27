@@ -202,7 +202,13 @@ async function saveTicket() {
 }
 
 async function deleteTicket(id, name) {
-    if (!confirm(`Удалить билет «${name}» (ID ${id})?`)) return;
+    const confirmed = await showConfirmModal({
+        title: 'Удаление билета',
+        message: `Удалить билет «${name}» (ID ${id})?`,
+        yesText: 'Да, удалить',
+        noText: 'Отмена'
+    });
+    if (!confirmed) return;
     try {
         const resp = await fetch(`${TICKETS_URL}/${id}`, { method: 'DELETE' });
         if (!resp.ok) {

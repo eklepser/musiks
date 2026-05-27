@@ -413,7 +413,13 @@ async function saveArtist() {
 }
 
 async function deleteArtist(id, name) {
-    if (!confirm(`Удалить исполнителя «${name}» (ID ${id})?`)) return;
+    const confirmed = await showConfirmModal({
+        title: 'Удаление исполнителя',
+        message: `Удалить исполнителя «${name}» (ID ${id})?`,
+        yesText: 'Да, удалить',
+        noText: 'Отмена'
+    });
+    if (!confirmed) return;
     try {
         const resp = await fetch(`https://localhost:7062/api/Artists/${id}`, { method: 'DELETE' });
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
@@ -425,7 +431,6 @@ async function deleteArtist(id, name) {
         showToast('Ошибка удаления', 'error');
     }
 }
-
 function fillConcertForm(concert) {
     const datetimeLocal = concert.datetime ? concert.datetime.slice(0, 16) : '';
     document.getElementById('concert-title').value = concert.title;
@@ -516,7 +521,13 @@ async function saveConcert() {
 }
 
 async function deleteConcert(id, title) {
-    if (!confirm(`Удалить концерт «${title}» (ID ${id})?`)) return;
+    const confirmed = await showConfirmModal({
+        title: 'Удаление концерта',
+        message: `Удалить концерт «${title}» (ID ${id})?`,
+        yesText: 'Да, удалить',
+        noText: 'Отмена'
+    });
+    if (!confirmed) return;
     try {
         const resp = await fetch(`https://localhost:7062/api/Concerts/${id}`, { method: 'DELETE' });
         if (!resp.ok) throw new Error('HTTP ' + resp.status);

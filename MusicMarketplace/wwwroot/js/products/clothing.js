@@ -267,7 +267,13 @@ async function saveClothing() {
 }
 
 async function deleteClothing(id, name) {
-    if (!confirm(`Удалить одежду «${name}» (ID ${id})?`)) return;
+    const confirmed = await showConfirmModal({
+        title: 'Удаление одежды',
+        message: `Удалить одежду «${name}» (ID ${id})?`,
+        yesText: 'Да, удалить',
+        noText: 'Отмена'
+    });
+    if (!confirmed) return;
     try {
         const resp = await fetch(`${CLOTHINGS_URL}/${id}`, { method: 'DELETE' });
         if (resp.status === 409) {

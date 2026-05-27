@@ -33,7 +33,13 @@ window.addToWishlist = async function (productId, productName) {
 window.removeFromWishlist = async function (productId) {
     const userId = getCurrentUserId();
     if (!userId) return;
-    if (!confirm('Удалить из вишлиста?')) return;
+    const confirmed = await showConfirmModal({
+        title: 'Удаление из вишлиста',
+        message: `Удалить товар из вишлиста?`,
+        yesText: 'Да, удалить',
+        noText: 'Отмена'
+    });
+    if (!confirmed) return;
     const resp = await fetch(`https://localhost:7062/api/Wishlists/${userId}/${productId}`, { method: 'DELETE' });
     if (resp.ok) {
         if (typeof loadUserStatus === 'function') await loadUserStatus();
@@ -113,6 +119,13 @@ window.removeFromCartWithQuantity = async function (productId, quantity) {
 window.removeFromCart = async function (productId) {
     const userId = getCurrentUserId();
     if (!userId) return;
+    const confirmed = await showConfirmModal({
+        title: 'Удаление из корзины',
+        message: `Удалить товар из корзины?`,
+        yesText: 'Да, удалить',
+        noText: 'Отмена'
+    });
+    if (!confirmed) return;
     const resp = await fetch(`https://localhost:7062/api/Carts/${userId}/${productId}`, { method: 'DELETE' });
     if (resp.ok) {
         if (typeof loadUserStatus === 'function') await loadUserStatus();
@@ -156,7 +169,13 @@ window.addReview = async function (productId, productName, rating, reviewText) {
 window.deleteReview = async function (productId) {
     const userId = getCurrentUserId();
     if (!userId) return;
-    if (!confirm('Удалить отзыв?')) return;
+    const confirmed = await showConfirmModal({
+        title: 'Удаление отзыва',
+        message: `Удалить отзыв на этот товар?`,
+        yesText: 'Да, удалить',
+        noText: 'Отмена'
+    });
+    if (!confirmed) return;
     const resp = await fetch(`https://localhost:7062/api/Reviews/${userId}/${productId}`, { method: 'DELETE' });
     if (resp.ok) {
         if (typeof loadUserStatus === 'function') await loadUserStatus();

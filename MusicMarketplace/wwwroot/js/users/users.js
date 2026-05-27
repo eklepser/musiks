@@ -201,17 +201,20 @@ async function saveUser() {
 }
 
 async function deleteUser(id, name) {
-    if (!confirm(`Удалить пользователя «${name}» (ID ${id})?`)) return;
-
+    const confirmed = await showConfirmModal({
+        title: 'Удаление пользователя',
+        message: `Удалить пользователя «${name}» (ID ${id})?`,
+        yesText: 'Да, удалить',
+        noText: 'Отмена'
+    });
+    if (!confirmed) return;
     try {
         const resp = await fetch(`${USERS_URL}/${id}`, { method: 'DELETE' });
-
         if (!resp.ok) {
             const error = await resp.json();
             showToast(error.message || 'Невозможно удалить пользователя', 'error');
             return;
         }
-
         clearUserForm();
         await loadUsers();
         showToast(`Пользователь «${name}» удалён`, 'success');

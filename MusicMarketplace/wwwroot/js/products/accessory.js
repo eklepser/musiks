@@ -283,7 +283,13 @@ async function saveAccessory() {
 }
 
 async function deleteAccessory(id, name) {
-    if (!confirm(`Удалить аксессуар «${name}» (ID ${id})?`)) return;
+    const confirmed = await showConfirmModal({
+        title: 'Удаление аксессуара',
+        message: `Удалить аксессуар «${name}» (ID ${id})?`,
+        yesText: 'Да, удалить',
+        noText: 'Отмена'
+    });
+    if (!confirmed) return;
     try {
         const resp = await fetch(`${ACCESSORIES_URL}/${id}`, { method: 'DELETE' });
         if (resp.status === 409) {

@@ -193,7 +193,13 @@ async function saveManufacturer() {
 }
 
 async function deleteManufacturer(id, name) {
-    if (!confirm(`Удалить производителя «${name}» (ID ${id})?`)) return;
+    const confirmed = await showConfirmModal({
+        title: 'Удаление производителя',
+        message: `Удалить производителя «${name}» (ID ${id})?`,
+        yesText: 'Да, удалить',
+        noText: 'Отмена'
+    });
+    if (!confirmed) return;
     try {
         const resp = await fetch(`${MANUFACTURERS_URL}/${id}`, { method: 'DELETE' });
         if (!resp.ok) {

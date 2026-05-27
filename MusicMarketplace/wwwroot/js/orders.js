@@ -134,7 +134,13 @@ async function updateOrder(id) {
 }
 
 async function deleteOrder(id) {
-    if (!confirm('Удалить заказ?')) return;
+    const confirmed = await showConfirmModal({
+        title: 'Удаление заказа',
+        message: `Удалить заказ №${id}?`,
+        yesText: 'Да, удалить',
+        noText: 'Отмена'
+    });
+    if (!confirmed) return;
     try {
         const resp = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
         if (!resp.ok) {
@@ -145,8 +151,11 @@ async function deleteOrder(id) {
             showError(msg);
             return;
         }
-        await renderTable(); showSuccess('Заказ удалён');
-    } catch (err) { showError('Ошибка удаления: ' + err.message); }
+        await renderTable();
+        showSuccess('Заказ удалён');
+    } catch (err) {
+        showError('Ошибка удаления: ' + err.message);
+    }
 }
 
 async function onSubmit() {
