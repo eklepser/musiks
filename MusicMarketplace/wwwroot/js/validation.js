@@ -300,10 +300,106 @@ function initToggleFilters() {
     });
 }
 
+const POPULAR_COUNTRIES = [
+    "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria",
+    "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia",
+    "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia",
+    "Cameroon", "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica",
+    "Croatia", "Cuba", "Cyprus", "Czech Republic", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt",
+    "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon",
+    "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti",
+    "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan",
+    "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Korea, North", "Korea, South", "Kosovo", "Kuwait", "Kyrgyzstan", "Laos",
+    "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi",
+    "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova",
+    "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands",
+    "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Palestine",
+    "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russia",
+    "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino",
+    "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia",
+    "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname",
+    "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga",
+    "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates",
+    "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam",
+    "Yemen", "Zambia", "Zimbabwe"
+];
+
+const POPULAR_LANGUAGES = [
+    "English", "Russian", "Spanish", "French", "German", "Italian", "Portuguese", "Chinese", "Japanese", "Korean",
+    "Arabic", "Hindi", "Turkish", "Dutch", "Polish", "Swedish", "Norwegian", "Danish", "Finnish", "Greek", "Czech",
+    "Hungarian", "Romanian", "Thai", "Vietnamese", "Indonesian", "Hebrew", "Persian", "Ukrainian", "Instrumental"
+];
+
+function initCountrySelect() {
+    const countrySelect = document.getElementById('artist-country');
+    if (countrySelect) {
+        countrySelect.innerHTML = '<option value="">-- Выберите страну --</option>';
+        POPULAR_COUNTRIES.forEach(country => {
+            const option = document.createElement('option');
+            option.value = country;
+            option.textContent = country;
+            countrySelect.appendChild(option);
+        });
+    }
+    const manufacturerCountrySelect = document.getElementById('manufacturer-country');
+    if (manufacturerCountrySelect) {
+        manufacturerCountrySelect.innerHTML = '<option value="">-- Выберите страну --</option>';
+        POPULAR_COUNTRIES.forEach(country => {
+            const option = document.createElement('option');
+            option.value = country;
+            option.textContent = country;
+            manufacturerCountrySelect.appendChild(option);
+        });
+    }
+}
+
+function initLanguageSelect() {
+    const languageSelect = document.getElementById('artist-language');
+    if (languageSelect) {
+        languageSelect.innerHTML = '<option value="">-- Выберите язык --</option>';
+        POPULAR_LANGUAGES.forEach(lang => {
+            const option = document.createElement('option');
+            option.value = lang;
+            option.textContent = lang;
+            languageSelect.appendChild(option);
+        });
+    }
+}
+
+function updateArtistFilterCountries(availableCountries) {
+    const select = document.getElementById('artist-search-country');
+    if (!select) return;
+    select.innerHTML = '<option value="">Все страны</option>';
+    const sortedCountries = [...new Set(availableCountries.filter(c => c))].sort();
+    sortedCountries.forEach(country => {
+        const opt = document.createElement('option');
+        opt.value = country;
+        opt.textContent = country;
+        select.appendChild(opt);
+    });
+}
+
+function updateArtistFilterLanguages(availableLanguages) {
+    const select = document.getElementById('artist-search-language');
+    if (!select) return;
+    select.innerHTML = '<option value="">Все языки</option><option value="Instrumental">Инструментальная (без языка)</option>';
+    const sortedLanguages = [...new Set(availableLanguages.filter(l => l && l !== 'Instrumental'))].sort();
+    sortedLanguages.forEach(lang => {
+        const opt = document.createElement('option');
+        opt.value = lang;
+        opt.textContent = lang;
+        select.appendChild(opt);
+    });
+}
+
 function initAllValidations() {
     initNumericInputs();
     initLettersOnlyInputs();
     initToggleFilters();
+    setTimeout(function () {
+        if (typeof initCountrySelect === 'function') initCountrySelect();
+        if (typeof initLanguageSelect === 'function') initLanguageSelect();
+    }, 50);
 }
 
 window.filterNumericInput = filterNumericInput;
@@ -314,3 +410,9 @@ window.clearFieldValidity = clearFieldValidity;
 window.attachLiveValidation = attachLiveValidation;
 window.initToggleFilters = initToggleFilters;
 window.initAllValidations = initAllValidations;
+window.initCountrySelect = initCountrySelect;
+window.initLanguageSelect = initLanguageSelect;
+window.updateArtistFilterCountries = updateArtistFilterCountries;
+window.updateArtistFilterLanguages = updateArtistFilterLanguages;
+window.POPULAR_COUNTRIES = POPULAR_COUNTRIES;
+window.POPULAR_LANGUAGES = POPULAR_LANGUAGES;

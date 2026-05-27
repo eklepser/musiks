@@ -17,6 +17,12 @@ async function loadArtists() {
         updateArtistFilterOptions();
         updateModalArtistSelect();
         updateOpenArtistsButtonVisibility();
+        if (typeof updateArtistFilterCountries === 'function') {
+            const countries = allArtists.map(a => a.country);
+            updateArtistFilterCountries(countries);
+            const languages = allArtists.map(a => a.language);
+            updateArtistFilterLanguages(languages);
+        }
     }
 }
 
@@ -56,22 +62,40 @@ function updateOpenArtistsButtonVisibility() {
 
 function updateArtistFilterOptions() {
     const countries = [...new Set(allArtists.map(a => a.country).filter(c => c))].sort();
-    const languages = [...new Set(allArtists.map(a => a.language).filter(l => l))].sort();
+    const languages = [...new Set(allArtists.map(a => a.language).filter(l => l && l !== 'Instrumental'))].sort();
     const names = allArtists.map(a => a.name);
+
     const countrySelect = document.getElementById('artist-search-country');
     const languageSelect = document.getElementById('artist-search-language');
     const nameDatalist = document.getElementById('artist-name-datalist');
+
     if (countrySelect) {
         countrySelect.innerHTML = '<option value="">Все страны</option>';
-        countries.forEach(c => { const opt = document.createElement('option'); opt.value = c; opt.textContent = c; countrySelect.appendChild(opt); });
+        countries.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c;
+            opt.textContent = c;
+            countrySelect.appendChild(opt);
+        });
     }
+
     if (languageSelect) {
         languageSelect.innerHTML = '<option value="">Все языки</option><option value="Instrumental">Инструментальная (без языка)</option>';
-        languages.forEach(lang => { const opt = document.createElement('option'); opt.value = lang; opt.textContent = lang; languageSelect.appendChild(opt); });
+        languages.forEach(lang => {
+            const opt = document.createElement('option');
+            opt.value = lang;
+            opt.textContent = lang;
+            languageSelect.appendChild(opt);
+        });
     }
+
     if (nameDatalist) {
         nameDatalist.innerHTML = '';
-        names.forEach(name => { const opt = document.createElement('option'); opt.value = name; nameDatalist.appendChild(opt); });
+        names.forEach(name => {
+            const opt = document.createElement('option');
+            opt.value = name;
+            nameDatalist.appendChild(opt);
+        });
     }
 }
 
@@ -80,13 +104,34 @@ function updateConcertFilterOptions() {
     const titles = allConcerts.map(c => c.title);
     const venueSelect = document.getElementById('concert-search-venue');
     const titleDatalist = document.getElementById('concert-title-datalist');
+    const venueDatalist = document.getElementById('concert-venue-datalist');
+
     if (venueSelect) {
         venueSelect.innerHTML = '<option value="">Все места</option>';
-        venues.forEach(venue => { const opt = document.createElement('option'); opt.value = venue; opt.textContent = venue; venueSelect.appendChild(opt); });
+        venues.forEach(venue => {
+            const opt = document.createElement('option');
+            opt.value = venue;
+            opt.textContent = venue;
+            venueSelect.appendChild(opt);
+        });
     }
+
+    if (venueDatalist) {
+        venueDatalist.innerHTML = '';
+        venues.forEach(venue => {
+            const opt = document.createElement('option');
+            opt.value = venue;
+            venueDatalist.appendChild(opt);
+        });
+    }
+
     if (titleDatalist) {
         titleDatalist.innerHTML = '';
-        titles.forEach(title => { const opt = document.createElement('option'); opt.value = title; titleDatalist.appendChild(opt); });
+        titles.forEach(title => {
+            const opt = document.createElement('option');
+            opt.value = title;
+            titleDatalist.appendChild(opt);
+        });
     }
 }
 
@@ -132,7 +177,7 @@ async function renderArtists() {
         if (!tbody) return;
         tbody.innerHTML = '';
         if (artists.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Нет данных</tbody>';
+            tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Нет数据</tbody>';
             if (countSpan) countSpan.innerText = '0';
             return;
         }
@@ -160,7 +205,7 @@ async function renderArtists() {
         });
     } catch (err) {
         const tbody = document.getElementById('artists-tbody');
-        if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Ошибка загрузки</tbody>';
+        if (tbody) tbody.innerHTML = '<table><td colspan="6" class="centered-message">Ошибка загрузки</tbody>';
     }
 }
 
@@ -266,10 +311,13 @@ function initConcertLiveValidation() {
 }
 
 function fillArtistForm(artist) {
+    const countrySelect = document.getElementById('artist-country');
+    const languageSelect = document.getElementById('artist-language');
+
     document.getElementById('artist-name').value = artist.name;
-    document.getElementById('artist-country').value = artist.country || '';
+    if (countrySelect) countrySelect.value = artist.country || '';
     document.getElementById('artist-debut-year').value = artist.debut_year || '';
-    document.getElementById('artist-language').value = artist.language || '';
+    if (languageSelect) languageSelect.value = artist.language || '';
     document.getElementById('artist-edit-id').value = artist.artist_id;
     currentEditArtistId = artist.artist_id;
     document.getElementById('artist-form-title').innerText = 'Редактировать исполнителя';
@@ -321,9 +369,9 @@ function validateArtistFields(name, country, debutYear, language) {
 async function saveArtist() {
     const id = document.getElementById('artist-edit-id').value;
     const name = document.getElementById('artist-name').value.trim();
-    const countryVal = document.getElementById('artist-country').value.trim();
+    const countryVal = document.getElementById('artist-country').value;
     const debutVal = document.getElementById('artist-debut-year').value.trim();
-    const languageVal = document.getElementById('artist-language').value.trim();
+    const languageVal = document.getElementById('artist-language').value;
     const validationError = validateArtistFields(name, countryVal, debutVal, languageVal);
     if (validationError) {
         showToast(validationError, 'error');

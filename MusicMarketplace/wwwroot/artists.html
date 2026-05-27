@@ -33,58 +33,13 @@
                 <input type="hidden" id="artist-edit-id">
                 <div class="form-group-row">
                     <input type="text" id="artist-name" placeholder="Имя*" required minlength="2" maxlength="100" data-letters-only="true">
-                    <input type="text" id="artist-country" placeholder="Страна" maxlength="50" list="country-datalist">
-                    <input type="number" id="artist-debut-year" placeholder="Год дебюта" min="1900" max="2026" data-numeric="true">
-                    <input type="text" id="artist-language" placeholder="Язык" maxlength="50" list="language-datalist">
-                    <datalist id="country-datalist">
-                        <option value="USA">USA</option>
-                        <option value="UK">UK</option>
-                        <option value="Canada">Canada</option>
-                        <option value="Germany">Germany</option>
-                        <option value="France">France</option>
-                        <option value="Russia">Russia</option>
-                        <option value="Japan">Japan</option>
-                        <option value="Australia">Australia</option>
-                        <option value="Brazil">Brazil</option>
-                        <option value="Italy">Italy</option>
-                        <option value="Spain">Spain</option>
-                        <option value="Sweden">Sweden</option>
-                        <option value="Norway">Norway</option>
-                        <option value="Netherlands">Netherlands</option>
-                        <option value="South Korea">South Korea</option>
-                    </datalist>
-                    <datalist id="language-datalist">
-                        <option value="English">English</option>
-                        <option value="Russian">Russian</option>
-                        <option value="Spanish">Spanish</option>
-                        <option value="French">French</option>
-                        <option value="German">German</option>
-                        <option value="Italian">Italian</option>
-                        <option value="Portuguese">Portuguese</option>
-                        <option value="Chinese">Chinese</option>
-                        <option value="Japanese">Japanese</option>
-                        <option value="Korean">Korean</option>
-                        <option value="Arabic">Arabic</option>
-                        <option value="Hindi">Hindi</option>
-                        <option value="Turkish">Turkish</option>
-                        <option value="Dutch">Dutch</option>
-                        <option value="Polish">Polish</option>
-                        <option value="Swedish">Swedish</option>
-                        <option value="Norwegian">Norwegian</option>
-                        <option value="Danish">Danish</option>
-                        <option value="Finnish">Finnish</option>
-                        <option value="Greek">Greek</option>
-                        <option value="Czech">Czech</option>
-                        <option value="Hungarian">Hungarian</option>
-                        <option value="Romanian">Romanian</option>
-                        <option value="Thai">Thai</option>
-                        <option value="Vietnamese">Vietnamese</option>
-                        <option value="Indonesian">Indonesian</option>
-                        <option value="Hebrew">Hebrew</option>
-                        <option value="Persian">Persian</option>
-                        <option value="Ukrainian">Ukrainian</option>
-                        <option value="Instrumental">Instrumental</option>
-                    </datalist>
+                    <select id="artist-country">
+                        <option value="">-- Выберите страну --</option>
+                    </select>
+                    <input type="number" id="artist-debut-year" class="year-field" placeholder="Год дебюта" min="1900" max="2026" data-numeric="true">
+                    <select id="artist-language">
+                        <option value="">-- Выберите язык --</option>
+                    </select>
                 </div>
                 <div class="form-actions">
                     <button id="artist-submit">Добавить</button>
@@ -96,9 +51,17 @@
                     <div class="filter-group">
                         <input type="text" id="artist-search-name" list="artist-name-datalist" placeholder="Поиск по имени">
                         <datalist id="artist-name-datalist"></datalist>
-                        <select id="artist-search-country"><option value="">Все страны</option></select>
-                        <select id="artist-search-language"><option value="">Все языки</option><option value="Instrumental">Инструментальная</option></select>
-                        <select id="artist-sort"><option value="name_asc">Имя А-Я</option><option value="name_desc">Имя Я-А</option></select>
+                        <select id="artist-search-country">
+                            <option value="">Все страны</option>
+                        </select>
+                        <select id="artist-search-language">
+                            <option value="">Все языки</option>
+                            <option value="Instrumental">Инструментальная (без языка)</option>
+                        </select>
+                        <select id="artist-sort">
+                            <option value="name_asc">Имя А-Я</option>
+                            <option value="name_desc">Имя Я-А</option>
+                        </select>
                     </div>
                     <div class="filter-group">
                         <button id="apply-artist-filters">Применить</button>
@@ -121,7 +84,7 @@
                     <input type="text" id="concert-venue" placeholder="Место*" required minlength="2" maxlength="100">
                     <input type="datetime-local" id="concert-datetime" required>
                 </div>
-                <div class="form-group-row">
+                <div class="form-grid-item" style="margin-bottom: 20px;">
                     <label>Исполнители:</label>
                     <div class="selected-list-container">
                         <div id="selected-artists-list" class="selected-list"></div>
@@ -140,9 +103,18 @@
                         <datalist id="concert-title-datalist"></datalist>
                         <input type="text" id="concert-search-venue" placeholder="Место" list="concert-venue-datalist">
                         <datalist id="concert-venue-datalist"></datalist>
-                        <select id="concert-search-status"><option value="">Все концерты</option><option value="upcoming">Запланированные</option><option value="past">Прошедшие</option></select>
-                        <select id="concert-search-artist"><option value="">Все исполнители</option></select>
-                        <select id="concert-sort"><option value="date_asc">Дата (сначала старые)</option><option value="date_desc">Дата (сначала новые)</option></select>
+                        <select id="concert-search-status">
+                            <option value="">Все концерты</option>
+                            <option value="upcoming">Запланированные</option>
+                            <option value="past">Прошедшие</option>
+                        </select>
+                        <select id="concert-search-artist">
+                            <option value="">Все исполнители</option>
+                        </select>
+                        <select id="concert-sort">
+                            <option value="date_asc">Дата (сначала старые)</option>
+                            <option value="date_desc">Дата (сначала новые)</option>
+                        </select>
                     </div>
                     <div class="filter-group">
                         <button id="apply-concert-filters">Применить</button>
@@ -173,10 +145,12 @@
     <script src="js/users/user-menu.js"></script>
     <script src="js/artists-concerts.js"></script>
     <script>
-        initUserMenu();
-        setTimeout(function () {
-            if (typeof initAllValidations === 'function') initAllValidations();
-        }, 100);
+        document.addEventListener('DOMContentLoaded', function () {
+            if (typeof initUserMenu === 'function') initUserMenu();
+            setTimeout(function () {
+                if (typeof initAllValidations === 'function') initAllValidations();
+            }, 100);
+        });
     </script>
 </body>
 </html>

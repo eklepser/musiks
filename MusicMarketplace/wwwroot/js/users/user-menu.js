@@ -13,6 +13,13 @@
             link.classList.remove('active');
         }
     });
+
+    const usersLink = document.querySelector('.nav-menu .users-link');
+    if (usersLink && currentPath.includes('/users')) {
+        usersLink.classList.add('active');
+    } else if (usersLink) {
+        usersLink.classList.remove('active');
+    }
 }
 
 let currentUser = null;

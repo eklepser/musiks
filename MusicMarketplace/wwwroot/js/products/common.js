@@ -205,3 +205,27 @@ loadManufacturerNameDatalist();
 loadManufacturerCountryDatalist();
 loadGenreNameDatalist();
 loadAllArtists();
+
+// В функции loadAllArtists добавить вызов обновления фильтров
+const originalLoadAllArtists = loadAllArtists;
+window.loadAllArtists = async function () {
+    await originalLoadAllArtists();
+    if (typeof updateArtistFilterCountries === 'function' && allArtists) {
+        const countries = allArtists.map(a => a.country);
+        updateArtistFilterCountries(countries);
+        const languages = allArtists.map(a => a.language);
+        updateArtistFilterLanguages(languages);
+    }
+};
+
+// Инициализация даталистов стран и языков
+setTimeout(() => {
+    if (typeof initCountryDatalists === 'function') initCountryDatalists();
+    if (typeof initLanguageDatalists === 'function') initLanguageDatalists();
+}, 100);
+
+// Инициализация стран и языков при загрузке
+setTimeout(() => {
+    if (typeof initCountrySelect === 'function') initCountrySelect();
+    if (typeof initLanguageSelect === 'function') initLanguageSelect();
+}, 100);

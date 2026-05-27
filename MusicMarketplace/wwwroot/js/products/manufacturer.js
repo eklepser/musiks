@@ -66,7 +66,7 @@ function fillManufacturerForm(item) {
     if (!nameInput || !contactInput || !countryInput || !editIdInput || !formTitle || !submitBtn || !cancelBtn) return;
     nameInput.value = item.name;
     contactInput.value = item.contact_info || '';
-    countryInput.value = item.country || '';
+    if (countryInput) countryInput.value = item.country || '';
     editIdInput.value = item.manufacturer_id;
     manufacturerEditId = item.manufacturer_id;
     formTitle.innerText = 'Редактировать производителя';

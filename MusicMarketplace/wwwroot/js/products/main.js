@@ -218,3 +218,15 @@ function initAllFormsLiveValidation() {
 setTimeout(function () {
     initAllFormsLiveValidation();
 }, 200);
+
+// Инициализация даталистов при загрузке
+setTimeout(function () {
+    if (typeof initCountryDatalists === 'function') initCountryDatalists();
+    if (typeof initLanguageDatalists === 'function') initLanguageDatalists();
+}, 200);
+
+// Инициализация стран и языков
+setTimeout(function () {
+    if (typeof initCountrySelect === 'function') initCountrySelect();
+    if (typeof initLanguageSelect === 'function') initLanguageSelect();
+}, 200);
