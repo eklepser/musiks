@@ -7,6 +7,7 @@ namespace MusicMarketplace.Services
     public class UsersService
     {
         private readonly MusicMarketplaceContext _context;
+
         public UsersService(MusicMarketplaceContext context) => _context = context;
 
         public async Task<List<User>> GetAllAsync()
@@ -21,6 +22,17 @@ namespace MusicMarketplace.Services
             return await _context.Set<User>().FromSqlRaw(sql, id).FirstOrDefaultAsync();
         }
 
+        public async Task<List<UserListDto>> GetFilteredAsync(string? search, string? sortBy)
+        {
+            var sql = "SELECT * FROM get_filtered_users({0}, {1})";
+
+            return await _context.Database.SqlQueryRaw<UserListDto>(
+                sql,
+                search ?? (object)DBNull.Value,
+                sortBy ?? (object)DBNull.Value
+            ).ToListAsync();
+        }
+
         public async Task<User> CreateAsync(UserDto dto)
         {
             var sql = "SELECT * FROM create_user({0}, {1}, {2}, {3})";
@@ -30,7 +42,8 @@ namespace MusicMarketplace.Services
         public async Task<bool> UpdateAsync(int id, UserDto dto)
         {
             var sql = "SELECT update_user({0}, {1}, {2}, {3}, {4})";
-            var result = await _context.Database.ExecuteSqlRawAsync(sql, id, dto.login, dto.email, dto.full_name, dto.password ?? (object)DBNull.Value);
+            var passwordParam = string.IsNullOrWhiteSpace(dto.password) ? null : dto.password;
+            var result = await _context.Database.ExecuteSqlRawAsync(sql, id, dto.login, dto.email, dto.full_name, passwordParam);
             return result > 0;
         }
 

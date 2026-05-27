@@ -1229,3 +1229,24 @@ BEGIN
     END LOOP;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_filtered_users(p_search VARCHAR, p_sort_by VARCHAR)
+RETURNS TABLE (
+user_id INT, login VARCHAR, email VARCHAR, registration_date DATE, full_name VARCHAR
+) AS $$
+DECLARE query_text TEXT;
+BEGIN
+query_text := 'SELECT u.user_id, u.login, u.email, u.registration_date, u.full_name FROM "User" u WHERE 1=1';
+IF p_search IS NOT NULL THEN
+query_text := query_text || ' AND (lower(u.login) LIKE lower(''%' || p_search || '%'') OR lower(u.full_name) LIKE lower(''%' || p_search || '%''))';
+END IF;
+IF p_sort_by = 'name_asc' THEN query_text := query_text || ' ORDER BY u.full_name ASC';
+ELSIF p_sort_by = 'name_desc' THEN query_text := query_text || ' ORDER BY u.full_name DESC';
+ELSIF p_sort_by = 'date_asc' THEN query_text := query_text || ' ORDER BY u.registration_date ASC';
+ELSIF p_sort_by = 'date_desc' THEN query_text := query_text || ' ORDER BY u.registration_date DESC';
+ELSE query_text := query_text || ' ORDER BY u.user_id DESC';
+END IF;
+RETURN QUERY EXECUTE query_text;
+END;
+$$ LANGUAGE plpgsql;
+

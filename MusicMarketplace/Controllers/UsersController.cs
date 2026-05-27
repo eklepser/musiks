@@ -9,6 +9,7 @@ namespace MusicMarketplace.Controllers
     public class UsersController : ControllerBase
     {
         private readonly UsersService _usersService;
+
         public UsersController(UsersService usersService) => _usersService = usersService;
 
         [HttpGet]
@@ -24,6 +25,16 @@ namespace MusicMarketplace.Controllers
             var user = await _usersService.GetByIdAsync(id);
             if (user == null) return NotFound(new { message = $"Пользователь с ID {id} не найден" });
             return Ok(user);
+        }
+
+        [HttpGet("filter")]
+        public async Task<IActionResult> GetUsersFiltered(
+            [FromQuery] string? searchName = null,
+            [FromQuery] string? sortBy = null)
+        {
+            // Теперь здесь возвращается List<UserListDto>
+            var users = await _usersService.GetFilteredAsync(searchName, sortBy);
+            return Ok(users);
         }
 
         [HttpPost]
