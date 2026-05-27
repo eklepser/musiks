@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MusicMarketplace.DTOs;
 using MusicMarketplace.Services;
+using Npgsql; // Добавлено для обработки ошибок Postgres
 
 namespace MusicMarketplace.Controllers
 {
@@ -10,7 +11,10 @@ namespace MusicMarketplace.Controllers
     {
         private readonly UsersService _usersService;
 
-        public UsersController(UsersService usersService) => _usersService = usersService;
+        public UsersController(UsersService usersService)
+        {
+            _usersService = usersService;
+        }
 
         [HttpGet]
         public async Task<IActionResult> GetUsers()
@@ -23,18 +27,8 @@ namespace MusicMarketplace.Controllers
         public async Task<IActionResult> GetUser(int id)
         {
             var user = await _usersService.GetByIdAsync(id);
-            if (user == null) return NotFound(new { message = $"Пользователь с ID {id} не найден" });
+            if (user == null) return NotFound(new { message = "Пользователь не найден" });
             return Ok(user);
-        }
-
-        [HttpGet("filter")]
-        public async Task<IActionResult> GetUsersFiltered(
-            [FromQuery] string? searchName = null,
-            [FromQuery] string? sortBy = null)
-        {
-            // Теперь здесь возвращается List<UserListDto>
-            var users = await _usersService.GetFilteredAsync(searchName, sortBy);
-            return Ok(users);
         }
 
         [HttpPost]
@@ -53,6 +47,16 @@ namespace MusicMarketplace.Controllers
             {
                 return Conflict(new { message = ex.Message });
             }
+            catch (PostgresException pgEx)
+            {
+                // Перехватываем ошибку, возникшую внутри хранимой процедуры (например, RAISE EXCEPTION)
+                // pgEx.MessageText содержит текст ошибки: "Логин уже существует"
+                return Conflict(new { message = pgEx.MessageText });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Произошла внутренняя ошибка сервера" });
+            }
         }
 
         [HttpPut("{id}")]
@@ -67,13 +71,17 @@ namespace MusicMarketplace.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
             catch (InvalidOperationException ex)
             {
                 return Conflict(new { message = ex.Message });
+            }
+            catch (PostgresException pgEx)
+            {
+                return Conflict(new { message = pgEx.MessageText });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Произошла внутренняя ошибка сервера" });
             }
         }
 
@@ -85,10 +93,19 @@ namespace MusicMarketplace.Controllers
                 await _usersService.DeleteAsync(id);
                 return NoContent();
             }
-            catch (KeyNotFoundException ex)
+            catch (Exception ex)
             {
-                return NotFound(new { message = ex.Message });
+                return StatusCode(500, new { message = "Произошла ошибка при удалении" });
             }
         }
+
+        [HttpGet("filter")]
+        public async Task<IActionResult> GetUsersFiltered(
+        [FromQuery] string? searchName = null,
+        [FromQuery] string? sortBy = null)
+        {
+            var users = await _usersService.GetFilteredAsync(searchName, sortBy);
+            return Ok(users);
+        }
     }
-}
+}   

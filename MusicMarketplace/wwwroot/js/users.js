@@ -1,179 +1,178 @@
 ﻿const USERS_URL = 'https://localhost:7062/api/Users';
-const USERS_FILTER_URL = 'https://localhost:7062/api/Users/filter';
-let editUserId = null;
 
-// Загрузка подсказок для поиска
-async function loadUserSearchSuggestions() {
+let usersData = [];
+let currentEditUserId = null;
+
+async function loadUsers() {
     try {
         const resp = await fetch(USERS_URL);
-        if (resp.ok) {
-            const users = await resp.json();
-            const datalist = document.getElementById('user-search-datalist');
-            if (datalist) {
-                datalist.innerHTML = '';
-                users.forEach(u => {
-                    const opt = document.createElement('option');
-                    opt.value = u.login; // Подсказка по логину
-                    datalist.appendChild(opt);
-                    // Можно добавить и ФИО, но datalist дедуплицирует одинаковые value
-                    // Для простоты используем логин, так как он уникален
-                });
-            }
-        }
-    } catch (e) {
-        console.error(e);
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        usersData = await resp.json();
+        renderUsersTable();
+        updateUserSelects();
+    } catch (err) {
+        console.error(err);
+        showToast('Ошибка загрузки пользователей', 'error');
     }
 }
 
-// Основная функция загрузки таблицы
-async function loadUsersTable() {
-    const search = document.getElementById('search-user').value.trim();
-    const sortBy = document.getElementById('user-sort').value; // Берет значение из селекта (по умолчанию date_desc)
-
-    let url = `${USERS_FILTER_URL}?`;
-    if (search) url += `searchName=${encodeURIComponent(search)}&`;
-    if (sortBy) url += `sortBy=${sortBy}&`;
-
-    try {
-        const resp = await fetch(url);
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        const users = await resp.json();
-        const tbody = document.getElementById('users-tbody');
-        const countSpan = document.getElementById('user-found-count');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-        countSpan.innerText = users.length;
-
-        if (users.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Нет данных</td></tr>';
-            return;
-        }
-
-        users.forEach(user => {
-            const row = tbody.insertRow();
-            row.insertCell(0).textContent = user.user_id;
-            row.insertCell(1).textContent = user.login;
-            row.insertCell(2).textContent = user.full_name;
-            row.insertCell(3).textContent = user.email;
-            row.insertCell(4).textContent = new Date(user.registration_date).toLocaleDateString();
-            const actions = row.insertCell(5);
-            const btnRow = document.createElement('div');
-            btnRow.className = 'action-buttons-row';
-            const editBtn = document.createElement('button');
-            editBtn.textContent = 'Ред.';
-            editBtn.className = 'edit-btn';
-            editBtn.onclick = () => fillUserForm(user);
-            const delBtn = document.createElement('button');
-            delBtn.textContent = 'Удалить';
-            delBtn.className = 'delete-btn';
-            delBtn.onclick = () => deleteUser(user.user_id, user.login);
-            btnRow.append(editBtn, delBtn);
-            actions.appendChild(btnRow);
-        });
-    } catch (err) {
-        console.error(err);
-        document.getElementById('users-tbody').innerHTML = '<tr><td colspan="6" class="centered-message">Ошибка загрузки</td></tr>';
+function renderUsersTable() {
+    const tbody = document.getElementById('users-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (usersData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Нет данных</td></tr>';
+        return;
     }
+    usersData.forEach(user => {
+        const row = tbody.insertRow();
+        row.insertCell(0).textContent = user.user_id;
+        row.insertCell(1).textContent = user.login;
+        row.insertCell(2).textContent = user.email;
+        row.insertCell(3).textContent = user.full_name;
+        row.insertCell(4).textContent = new Date(user.registration_date).toLocaleDateString();
+        const actions = row.insertCell(5);
+        const btnRow = document.createElement('div');
+        btnRow.className = 'action-buttons-row';
+        const editBtn = document.createElement('button');
+        editBtn.textContent = 'Ред.';
+        editBtn.className = 'edit-btn';
+        editBtn.onclick = () => fillUserForm(user);
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'Удалить';
+        delBtn.className = 'delete-btn';
+        delBtn.onclick = () => deleteUser(user.user_id, user.full_name);
+        btnRow.append(editBtn, delBtn);
+        actions.appendChild(btnRow);
+    });
+}
+
+function updateUserSelects() {
+    const selects = document.querySelectorAll('#user-select, #filter-user-id');
+    selects.forEach(select => {
+        if (!select) return;
+        const currentValue = select.value;
+        select.innerHTML = '<option value="">-- Выберите пользователя --</option>';
+        usersData.forEach(user => {
+            const opt = document.createElement('option');
+            opt.value = user.user_id;
+            opt.textContent = `${user.full_name} (${user.login})`;
+            select.appendChild(opt);
+        });
+        if (currentValue) select.value = currentValue;
+    });
 }
 
 function fillUserForm(user) {
     document.getElementById('user-login').value = user.login;
-    document.getElementById('user-full-name').value = user.full_name;
     document.getElementById('user-email').value = user.email;
-    document.getElementById('user-password').value = ''; // Очищаем поле пароля при редактировании
+    document.getElementById('user-full-name').value = user.full_name;
+    document.getElementById('user-password').value = '';
     document.getElementById('user-edit-id').value = user.user_id;
+    currentEditUserId = user.user_id;
     document.getElementById('user-form-title').innerText = 'Редактировать пользователя';
     document.getElementById('user-submit').innerText = 'Сохранить';
     document.getElementById('user-cancel').style.display = 'inline-block';
-    editUserId = user.user_id;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function clearUserForm() {
     document.getElementById('user-login').value = '';
-    document.getElementById('user-full-name').value = '';
     document.getElementById('user-email').value = '';
+    document.getElementById('user-full-name').value = '';
     document.getElementById('user-password').value = '';
     document.getElementById('user-edit-id').value = '';
+    currentEditUserId = null;
     document.getElementById('user-form-title').innerText = 'Добавить пользователя';
     document.getElementById('user-submit').innerText = 'Добавить';
     document.getElementById('user-cancel').style.display = 'none';
-    editUserId = null;
+}
+
+function validateUserFields(login, email, fullName, password, isUpdate = false) {
+    if (!login || login.trim() === '') return 'Логин обязателен';
+    if (login.length < 3 || login.length > 50) return 'Логин должен содержать от 3 до 50 символов';
+    if (!email || email.trim() === '') return 'Email обязателен';
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(email)) return 'Некорректный формат email';
+    if (!fullName || fullName.trim() === '') return 'Полное имя обязательно';
+    if (fullName.length < 2 || fullName.length > 100) return 'Полное имя должно содержать от 2 до 100 символов';
+    if (!isUpdate && (!password || password.trim() === '')) return 'Пароль обязателен при создании';
+    if (password && password.length < 6) return 'Пароль должен содержать минимум 6 символов';
+    return null;
 }
 
 async function saveUser() {
     const login = document.getElementById('user-login').value.trim();
-    const fullName = document.getElementById('user-full-name').value.trim();
     const email = document.getElementById('user-email').value.trim();
-    const password = document.getElementById('user-password').value; // Может быть пустым при редактировании
-
-    let err = validateRequiredString(login, 'Логин', 3, 50, true);
-    if (err) { showToast(err, 'error'); return; }
-    err = validateRequiredString(fullName, 'ФИО', 2, 100, true);
-    if (err) { showToast(err, 'error'); return; }
-    err = validateRequiredString(email, 'Email', 5, 100, true);
-    if (err) { showToast(err, 'error'); return; }
-
-    // Валидация пароля только при создании
-    if (!editUserId && (!password || password.trim() === '')) {
-        showToast('Пароль обязателен при создании', 'error'); return;
+    const fullName = document.getElementById('user-full-name').value.trim();
+    const password = document.getElementById('user-password').value;
+    const validationError = validateUserFields(login, email, fullName, password, currentEditUserId !== null);
+    if (validationError) {
+        showToast(validationError, 'error');
+        return;
     }
-
     const data = {
         login: login,
+        email: email,
         full_name: fullName,
-        email: email
+        password: password || null
     };
-    // Передаем пароль только если он не пустой (или если это создание)
-    if (password.trim() !== '') {
-        data.password = password;
+    if (currentEditUserId) {
+        data.user_id = currentEditUserId;
     }
-
-    if (editUserId) data.user_id = editUserId;
-
-    let url = USERS_URL, method = 'POST';
-    if (editUserId) { url += `/${editUserId}`; method = 'PUT'; }
-
+    let url = USERS_URL;
+    let method = 'POST';
+    if (currentEditUserId) {
+        url += `/${currentEditUserId}`;
+        method = 'PUT';
+    }
     try {
         const resp = await fetch(url, {
             method: method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
-        if (resp.status === 409) {
-            const errData = await resp.json();
-            showToast(errData.message || 'Пользователь уже существует', 'error');
+        if (!resp.ok) {
+            const error = await resp.json();
+            let msg = 'Ошибка сохранения';
+            if (error.message) msg = error.message;
+            else if (error.errors) {
+                const errors = Object.values(error.errors).flat();
+                msg = errors.join('; ');
+            }
+            showToast(msg, 'error');
             return;
         }
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
         clearUserForm();
-        await loadUsersTable();
-        showToast('Пользователь сохранен', 'success');
+        await loadUsers();
+        showToast(`Пользователь «${fullName}» ${currentEditUserId ? 'обновлён' : 'добавлен'}`, 'success');
     } catch (err) {
-        showToast('Ошибка сохранения', 'error');
+        console.error(err);
+        showToast('Ошибка соединения', 'error');
     }
 }
 
-async function deleteUser(id, login) {
-    if (!confirm(`Удалить пользователя ${login}?`)) return;
+async function deleteUser(id, name) {
+    if (!confirm(`Удалить пользователя «${name}» (ID ${id})?`)) return;
     try {
         const resp = await fetch(`${USERS_URL}/${id}`, { method: 'DELETE' });
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        await loadUsersTable();
-        showToast('Пользователь удален', 'success');
+        if (!resp.ok) {
+            const error = await resp.json();
+            showToast(error.message || 'Невозможно удалить пользователя', 'error');
+            return;
+        }
+        clearUserForm();
+        await loadUsers();
+        showToast(`Пользователь «${name}» удалён`, 'success');
     } catch (err) {
+        console.error(err);
         showToast('Ошибка удаления', 'error');
     }
 }
 
-// Инициализация
-document.getElementById('user-submit').addEventListener('click', saveUser);
-document.getElementById('user-cancel').addEventListener('click', clearUserForm);
-document.getElementById('apply-user-filters').addEventListener('click', loadUsersTable);
-document.getElementById('clear-user-filters').addEventListener('click', () => {
-    document.getElementById('search-user').value = '';
-    document.getElementById('user-sort').value = 'date_desc'; // Сброс на дефолтную сортировку
-    loadUsersTable();
-});
+document.getElementById('user-submit')?.addEventListener('click', saveUser);
+document.getElementById('user-cancel')?.addEventListener('click', clearUserForm);
 
-loadUsersTable();
-loadUserSearchSuggestions(); // Загружаем список для datalist
+document.addEventListener('DOMContentLoaded', () => {
+    loadUsers();
+});
