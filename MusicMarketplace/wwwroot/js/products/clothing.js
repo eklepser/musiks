@@ -1,5 +1,6 @@
 ﻿let clothingEditId = null;
 let selectedArtistsForClothing = [];
+
 function ensureArtistIdsArray(artistIds) {
     if (Array.isArray(artistIds)) return artistIds;
     if (typeof artistIds === 'string') {
@@ -13,11 +14,12 @@ function ensureArtistIdsArray(artistIds) {
     if (artistIds === null || artistIds === undefined) return [];
     return [artistIds];
 }
+
 function renderClothingSelectedArtists() {
     const container = document.getElementById('clothing-selected-artists-list');
     if (!container) return;
     if (!selectedArtistsForClothing.length) {
-        container.innerHTML = '<span style="color: #999;">Исполнители не выбраны</span>';
+        container.innerHTML = '<span class="placeholder-text">Исполнители не выбраны</span>';
         return;
     }
     const names = selectedArtistsForClothing.map(id => {
@@ -26,11 +28,12 @@ function renderClothingSelectedArtists() {
     });
     container.innerHTML = names.join(', ');
 }
+
 function renderEditClothingSelectedArtists() {
     const container = document.getElementById('edit-clothing-selected-artists-list');
     if (!container) return;
     if (!selectedArtistsForClothing.length) {
-        container.innerHTML = '<span style="color: #999;">Исполнители не выбраны</span>';
+        container.innerHTML = '<span class="placeholder-text">Исполнители не выбраны</span>';
         return;
     }
     const names = selectedArtistsForClothing.map(id => {
@@ -39,6 +42,7 @@ function renderEditClothingSelectedArtists() {
     });
     container.innerHTML = names.join(', ');
 }
+
 function clearClothingForm() {
     document.getElementById('clothing-name').value = '';
     document.getElementById('clothing-price').value = '';
@@ -57,7 +61,49 @@ function clearClothingForm() {
     if (typeof renderClothingSelectedGenres === 'function') renderClothingSelectedGenres();
     document.getElementById('clothing-submit').innerText = 'Добавить';
     document.getElementById('clothing-cancel').style.display = 'none';
+    const fields = ['clothing-name', 'clothing-price', 'clothing-stock', 'clothing-manufacturer-id', 'clothing-material', 'clothing-color', 'clothing-description'];
+    fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && typeof clearFieldValidity === 'function') clearFieldValidity(el);
+    });
 }
+
+function initClothingLiveValidation() {
+    const fields = [
+        { id: 'clothing-name', required: true, validator: (v) => validateRequiredString(v, 'Название', 2, 200, true) },
+        { id: 'clothing-price', required: true, validator: (v) => validatePrice(v, true) },
+        { id: 'clothing-stock', required: false, validator: (v) => validateStock(v, false) },
+        { id: 'clothing-manufacturer-id', required: true, validator: (v) => v ? null : 'Выберите производителя' },
+        { id: 'clothing-material', required: false, validator: (v) => v && v.trim() ? validateOptionalString(v, 'Материал', 50) : null },
+        { id: 'clothing-color', required: false, validator: (v) => v && v.trim() ? validateOptionalString(v, 'Цвет', 30) : null },
+        { id: 'clothing-description', required: false, validator: (v) => v && v.trim() ? validateOptionalString(v, 'Описание', 1000) : null }
+    ];
+    fields.forEach(f => {
+        const el = document.getElementById(f.id);
+        if (el && typeof attachLiveValidation === 'function') {
+            attachLiveValidation(el, f.validator, f.required);
+        }
+    });
+}
+
+function initEditClothingLiveValidation() {
+    const fields = [
+        { id: 'edit-clothing-name', required: true, validator: (v) => validateRequiredString(v, 'Название', 2, 200, true) },
+        { id: 'edit-clothing-price', required: true, validator: (v) => validatePrice(v, true) },
+        { id: 'edit-clothing-stock', required: false, validator: (v) => validateStock(v, false) },
+        { id: 'edit-clothing-manufacturer-id', required: true, validator: (v) => v ? null : 'Выберите производителя' },
+        { id: 'edit-clothing-material', required: false, validator: (v) => v && v.trim() ? validateOptionalString(v, 'Материал', 50) : null },
+        { id: 'edit-clothing-color', required: false, validator: (v) => v && v.trim() ? validateOptionalString(v, 'Цвет', 30) : null },
+        { id: 'edit-clothing-description', required: false, validator: (v) => v && v.trim() ? validateOptionalString(v, 'Описание', 1000) : null }
+    ];
+    fields.forEach(f => {
+        const el = document.getElementById(f.id);
+        if (el && typeof attachLiveValidation === 'function') {
+            attachLiveValidation(el, f.validator, f.required);
+        }
+    });
+}
+
 function fillEditClothingForm(c) {
     hideEditPanel();
     document.getElementById('edit-clothing-id').value = c.clothing_id;
@@ -76,14 +122,16 @@ function fillEditClothingForm(c) {
     if (typeof renderEditClothingSelectedArtists === 'function') renderEditClothingSelectedArtists();
     if (typeof renderEditClothingSelectedGenres === 'function') renderEditClothingSelectedGenres();
     loadProductGenresForEdit(c.product_id, 'clothing');
+    initEditClothingLiveValidation();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
 function validateClothingFields(name, price, stock, manufacturerId, material, color, description) {
     let err = validateRequiredString(name, 'Название', 2, 200, true);
     if (err) return err;
-    err = validatePrice(price);
+    err = validatePrice(price, true);
     if (err) return err;
-    err = validateStock(stock);
+    err = validateStock(stock, false);
     if (err) return err;
     if (!manufacturerId) return 'Выберите производителя';
     if (material && material.trim()) {
@@ -100,13 +148,10 @@ function validateClothingFields(name, price, stock, manufacturerId, material, co
     }
     return null;
 }
+
 async function saveEditClothing() {
     const id = document.getElementById('edit-clothing-id').value;
     const manufacturerId = parseInt(document.getElementById('edit-clothing-manufacturer-id').value);
-    if (!manufacturerId) {
-        showToast('Выберите производителя', 'error');
-        return;
-    }
     const name = document.getElementById('edit-clothing-name').value.trim();
     const price = document.getElementById('edit-clothing-price').value;
     const stock = document.getElementById('edit-clothing-stock').value;
@@ -118,12 +163,13 @@ async function saveEditClothing() {
         showToast(validationError, 'error');
         return;
     }
+    if (!manufacturerId) { showToast('Выберите производителя', 'error'); return; }
     const data = {
         clothing_id: parseInt(id),
         name: name,
         price: parseFloat(price),
         description: description || null,
-        stock: parseInt(stock, 10),
+        stock: parseInt(stock, 10) || 0,
         manufacturer_id: manufacturerId,
         material: material || null,
         color: color || null,
@@ -155,6 +201,7 @@ async function saveEditClothing() {
         showToast('Ошибка соединения', 'error');
     }
 }
+
 async function saveClothing() {
     const name = document.getElementById('clothing-name').value.trim();
     const price = document.getElementById('clothing-price').value;
@@ -168,12 +215,13 @@ async function saveClothing() {
         showToast(validationError, 'error');
         return;
     }
+    if (!manufacturerId) { showToast('Выберите производителя', 'error'); return; }
     const id = document.getElementById('clothing-edit-id').value;
     const data = {
         name: name,
         price: parseFloat(price),
         description: description || null,
-        stock: parseInt(stock, 10),
+        stock: parseInt(stock, 10) || 0,
         manufacturer_id: parseInt(manufacturerId),
         material: material || null,
         color: color || null,
@@ -217,6 +265,7 @@ async function saveClothing() {
         showToast('Ошибка сохранения', 'error');
     }
 }
+
 async function deleteClothing(id, name) {
     if (!confirm(`Удалить одежду «${name}» (ID ${id})?`)) return;
     try {
@@ -234,6 +283,7 @@ async function deleteClothing(id, name) {
         showToast('Ошибка удаления', 'error');
     }
 }
+
 function openClothingArtistsModal() {
     const modal = document.getElementById('artists-merch-modal');
     const artistsListDiv = document.getElementById('modal-merch-artists-list');
@@ -247,7 +297,7 @@ function openClothingArtistsModal() {
             const artist = allArtists.find(a => a.artist_id === artistId);
             const name = artist ? artist.name : `ID ${artistId}`;
             const div = document.createElement('div');
-            div.style.marginBottom = '5px';
+            div.className = 'selected-artist-item';
             div.innerHTML = `${name} <button class="remove-clothing-artist-from-modal" data-artist-id="${artistId}">Удалить</button>`;
             artistsListDiv.appendChild(div);
         });
@@ -271,6 +321,7 @@ function openClothingArtistsModal() {
     });
     modal.style.display = 'block';
 }
+
 function addClothingArtistFromModal() {
     const artistId = parseInt(document.getElementById('modal-merch-artist-select').value);
     if (!artistId) return;
@@ -283,13 +334,17 @@ function addClothingArtistFromModal() {
         showToast('Исполнитель уже выбран', 'warning');
     }
 }
+
 function closeArtistsMerchModal() {
     const modal = document.getElementById('artists-merch-modal');
     if (modal) modal.style.display = 'none';
 }
+
 document.getElementById('modal-merch-add-artist')?.addEventListener('click', addClothingArtistFromModal);
 document.getElementById('modal-merch-close')?.addEventListener('click', closeArtistsMerchModal);
 window.addEventListener('click', (e) => {
     const modal = document.getElementById('artists-merch-modal');
     if (e.target === modal && modal) modal.style.display = 'none';
 });
+
+initClothingLiveValidation();

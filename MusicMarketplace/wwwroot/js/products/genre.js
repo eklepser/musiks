@@ -17,7 +17,7 @@ async function loadGenresTable() {
         if (!tbody) return;
         tbody.innerHTML = '';
         if (items.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="centered-message">Нет данных</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="centered-message">Нет данных</tbody>';
             const countSpan = document.getElementById('genre-found-count');
             if (countSpan) countSpan.innerText = '0';
             return;
@@ -45,7 +45,7 @@ async function loadGenresTable() {
         });
     } catch (err) {
         const tbody = document.getElementById('genres-tbody');
-        if (tbody) tbody.innerHTML = '<tr><td colspan="4" class="centered-message">Ошибка загрузки</td></tr>';
+        if (tbody) tbody.innerHTML = '<tr><td colspan="4" class="centered-message">Ошибка загрузки</tbody>';
         const countSpan = document.getElementById('genre-found-count');
         if (countSpan) countSpan.innerText = '0';
     }
@@ -66,6 +66,10 @@ function fillGenreForm(item) {
     formTitle.innerText = 'Редактировать жанр';
     submitBtn.innerText = 'Сохранить';
     cancelBtn.style.display = 'inline-block';
+    if (typeof clearFieldValidity === 'function') {
+        clearFieldValidity(nameInput);
+        clearFieldValidity(descInput);
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -76,13 +80,42 @@ function clearGenreForm() {
     const formTitle = document.getElementById('genre-form-title');
     const submitBtn = document.getElementById('genre-submit');
     const cancelBtn = document.getElementById('genre-cancel');
-    if (nameInput) nameInput.value = '';
-    if (descInput) descInput.value = '';
+    if (nameInput) {
+        nameInput.value = '';
+        if (typeof clearFieldValidity === 'function') clearFieldValidity(nameInput);
+    }
+    if (descInput) {
+        descInput.value = '';
+        if (typeof clearFieldValidity === 'function') clearFieldValidity(descInput);
+    }
     if (editIdInput) editIdInput.value = '';
     genreEditId = null;
     if (formTitle) formTitle.innerText = 'Добавить жанр';
     if (submitBtn) submitBtn.innerText = 'Добавить';
     if (cancelBtn) cancelBtn.style.display = 'none';
+}
+
+function initGenreLiveValidation() {
+    const fields = [
+        { id: 'genre-name', required: true, validator: (v) => validateRequiredString(v, 'Название', 2, 50, true) },
+        { id: 'genre-description', required: false, validator: (v) => v && v.trim() ? validateOptionalString(v, 'Описание', 500) : null }
+    ];
+    fields.forEach(f => {
+        const el = document.getElementById(f.id);
+        if (el && typeof attachLiveValidation === 'function') {
+            attachLiveValidation(el, f.validator, f.required);
+        }
+    });
+}
+
+function validateGenreFields(name, description) {
+    let err = validateRequiredString(name, 'Название', 2, 50, true);
+    if (err) return err;
+    if (description && description.trim()) {
+        err = validateOptionalString(description, 'Описание', 500);
+        if (err) return err;
+    }
+    return null;
 }
 
 async function saveGenre() {
@@ -93,7 +126,11 @@ async function saveGenre() {
     const id = editId.value;
     const name = nameInput.value.trim();
     const description = descInput.value.trim();
-    if (!name || name.length < 2) { showToast('Название должно содержать минимум 2 символа', 'error'); return; }
+    const validationError = validateGenreFields(name, description);
+    if (validationError) {
+        showToast(validationError, 'error');
+        return;
+    }
     const data = {
         name: name,
         description: description === '' ? null : description
@@ -154,3 +191,5 @@ if (genreClearBtn) genreClearBtn.addEventListener('click', () => {
     if (sortBy) sortBy.value = 'name_asc';
     loadGenresTable();
 });
+
+initGenreLiveValidation();

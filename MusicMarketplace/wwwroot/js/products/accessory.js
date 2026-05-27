@@ -61,6 +61,51 @@ function clearAccessoryForm() {
     if (typeof renderAccessorySelectedGenres === 'function') renderAccessorySelectedGenres();
     document.getElementById('accessory-submit').innerText = 'Добавить';
     document.getElementById('accessory-cancel').style.display = 'none';
+    const fields = ['accessory-name', 'accessory-price', 'accessory-stock', 'accessory-manufacturer-id', 'accessory-material', 'accessory-color', 'accessory-type', 'accessory-weight', 'accessory-description'];
+    fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && typeof clearFieldValidity === 'function') clearFieldValidity(el);
+    });
+}
+
+function initAccessoryLiveValidation() {
+    const fields = [
+        { id: 'accessory-name', required: true, validator: (v) => validateRequiredString(v, 'Название', 2, 200, true) },
+        { id: 'accessory-price', required: true, validator: (v) => validatePrice(v, true) },
+        { id: 'accessory-stock', required: false, validator: (v) => validateStock(v, false) },
+        { id: 'accessory-manufacturer-id', required: true, validator: (v) => v ? null : 'Выберите производителя' },
+        { id: 'accessory-material', required: false, validator: (v) => v && v.trim() ? validateOptionalString(v, 'Материал', 50) : null },
+        { id: 'accessory-color', required: false, validator: (v) => v && v.trim() ? validateOptionalString(v, 'Цвет', 30) : null },
+        { id: 'accessory-type', required: false, validator: (v) => v && v.trim() ? validateOptionalString(v, 'Тип аксессуара', 50) : null },
+        { id: 'accessory-weight', required: false, validator: (v) => v && v.trim() ? validatePositiveNumber(v, 'Вес', false) : null },
+        { id: 'accessory-description', required: false, validator: (v) => v && v.trim() ? validateOptionalString(v, 'Описание', 1000) : null }
+    ];
+    fields.forEach(f => {
+        const el = document.getElementById(f.id);
+        if (el && typeof attachLiveValidation === 'function') {
+            attachLiveValidation(el, f.validator, f.required);
+        }
+    });
+}
+
+function initEditAccessoryLiveValidation() {
+    const fields = [
+        { id: 'edit-accessory-name', required: true, validator: (v) => validateRequiredString(v, 'Название', 2, 200, true) },
+        { id: 'edit-accessory-price', required: true, validator: (v) => validatePrice(v, true) },
+        { id: 'edit-accessory-stock', required: false, validator: (v) => validateStock(v, false) },
+        { id: 'edit-accessory-manufacturer-id', required: true, validator: (v) => v ? null : 'Выберите производителя' },
+        { id: 'edit-accessory-material', required: false, validator: (v) => v && v.trim() ? validateOptionalString(v, 'Материал', 50) : null },
+        { id: 'edit-accessory-color', required: false, validator: (v) => v && v.trim() ? validateOptionalString(v, 'Цвет', 30) : null },
+        { id: 'edit-accessory-type', required: false, validator: (v) => v && v.trim() ? validateOptionalString(v, 'Тип аксессуара', 50) : null },
+        { id: 'edit-accessory-weight', required: false, validator: (v) => v && v.trim() ? validatePositiveNumber(v, 'Вес', false) : null },
+        { id: 'edit-accessory-description', required: false, validator: (v) => v && v.trim() ? validateOptionalString(v, 'Описание', 1000) : null }
+    ];
+    fields.forEach(f => {
+        const el = document.getElementById(f.id);
+        if (el && typeof attachLiveValidation === 'function') {
+            attachLiveValidation(el, f.validator, f.required);
+        }
+    });
 }
 
 function fillEditAccessoryForm(a) {
@@ -81,15 +126,16 @@ function fillEditAccessoryForm(a) {
     if (typeof renderEditAccessorySelectedArtists === 'function') renderEditAccessorySelectedArtists();
     if (typeof renderEditAccessorySelectedGenres === 'function') renderEditAccessorySelectedGenres();
     loadProductGenresForEdit(a.product_id, 'accessory');
+    initEditAccessoryLiveValidation();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function validateAccessoryFields(name, price, stock, manufacturerId, material, color, type, weight, description) {
     let err = validateRequiredString(name, 'Название', 2, 200, true);
     if (err) return err;
-    err = validatePrice(price);
+    err = validatePrice(price, true);
     if (err) return err;
-    err = validateStock(stock);
+    err = validateStock(stock, false);
     if (err) return err;
     if (!manufacturerId) return 'Выберите производителя';
     if (material && material.trim()) {
@@ -105,7 +151,7 @@ function validateAccessoryFields(name, price, stock, manufacturerId, material, c
         if (err) return err;
     }
     if (weight && weight.trim() !== '') {
-        err = validatePositiveNumber(weight, 'Вес');
+        err = validatePositiveNumber(weight, 'Вес', false);
         if (err) return err;
     }
     if (description && description.trim()) {
@@ -118,10 +164,6 @@ function validateAccessoryFields(name, price, stock, manufacturerId, material, c
 async function saveEditAccessory() {
     const id = document.getElementById('edit-accessory-id').value;
     const manufacturerId = parseInt(document.getElementById('edit-accessory-manufacturer-id').value);
-    if (!manufacturerId) {
-        showToast('Выберите производителя', 'error');
-        return;
-    }
     const name = document.getElementById('edit-accessory-name').value.trim();
     const price = document.getElementById('edit-accessory-price').value;
     const stock = document.getElementById('edit-accessory-stock').value;
@@ -135,12 +177,13 @@ async function saveEditAccessory() {
         showToast(validationError, 'error');
         return;
     }
+    if (!manufacturerId) { showToast('Выберите производителя', 'error'); return; }
     const data = {
         accessory_id: parseInt(id),
         name: name,
         price: parseFloat(price),
         description: description || null,
-        stock: parseInt(stock, 10),
+        stock: parseInt(stock, 10) || 0,
         manufacturer_id: manufacturerId,
         material: material || null,
         color: color || null,
@@ -188,12 +231,13 @@ async function saveAccessory() {
         showToast(validationError, 'error');
         return;
     }
+    if (!manufacturerId) { showToast('Выберите производителя', 'error'); return; }
     const id = document.getElementById('accessory-edit-id').value;
     const data = {
         name: name,
         price: parseFloat(price),
         description: description || null,
-        stock: parseInt(stock, 10),
+        stock: parseInt(stock, 10) || 0,
         manufacturer_id: parseInt(manufacturerId),
         material: material || null,
         color: color || null,
@@ -318,3 +362,5 @@ window.addEventListener('click', (e) => {
     const modal = document.getElementById('artists-merch-modal');
     if (e.target === modal && modal) modal.style.display = 'none';
 });
+
+initAccessoryLiveValidation();

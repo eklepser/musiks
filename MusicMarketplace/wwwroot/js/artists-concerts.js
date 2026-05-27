@@ -132,7 +132,7 @@ async function renderArtists() {
         if (!tbody) return;
         tbody.innerHTML = '';
         if (artists.length === 0) {
-            tbody.innerHTML = '<td><td colspan="6" class="centered-message">Нет данных</tbody>';
+            tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Нет данных</tbody>';
             if (countSpan) countSpan.innerText = '0';
             return;
         }
@@ -236,6 +236,35 @@ async function loadArtistOptions() {
     }
 }
 
+function initArtistLiveValidation() {
+    const fields = [
+        { id: 'artist-name', required: true, validator: (v) => validateRequiredString(v, 'Имя', 2, 100, true) },
+        { id: 'artist-country', required: false, validator: (v) => v && v.trim() ? validateOptionalString(v, 'Страна', 50) : null },
+        { id: 'artist-debut-year', required: false, validator: (v) => v && v.trim() ? validateYear(v, 'Год дебюта') : null },
+        { id: 'artist-language', required: false, validator: (v) => v && v.trim() ? validateOptionalString(v, 'Язык', 50) : null }
+    ];
+    fields.forEach(f => {
+        const el = document.getElementById(f.id);
+        if (el && typeof attachLiveValidation === 'function') {
+            attachLiveValidation(el, f.validator, f.required);
+        }
+    });
+}
+
+function initConcertLiveValidation() {
+    const fields = [
+        { id: 'concert-title', required: true, validator: (v) => validateRequiredString(v, 'Название', 2, 150, true) },
+        { id: 'concert-venue', required: true, validator: (v) => validateRequiredString(v, 'Место', 2, 100, true) },
+        { id: 'concert-datetime', required: true, validator: (v) => v ? validateConcertDatetime(v) : 'Дата и время обязательны' }
+    ];
+    fields.forEach(f => {
+        const el = document.getElementById(f.id);
+        if (el && typeof attachLiveValidation === 'function') {
+            attachLiveValidation(el, f.validator, f.required);
+        }
+    });
+}
+
 function fillArtistForm(artist) {
     document.getElementById('artist-name').value = artist.name;
     document.getElementById('artist-country').value = artist.country || '';
@@ -246,6 +275,11 @@ function fillArtistForm(artist) {
     document.getElementById('artist-form-title').innerText = 'Редактировать исполнителя';
     document.getElementById('artist-submit').innerText = 'Сохранить';
     document.getElementById('artist-cancel').style.display = 'inline-block';
+    const fields = ['artist-name', 'artist-country', 'artist-debut-year', 'artist-language'];
+    fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && typeof clearFieldValidity === 'function') clearFieldValidity(el);
+    });
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -259,6 +293,29 @@ function clearArtistForm() {
     document.getElementById('artist-form-title').innerText = 'Добавить исполнителя';
     document.getElementById('artist-submit').innerText = 'Добавить';
     document.getElementById('artist-cancel').style.display = 'none';
+    const fields = ['artist-name', 'artist-country', 'artist-debut-year', 'artist-language'];
+    fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && typeof clearFieldValidity === 'function') clearFieldValidity(el);
+    });
+}
+
+function validateArtistFields(name, country, debutYear, language) {
+    let err = validateRequiredString(name, 'Имя', 2, 100, true);
+    if (err) return err;
+    if (country && country.trim()) {
+        err = validateOptionalString(country, 'Страна', 50);
+        if (err) return err;
+    }
+    if (debutYear && debutYear.trim()) {
+        err = validateYear(debutYear, 'Год дебюта');
+        if (err) return err;
+    }
+    if (language && language.trim()) {
+        err = validateOptionalString(language, 'Язык', 50);
+        if (err) return err;
+    }
+    return null;
 }
 
 async function saveArtist() {
@@ -267,12 +324,11 @@ async function saveArtist() {
     const countryVal = document.getElementById('artist-country').value.trim();
     const debutVal = document.getElementById('artist-debut-year').value.trim();
     const languageVal = document.getElementById('artist-language').value.trim();
-    const yearError = validateYear(debutVal, 'Год дебюта');
-    if (yearError) {
-        showToast(yearError, 'error');
+    const validationError = validateArtistFields(name, countryVal, debutVal, languageVal);
+    if (validationError) {
+        showToast(validationError, 'error');
         return;
     }
-    if (!name) { showToast('Имя обязательно', 'error'); return; }
     const data = {
         name: name,
         country: countryVal === '' ? null : countryVal,
@@ -296,7 +352,6 @@ async function saveArtist() {
                 else if (error.title && error.detail) errorMsg = error.detail;
                 else if (error.errors) errorMsg = Object.values(error.errors).flat().join(' ');
             } catch (e) { errorMsg = await resp.text(); }
-            if (errorMsg.includes('debut_year') || errorMsg.includes('1900')) errorMsg = 'Год дебюта должен быть целым числом от 1900 до текущего года';
             showToast(errorMsg, 'error');
             return;
         }
@@ -336,6 +391,11 @@ function fillConcertForm(concert) {
     document.getElementById('concert-form-title').innerText = 'Редактировать концерт';
     document.getElementById('concert-submit').innerText = 'Сохранить';
     document.getElementById('concert-cancel').style.display = 'inline-block';
+    const fields = ['concert-title', 'concert-venue', 'concert-datetime'];
+    fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && typeof clearFieldValidity === 'function') clearFieldValidity(el);
+    });
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -350,6 +410,21 @@ function clearConcertForm() {
     document.getElementById('concert-form-title').innerText = 'Добавить концерт';
     document.getElementById('concert-submit').innerText = 'Добавить';
     document.getElementById('concert-cancel').style.display = 'none';
+    const fields = ['concert-title', 'concert-venue', 'concert-datetime'];
+    fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && typeof clearFieldValidity === 'function') clearFieldValidity(el);
+    });
+}
+
+function validateConcertFields(title, venue, datetime) {
+    let err = validateRequiredString(title, 'Название', 2, 150, true);
+    if (err) return err;
+    err = validateRequiredString(venue, 'Место', 2, 100, true);
+    if (err) return err;
+    err = validateConcertDatetime(datetime);
+    if (err) return err;
+    return null;
 }
 
 async function saveConcert() {
@@ -359,8 +434,9 @@ async function saveConcert() {
     const datetimeInput = document.getElementById('concert-datetime').value;
     const datetime = datetimeInput ? new Date(datetimeInput).toISOString() : null;
     const artistIds = selectedArtistsForConcert;
-    if (!title || !venue || !datetime) {
-        showToast('Заполните все обязательные поля', 'error');
+    const validationError = validateConcertFields(title, venue, datetimeInput);
+    if (validationError) {
+        showToast(validationError, 'error');
         return;
     }
     const data = { title, venue, datetime, artistIds };
@@ -508,15 +584,21 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         if (btn.dataset.tab === 'artists') {
             await loadArtists();
             renderArtists();
+            initArtistLiveValidation();
         } else if (btn.dataset.tab === 'concerts') {
             await Promise.all([loadArtists(), loadConcerts(), loadArtistConcerts()]);
             await loadArtistOptions();
             renderConcerts();
+            initConcertLiveValidation();
         }
         setTimeout(function () {
             if (typeof initToggleFilters === 'function') initToggleFilters();
         }, 50);
     });
 });
-loadArtists().then(renderArtists);
+loadArtists().then(() => {
+    renderArtists();
+    initArtistLiveValidation();
+});
 loadArtistOptions();
+initConcertLiveValidation();

@@ -204,3 +204,17 @@ setTimeout(function () {
         initAllValidations();
     }
 }, 100);
+
+// Добавьте эти строки в конец файла main.js для инициализации live-валидации при переключении вкладок
+function initAllFormsLiveValidation() {
+    if (typeof initTicketLiveValidation === 'function') initTicketLiveValidation();
+    if (typeof initClothingLiveValidation === 'function') initClothingLiveValidation();
+    if (typeof initAccessoryLiveValidation === 'function') initAccessoryLiveValidation();
+    if (typeof initManufacturerLiveValidation === 'function') initManufacturerLiveValidation();
+    if (typeof initGenreLiveValidation === 'function') initGenreLiveValidation();
+}
+
+// Вызвать после загрузки страницы
+setTimeout(function () {
+    initAllFormsLiveValidation();
+}, 200);

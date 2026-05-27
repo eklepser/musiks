@@ -12,6 +12,47 @@
     if (typeof renderTicketSelectedGenres === 'function') renderTicketSelectedGenres();
     document.getElementById('ticket-submit').innerText = 'Добавить';
     document.getElementById('ticket-cancel').style.display = 'none';
+    const fields = ['ticket-name', 'ticket-price', 'ticket-stock', 'ticket-manufacturer-id', 'ticket-concert-id', 'ticket-price-category', 'ticket-description'];
+    fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && typeof clearFieldValidity === 'function') clearFieldValidity(el);
+    });
+}
+
+function initTicketLiveValidation() {
+    const fields = [
+        { id: 'ticket-name', required: true, validator: (v) => validateRequiredString(v, 'Название', 2, 200, true) },
+        { id: 'ticket-price', required: true, validator: (v) => validatePrice(v, true) },
+        { id: 'ticket-stock', required: false, validator: (v) => validateStock(v, false) },
+        { id: 'ticket-manufacturer-id', required: true, validator: (v) => v ? null : 'Выберите производителя' },
+        { id: 'ticket-concert-id', required: true, validator: (v) => v ? null : 'Выберите концерт' },
+        { id: 'ticket-price-category', required: false, validator: (v) => v && v.trim() ? validateOptionalString(v, 'Тип места', 50) : null },
+        { id: 'ticket-description', required: false, validator: (v) => v && v.trim() ? validateOptionalString(v, 'Описание', 1000) : null }
+    ];
+    fields.forEach(f => {
+        const el = document.getElementById(f.id);
+        if (el && typeof attachLiveValidation === 'function') {
+            attachLiveValidation(el, f.validator, f.required);
+        }
+    });
+}
+
+function initEditTicketLiveValidation() {
+    const fields = [
+        { id: 'edit-ticket-name', required: true, validator: (v) => validateRequiredString(v, 'Название', 2, 200, true) },
+        { id: 'edit-ticket-price', required: true, validator: (v) => validatePrice(v, true) },
+        { id: 'edit-ticket-stock', required: false, validator: (v) => validateStock(v, false) },
+        { id: 'edit-ticket-manufacturer-id', required: true, validator: (v) => v ? null : 'Выберите производителя' },
+        { id: 'edit-ticket-concert-id', required: true, validator: (v) => v ? null : 'Выберите концерт' },
+        { id: 'edit-ticket-price-category', required: false, validator: (v) => v && v.trim() ? validateOptionalString(v, 'Тип места', 50) : null },
+        { id: 'edit-ticket-description', required: false, validator: (v) => v && v.trim() ? validateOptionalString(v, 'Описание', 1000) : null }
+    ];
+    fields.forEach(f => {
+        const el = document.getElementById(f.id);
+        if (el && typeof attachLiveValidation === 'function') {
+            attachLiveValidation(el, f.validator, f.required);
+        }
+    });
 }
 
 function fillEditTicketForm(t) {
@@ -28,15 +69,16 @@ function fillEditTicketForm(t) {
     window.selectedGenresForTicket = t.genreIds || [];
     if (typeof renderEditTicketSelectedGenres === 'function') renderEditTicketSelectedGenres();
     loadProductGenresForEdit(t.product_id, 'ticket');
+    initEditTicketLiveValidation();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function validateTicketFields(name, price, stock, manufacturerId, concertId, priceCategory, description) {
     let err = validateRequiredString(name, 'Название', 2, 200, true);
     if (err) return err;
-    err = validatePrice(price);
+    err = validatePrice(price, true);
     if (err) return err;
-    err = validateStock(stock);
+    err = validateStock(stock, false);
     if (err) return err;
     if (!manufacturerId) return 'Выберите производителя';
     if (!concertId) return 'Выберите концерт';
@@ -65,12 +107,14 @@ async function saveEditTicket() {
         showToast(validationError, 'error');
         return;
     }
+    if (!manufacturerId) { showToast('Выберите производителя', 'error'); return; }
+    if (!concertId) { showToast('Выберите концерт', 'error'); return; }
     const data = {
         ticket_id: parseInt(id),
         name: name,
         price: parseFloat(price),
         description: description || null,
-        stock: parseInt(stock, 10),
+        stock: parseInt(stock, 10) || 0,
         concert_id: parseInt(concertId),
         price_category: priceCategory || null,
         manufacturer_id: manufacturerId,
@@ -111,15 +155,17 @@ async function saveTicket() {
         showToast(validationError, 'error');
         return;
     }
+    if (!manufacturerId) { showToast('Выберите производителя', 'error'); return; }
+    if (!concertId) { showToast('Выберите концерт', 'error'); return; }
     const id = document.getElementById('ticket-edit-id').value;
     const data = {
         name: name,
         price: parseFloat(price),
         description: description || null,
-        stock: parseInt(stock, 10),
+        stock: parseInt(stock, 10) || 0,
         concert_id: parseInt(concertId),
         price_category: priceCategory || null,
-        manufacturer_id: manufacturerId || null,
+        manufacturer_id: manufacturerId,
         genreIds: window.selectedGenresForTicket
     };
     let url = TICKETS_URL, method = 'POST';
@@ -171,3 +217,5 @@ async function deleteTicket(id, name) {
         showToast('Ошибка удаления', 'error');
     }
 }
+
+initTicketLiveValidation();

@@ -26,7 +26,7 @@ function validateOptionalString(value, fieldName, maxLength = 200) {
     }
     const trimmed = value.trim();
     if (/^\d+$/.test(trimmed)) {
-        return `${fieldName} не может быть числом`;
+        return `${fieldName} не может быть только числом`;
     }
     if (trimmed.length > maxLength) {
         return `${fieldName} не должен превышать ${maxLength} символов`;
@@ -34,9 +34,12 @@ function validateOptionalString(value, fieldName, maxLength = 200) {
     return null;
 }
 
-function validatePositiveInteger(value, fieldName) {
-    if (!value || value.toString().trim() === '') {
+function validatePositiveInteger(value, fieldName, required = false) {
+    if (!required && (!value || value.toString().trim() === '')) {
         return null;
+    }
+    if (required && (!value || value.toString().trim() === '')) {
+        return `${fieldName} обязателен для заполнения`;
     }
     const num = Number(value);
     if (isNaN(num) || !Number.isInteger(num) || num <= 0) {
@@ -45,9 +48,12 @@ function validatePositiveInteger(value, fieldName) {
     return null;
 }
 
-function validateNonNegativeInteger(value, fieldName) {
-    if (!value || value.toString().trim() === '') {
+function validateNonNegativeInteger(value, fieldName, required = false) {
+    if (!required && (!value || value.toString().trim() === '')) {
         return null;
+    }
+    if (required && (!value || value.toString().trim() === '')) {
+        return `${fieldName} обязателен для заполнения`;
     }
     const num = Number(value);
     if (isNaN(num) || !Number.isInteger(num) || num < 0) {
@@ -56,9 +62,12 @@ function validateNonNegativeInteger(value, fieldName) {
     return null;
 }
 
-function validatePositiveNumber(value, fieldName) {
-    if (!value || value.toString().trim() === '') {
+function validatePositiveNumber(value, fieldName, required = false) {
+    if (!required && (!value || value.toString().trim() === '')) {
         return null;
+    }
+    if (required && (!value || value.toString().trim() === '')) {
+        return `${fieldName} обязателен для заполнения`;
     }
     const num = parseFloat(value);
     if (isNaN(num) || num <= 0) {
@@ -70,8 +79,11 @@ function validatePositiveNumber(value, fieldName) {
     return null;
 }
 
-function validatePrice(value) {
-    if (!value || value.toString().trim() === '') {
+function validatePrice(value, required = true) {
+    if (!required && (!value || value.toString().trim() === '')) {
+        return null;
+    }
+    if (required && (!value || value.toString().trim() === '')) {
         return 'Цена обязательна для заполнения';
     }
     const num = parseFloat(value);
@@ -90,8 +102,8 @@ function validatePrice(value) {
     return null;
 }
 
-function validateStock(value) {
-    if (!value || value.toString().trim() === '') {
+function validateStock(value, required = false) {
+    if (!required && (!value || value.toString().trim() === '')) {
         return null;
     }
     const num = Number(value);
@@ -104,8 +116,8 @@ function validateStock(value) {
     return null;
 }
 
-function validateYear(value, fieldName) {
-    if (!value || value.toString().trim() === '') {
+function validateYear(value, fieldName, required = false) {
+    if (!required && (!value || value.toString().trim() === '')) {
         return null;
     }
     const year = Number(value);
@@ -193,6 +205,31 @@ function setFieldValidity(element, isValid, errorMessage) {
     }
 }
 
+function clearFieldValidity(element) {
+    if (!element) return;
+    element.classList.remove('is-valid', 'is-invalid');
+    element.setCustomValidity('');
+}
+
+function attachLiveValidation(element, validator, required = false) {
+    if (!element) return;
+    const validate = () => {
+        const value = element.type === 'checkbox' ? element.checked : element.value;
+        if (!required && (!value || value.toString().trim() === '')) {
+            clearFieldValidity(element);
+            return;
+        }
+        const error = validator(value);
+        setFieldValidity(element, !error, error);
+    };
+    element.removeEventListener('input', validate);
+    element.removeEventListener('change', validate);
+    element.removeEventListener('blur', validate);
+    element.addEventListener('input', validate);
+    element.addEventListener('change', validate);
+    element.addEventListener('blur', validate);
+}
+
 function initNumericInputs() {
     document.querySelectorAll('[data-numeric="true"]').forEach(input => {
         input.removeEventListener('input', filterNumericInput);
@@ -273,5 +310,7 @@ window.filterNumericInput = filterNumericInput;
 window.filterLettersOnly = filterLettersOnly;
 window.validateOnlyLetters = validateOnlyLetters;
 window.setFieldValidity = setFieldValidity;
+window.clearFieldValidity = clearFieldValidity;
+window.attachLiveValidation = attachLiveValidation;
 window.initToggleFilters = initToggleFilters;
 window.initAllValidations = initAllValidations;

@@ -20,7 +20,7 @@ async function loadManufacturersTable() {
         if (!tbody) return;
         tbody.innerHTML = '';
         if (items.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="centered-message">Нет данных</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="centered-message">Нет данных</tbody>';
             const countSpan = document.getElementById('manufacturer-found-count');
             if (countSpan) countSpan.innerText = '0';
             return;
@@ -49,7 +49,7 @@ async function loadManufacturersTable() {
         });
     } catch (err) {
         const tbody = document.getElementById('manufacturers-tbody');
-        if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="centered-message">Ошибка загрузки</td></tr>';
+        if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="centered-message">Ошибка загрузки</tbody>';
         const countSpan = document.getElementById('manufacturer-found-count');
         if (countSpan) countSpan.innerText = '0';
     }
@@ -72,9 +72,10 @@ function fillManufacturerForm(item) {
     formTitle.innerText = 'Редактировать производителя';
     submitBtn.innerText = 'Сохранить';
     cancelBtn.style.display = 'inline-block';
-    nameInput.classList.remove('is-valid', 'is-invalid');
-    contactInput.classList.remove('is-valid', 'is-invalid');
-    countryInput.classList.remove('is-valid', 'is-invalid');
+    const fields = [nameInput, contactInput, countryInput];
+    fields.forEach(el => {
+        if (el && typeof clearFieldValidity === 'function') clearFieldValidity(el);
+    });
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -88,21 +89,35 @@ function clearManufacturerForm() {
     const cancelBtn = document.getElementById('manufacturer-cancel');
     if (nameInput) {
         nameInput.value = '';
-        nameInput.classList.remove('is-valid', 'is-invalid');
+        if (typeof clearFieldValidity === 'function') clearFieldValidity(nameInput);
     }
     if (contactInput) {
         contactInput.value = '';
-        contactInput.classList.remove('is-valid', 'is-invalid');
+        if (typeof clearFieldValidity === 'function') clearFieldValidity(contactInput);
     }
     if (countryInput) {
         countryInput.value = '';
-        countryInput.classList.remove('is-valid', 'is-invalid');
+        if (typeof clearFieldValidity === 'function') clearFieldValidity(countryInput);
     }
     if (editIdInput) editIdInput.value = '';
     manufacturerEditId = null;
     if (formTitle) formTitle.innerText = 'Добавить производителя';
     if (submitBtn) submitBtn.innerText = 'Добавить';
     if (cancelBtn) cancelBtn.style.display = 'none';
+}
+
+function initManufacturerLiveValidation() {
+    const fields = [
+        { id: 'manufacturer-name', required: true, validator: (v) => validateRequiredString(v, 'Название', 2, 100, true) },
+        { id: 'manufacturer-contact', required: true, validator: (v) => v ? validateContactInfo(v) : 'Контактные данные обязательны' },
+        { id: 'manufacturer-country', required: false, validator: (v) => v && v.trim() ? validateOptionalString(v, 'Страна', 50) : null }
+    ];
+    fields.forEach(f => {
+        const el = document.getElementById(f.id);
+        if (el && typeof attachLiveValidation === 'function') {
+            attachLiveValidation(el, f.validator, f.required);
+        }
+    });
 }
 
 function validateManufacturerFields(name, contact, country) {
@@ -133,13 +148,8 @@ async function saveManufacturer() {
     const validationError = validateManufacturerFields(name, contact, country);
     if (validationError) {
         showToast(validationError, 'error');
-        setFieldValidity(nameInput, false, validationError);
-        setFieldValidity(contactInput, false, validationError);
         return;
     }
-    setFieldValidity(nameInput, true, '');
-    setFieldValidity(contactInput, true, '');
-    if (countryInput) setFieldValidity(countryInput, true, '');
     const data = {
         name: name,
         contact_info: contact,
@@ -221,3 +231,5 @@ if (manufacturerClearBtn) manufacturerClearBtn.addEventListener('click', () => {
     if (sortBy) sortBy.value = 'name_asc';
     loadManufacturersTable();
 });
+
+initManufacturerLiveValidation();
