@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿<!-- users.html -->
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -13,72 +14,35 @@
             <li><a href="/artists">Исполнители</a></li>
             <li><a href="/user">Мой профиль</a></li>
             <li style="margin-left: auto; display: flex; align-items: center; gap: 15px;">
-                <select id="user-select">
-                    <option value="">-- Выберите пользователя --</option>
-                </select>
+                <select id="user-select"><option value="">-- Выберите пользователя --</option></select>
                 <a href="/users" title="Управление пользователями" class="users-link">⚙️👤</a>
             </li>
         </ul>
     </div>
     <div class="container">
         <h1>Управление пользователями</h1>
-        <div class="add-section-card">
-            <h3>Добавление пользователя</h3>
-            <div class="form-card" style="margin-bottom: 0;">
-                <input type="hidden" id="user-edit-id">
-                <div class="form-group">
-                    <input type="text" id="user-login" placeholder="Логин*" required maxlength="50">
-                    <input type="email" id="user-email" placeholder="Email*" required maxlength="100">
-                    <input type="text" id="user-full-name" placeholder="ФИО*" required maxlength="100">
-                    <div class="password-field">
-                        <input type="password" id="user-password" placeholder="Пароль*" maxlength="50">
-                        <span id="password-hint" class="password-hint">Оставьте пароль пустым, чтобы сохранить старый пароль</span>
-                    </div>
-                </div>
-                <div class="form-actions">
-                    <button id="user-submit">Добавить</button>
-                    <button id="user-cancel" style="display:none;">Отмена</button>
-                </div>
-            </div>
-        </div>
-        <div class="filters-card">
-            <div class="filter-group-container">
-                <div class="filter-group">
-                    <select id="sort-by">
-                        <option value="date_desc">Дата (сначала новые)</option>
-                        <option value="date_asc">Дата (сначала старые)</option>
-                        <option value="name_asc">ФИО А-Я</option>
-                        <option value="name_desc">ФИО Я-А</option>
-                    </select>
-                    <button id="apply-filters">Применить</button>
-                    <button id="clear-filters">Сбросить</button>
-                </div>
-            </div>
-        </div>
-        <div class="stats-card">
-            <p>Найдено пользователей: <span id="found-count" class="highlight-number">0</span></p>
-        </div>
-        <table id="users-table">
-            <thead>
-                <tr><th>ID</th><th>Логин</th><th>ФИО</th><th>Email</th><th>Дата регистрации</th><th>Действия</th></tr>
-            </thead>
-            <tbody id="users-tbody">
-                <tr><td colspan="6" class="centered-message">Загрузка...
-            </tbody>
-        </table>
+        <div class="add-section-card"><h3>Добавление пользователя</h3><div class="form-card" style="margin-bottom:0;"><input type="hidden" id="user-edit-id"><div class="form-group"><input type="text" id="user-login" placeholder="Логин*" required maxlength="50"><input type="email" id="user-email" placeholder="Email*" required maxlength="100"><input type="text" id="user-full-name" placeholder="ФИО*" required maxlength="100"><div class="password-field"><input type="password" id="user-password" placeholder="Пароль*" maxlength="50"><span id="password-hint" class="password-hint">Оставьте пароль пустым, чтобы сохранить старый пароль</span></div></div><div class="form-actions"><button id="user-submit">Добавить</button><button id="user-cancel" style="display:none;">Отмена</button></div></div></div>
+        <div class="filters-card"><div class="filter-group-container"><div class="filter-group"><select id="sort-by"><option value="date_desc">Дата (сначала новые)</option><option value="date_asc">Дата (сначала старые)</option><option value="name_asc">ФИО А-Я</option><option value="name_desc">ФИО Я-А</option></select><button id="apply-filters">Применить</button><button id="clear-filters">Сбросить</button></div></div></div>
+        <div class="stats-card"><p>Найдено пользователей: <span id="found-count" class="highlight-number">0</span></p></div>
+        <table id="users-table"><thead><tr><th>ID</th><th>Логин</th><th>ФИО</th><th>Email</th><th>Дата регистрации</th><th>Действия</th></tr></thead><tbody id="users-tbody"><tr><td colspan="6" class="centered-message">Загрузка...</td></tr></tbody></table>
     </div>
-    <script src="js/toast.js"></script>
-    <script src="js/validation.js"></script>
-    <script src="js/users/user-menu.js"></script>
-    <script src="js/users/users.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            if (typeof initUserMenu === 'function') initUserMenu();
-            setTimeout(function () {
-                if (typeof initAllValidations === 'function') initAllValidations();
-                if (typeof initUserLiveValidation === 'function') initUserLiveValidation();
-            }, 100);
-        });
-    </script>
+
+    <script src="js/config.js"></script>
+    <script src="js/utils/toast.js"></script>
+    <script src="js/utils/validators.js"></script>
+    <script src="js/utils/helpers.js"></script>
+    <script src="js/utils/api.js"></script>
+    <script src="js/utils/modals.js"></script>
+    <script src="js/components/productForms.js"></script>
+    <script src="js/components/manufacturerForm.js"></script>
+    <script src="js/components/genreForm.js"></script>
+    <script src="js/components/artistConcertForms.js"></script>
+    <script src="js/components/userForm.js"></script>
+    <script src="js/components/catalog.js"></script>
+    <script src="js/components/cartWishlist.js"></script>
+    <script src="js/components/userDashboard.js"></script>
+    <script src="js/components/userMenu.js"></script>
+    <script src="js/pages/users.js"></script>
+    <script src="js/main.js"></script>
 </body>
 </html>

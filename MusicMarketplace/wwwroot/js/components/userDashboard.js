@@ -1,59 +1,79 @@
-﻿window.wishlistData = [];
+﻿// js/components/userDashboard.js
+window.wishlistData = [];
 window.cartData = [];
 window.reviewsData = [];
 window.ordersData = [];
 
-async function getCurrentUser() {
+window.getCurrentUser = async function () {
     const userId = localStorage.getItem('currentUserId');
     if (!userId) return null;
     try {
-        const resp = await fetch(`https://localhost:7062/api/Users/${userId}`);
+        const resp = await fetch(`${window.API_URLS.USERS}/${userId}`);
         if (resp.ok) return await resp.json();
     } catch (e) { console.error(e); }
     return null;
-}
+};
 
-async function loadWishlist() {
-    const user = await getCurrentUser();
+window.loadUserStatus = async function () {
+    const userId = window.getCurrentUserId();
+    if (!userId) return;
+    try {
+        const [wishlistRes, cartRes, reviewsRes] = await Promise.all([
+            fetch(`${window.API_URLS.WISHLISTS}/byUser/${userId}`),
+            fetch(`${window.API_URLS.CARTS}/byUser/${userId}`),
+            fetch(`${window.API_URLS.REVIEWS}/byUser/${userId}`)
+        ]);
+        if (wishlistRes.ok) window.userWishlistIds = (await wishlistRes.json()).map(i => i.product_id);
+        if (cartRes.ok) {
+            window.userCartObjects = await cartRes.json();
+            window.userCartIds = window.userCartObjects.map(i => i.product_id);
+        }
+        if (reviewsRes.ok) window.userReviewProductIds = (await reviewsRes.json()).map(i => i.product_id);
+    } catch (err) { console.error(err); }
+    if (typeof window.Catalog?.render === 'function') window.Catalog.render();
+};
+
+window.loadWishlist = async function () {
+    const user = await window.getCurrentUser();
     if (!user) return;
-    const searchName = document.getElementById('wishlist-search').value.trim();
-    const sortBy = document.getElementById('wishlist-sort').value;
-    let url = `https://localhost:7062/api/Wishlists/byUser/${user.user_id}/filter?`;
+    const searchName = document.getElementById('wishlist-search')?.value.trim() || '';
+    const sortBy = document.getElementById('wishlist-sort')?.value || '';
+    let url = `${window.API_URLS.WISHLISTS}/byUser/${user.user_id}/filter?`;
     if (searchName) url += `searchName=${encodeURIComponent(searchName)}&`;
     if (sortBy) url += `sortBy=${sortBy}&`;
     try {
         const resp = await fetch(url);
         if (resp.ok) {
             window.wishlistData = await resp.json();
-            renderWishlist();
+            window.renderWishlist();
         }
     } catch (e) { console.error(e); }
-}
+};
 
-async function loadCart() {
-    const user = await getCurrentUser();
+window.loadCart = async function () {
+    const user = await window.getCurrentUser();
     if (!user) return;
-    const searchName = document.getElementById('cart-search').value.trim();
-    const sortBy = document.getElementById('cart-sort').value;
-    let url = `https://localhost:7062/api/Carts/byUser/${user.user_id}/filter?`;
+    const searchName = document.getElementById('cart-search')?.value.trim() || '';
+    const sortBy = document.getElementById('cart-sort')?.value || '';
+    let url = `${window.API_URLS.CARTS}/byUser/${user.user_id}/filter?`;
     if (searchName) url += `searchName=${encodeURIComponent(searchName)}&`;
     if (sortBy) url += `sortBy=${sortBy}&`;
     try {
         const resp = await fetch(url);
         if (resp.ok) {
             window.cartData = await resp.json();
-            renderCart();
+            window.renderCart();
         }
     } catch (e) { console.error(e); }
-}
+};
 
-async function loadReviews() {
-    const user = await getCurrentUser();
+window.loadReviews = async function () {
+    const user = await window.getCurrentUser();
     if (!user) return;
-    const search = document.getElementById('reviews-search').value.trim();
-    const rating = document.getElementById('reviews-rating').value;
-    const sortBy = document.getElementById('reviews-sort').value;
-    let url = `https://localhost:7062/api/Reviews/byUser/${user.user_id}/filter?`;
+    const search = document.getElementById('reviews-search')?.value.trim() || '';
+    const rating = document.getElementById('reviews-rating')?.value || '';
+    const sortBy = document.getElementById('reviews-sort')?.value || '';
+    let url = `${window.API_URLS.REVIEWS}/byUser/${user.user_id}/filter?`;
     if (search) url += `searchName=${encodeURIComponent(search)}&`;
     if (rating) url += `rating=${rating}&`;
     if (sortBy) url += `sortBy=${sortBy}&`;
@@ -61,19 +81,19 @@ async function loadReviews() {
         const resp = await fetch(url);
         if (resp.ok) {
             window.reviewsData = await resp.json();
-            renderReviews();
+            window.renderReviews();
         }
     } catch (e) { console.error(e); }
-}
+};
 
-async function loadOrders() {
-    const user = await getCurrentUser();
+window.loadOrders = async function () {
+    const user = await window.getCurrentUser();
     if (!user) return;
-    const status = document.getElementById('orders-status').value;
-    const dateFrom = document.getElementById('orders-date-from').value;
-    const dateTo = document.getElementById('orders-date-to').value;
-    const sortBy = document.getElementById('orders-sort').value;
-    let url = `https://localhost:7062/api/Orders/byUser/${user.user_id}/detailed?`;
+    const status = document.getElementById('orders-status')?.value || '';
+    const dateFrom = document.getElementById('orders-date-from')?.value || '';
+    const dateTo = document.getElementById('orders-date-to')?.value || '';
+    const sortBy = document.getElementById('orders-sort')?.value || '';
+    let url = `${window.API_URLS.ORDERS}/byUser/${user.user_id}/detailed?`;
     if (status) url += `status=${status}&`;
     if (dateFrom) url += `dateFrom=${encodeURIComponent(dateFrom)}&`;
     if (dateTo) url += `dateTo=${encodeURIComponent(dateTo)}&`;
@@ -89,20 +109,20 @@ async function loadOrders() {
                 }
                 return { ...order, items };
             });
-            renderOrders();
+            window.renderOrders();
         } else {
             console.error('Failed to load orders:', resp.status);
             window.ordersData = [];
-            renderOrders();
+            window.renderOrders();
         }
     } catch (e) {
         console.error('Error loading orders:', e);
         window.ordersData = [];
-        renderOrders();
+        window.renderOrders();
     }
-}
+};
 
-function renderWishlist() {
+window.renderWishlist = function () {
     const tbody = document.getElementById('wishlist-tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
@@ -131,9 +151,9 @@ function renderWishlist() {
         btnRow.append(cartBtn, delBtn);
         actions.appendChild(btnRow);
     });
-}
+};
 
-function renderCart() {
+window.renderCart = function () {
     const tbody = document.getElementById('cart-tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
@@ -154,19 +174,13 @@ function renderCart() {
         const delBtn = document.createElement('button');
         delBtn.textContent = 'Удалить';
         delBtn.className = 'delete-btn';
-        delBtn.onclick = () => {
-            if (typeof window.showRemoveFromCartModal === 'function') {
-                window.showRemoveFromCartModal(item.product_id, item.name, item.quantity);
-            } else {
-                console.error('showRemoveFromCartModal is not defined');
-            }
-        };
+        delBtn.onclick = () => window.showRemoveFromCartModal(item.product_id, item.name, item.quantity);
         btnRow.appendChild(delBtn);
         actions.appendChild(btnRow);
     });
-}
+};
 
-function renderReviews() {
+window.renderReviews = function () {
     const tbody = document.getElementById('reviews-tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
@@ -190,15 +204,15 @@ function renderReviews() {
         btnRow.appendChild(delBtn);
         actions.appendChild(btnRow);
     });
-}
+};
 
-function renderOrders() {
+window.renderOrders = function () {
     const tbody = document.getElementById('orders-tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
     if (!window.ordersData || window.ordersData.length === 0) {
-        tbody.innerHTML = '<td><td colspan="5" style="text-align: center;">Нет заказов</tbody>';
-        renderPurchasedItems([]);
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Нет заказов</tbody>';
+        window.renderPurchasedItems([]);
         return;
     }
     window.ordersData.forEach(order => {
@@ -232,10 +246,10 @@ function renderOrders() {
         }
         actions.append(topRow, bottomRow);
     });
-    renderPurchasedItems(window.ordersData || []);
-}
+    window.renderPurchasedItems(window.ordersData || []);
+};
 
-function renderPurchasedItems(orders) {
+window.renderPurchasedItems = function (orders) {
     const completedOrders = (orders || []).filter(o => o.status === 'completed');
     const items = [];
     completedOrders.forEach(order => {
@@ -256,7 +270,7 @@ function renderPurchasedItems(orders) {
     if (!tbody) return;
     tbody.innerHTML = '';
     if (items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Нет товаров в завершённых заказах</tbody>';
+        tbody.innerHTML = '<td><td colspan="7" style="text-align: center;">Нет товаров в завершённых заказах</tbody>';
         return;
     }
     items.forEach(item => {
@@ -286,14 +300,11 @@ function renderPurchasedItems(orders) {
         btnRow.appendChild(reviewBtn);
         actions.appendChild(btnRow);
     });
-}
+};
 
 window.showOrderDetails = async function (orderId) {
     const order = window.ordersData.find(o => o.order_id === orderId);
-    if (!order) {
-        window.showToast('Заказ не найден', 'error');
-        return;
-    }
+    if (!order) { window.showToast('Заказ не найден', 'error'); return; }
     const items = order.items || [];
     document.getElementById('modal-order-id').textContent = orderId;
     document.getElementById('modal-order-date').textContent = new Date(order.order_date).toLocaleString();
@@ -323,10 +334,10 @@ window.closeOrderModal = function () {
 window.completeOrder = async function (orderId) {
     if (!confirm('Завершить заказ?')) return;
     try {
-        const resp = await fetch(`https://localhost:7062/api/Orders/${orderId}/complete`, { method: 'PUT' });
+        const resp = await fetch(`${window.API_URLS.ORDERS}/${orderId}/complete`, { method: 'PUT' });
         if (resp.ok) {
             window.showToast('Заказ успешно завершён', 'success');
-            await loadOrders();
+            await window.loadOrders();
         } else {
             const err = await resp.json();
             window.showToast(err.message || 'Ошибка завершения', 'error');
@@ -334,13 +345,20 @@ window.completeOrder = async function (orderId) {
     } catch (e) { window.showToast('Ошибка сети', 'error'); }
 };
 
+// js/components/userDashboard.js (исправляем cancelOrder на модальное окно)
 window.cancelOrder = async function (orderId) {
-    if (!confirm('Отменить заказ? Остаток товаров на складе будет восстановлен.')) return;
+    const confirmed = await window.showConfirmModal({
+        title: 'Отмена заказа',
+        message: 'Отменить заказ? Остаток товаров на складе будет восстановлен.',
+        yesText: 'Да, отменить',
+        noText: 'Нет'
+    });
+    if (!confirmed) return;
     try {
-        const resp = await fetch(`https://localhost:7062/api/Orders/${orderId}/cancel`, { method: 'PUT' });
+        const resp = await fetch(`${window.API_URLS.ORDERS}/${orderId}/cancel`, { method: 'PUT' });
         if (resp.ok) {
             window.showToast('Заказ отменён, товары возвращены на склад', 'success');
-            await loadOrders();
+            await window.loadOrders();
         } else {
             const err = await resp.json();
             window.showToast(err.message || 'Ошибка отмены', 'error');
@@ -348,24 +366,34 @@ window.cancelOrder = async function (orderId) {
     } catch (e) { window.showToast('Ошибка сети', 'error'); }
 };
 
-function showCheckoutModal() {
-    if (!window.cartData || window.cartData.length === 0) {
-        showToast('Корзина пуста', 'error');
-        return;
-    }
+window.completeOrder = async function (orderId) {
+    const confirmed = await window.showConfirmModal({
+        title: 'Завершение заказа',
+        message: 'Завершить заказ?',
+        yesText: 'Да, завершить',
+        noText: 'Отмена'
+    });
+    if (!confirmed) return;
+    try {
+        const resp = await fetch(`${window.API_URLS.ORDERS}/${orderId}/complete`, { method: 'PUT' });
+        if (resp.ok) {
+            window.showToast('Заказ успешно завершён', 'success');
+            await window.loadOrders();
+        } else {
+            const err = await resp.json();
+            window.showToast(err.message || 'Ошибка завершения', 'error');
+        }
+    } catch (e) { window.showToast('Ошибка сети', 'error'); }
+};
+
+window.showCheckoutModal = function () {
+    if (!window.cartData || window.cartData.length === 0) { window.showToast('Корзина пуста', 'error'); return; }
     const modal = document.getElementById('checkout-modal');
-    if (!modal) {
-        console.error('Checkout modal not found');
-        return;
-    }
+    if (!modal) return;
     const userInfoDiv = document.getElementById('checkout-user-info');
     const itemsTbody = document.getElementById('checkout-items-tbody');
     const totalSpan = document.getElementById('checkout-total');
-    if (!userInfoDiv || !itemsTbody || !totalSpan) {
-        console.error('Checkout modal elements not found');
-        return;
-    }
-    getCurrentUser().then(user => {
+    window.getCurrentUser().then(user => {
         if (user) {
             userInfoDiv.innerHTML = `<strong>Пользователь:</strong> ${user.full_name} (${user.login})<br><strong>Email:</strong> ${user.email}`;
         } else {
@@ -385,53 +413,42 @@ function showCheckoutModal() {
     });
     totalSpan.textContent = total.toFixed(2);
     modal.style.display = 'block';
-}
+};
 
-function hideCheckoutModal() {
+window.hideCheckoutModal = function () {
     const modal = document.getElementById('checkout-modal');
     if (modal) modal.style.display = 'none';
-}
+};
 
-async function confirmCheckout() {
-    const user = await getCurrentUser();
-    if (!user) {
-        showToast('Сначала выберите пользователя', 'error');
-        return;
-    }
-    if (!window.cartData || window.cartData.length === 0) {
-        showToast('Корзина пуста', 'error');
-        return;
-    }
+window.confirmCheckout = async function () {
+    const user = await window.getCurrentUser();
+    if (!user) { window.showToast('Сначала выберите пользователя', 'error'); return; }
+    if (!window.cartData || window.cartData.length === 0) { window.showToast('Корзина пуста', 'error'); return; }
     try {
-        const resp = await fetch(`https://localhost:7062/api/Carts/checkout/${user.user_id}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-        });
+        const resp = await fetch(`${window.API_URLS.CARTS}/checkout/${user.user_id}`, { method: 'POST' });
         if (!resp.ok) {
             let errorMsg = 'Ошибка оформления заказа';
             try {
                 const error = await resp.json();
                 if (error.message) errorMsg = error.message;
             } catch (e) { errorMsg = await resp.text(); }
-            showToast(errorMsg, 'error');
+            window.showToast(errorMsg, 'error');
             return;
         }
         const result = await resp.json();
-        hideCheckoutModal();
-        showToast(`Заказ №${result.orderId} оформлен на сумму ${result.totalAmount}`, 'success');
-        await loadCart();
-        await loadOrders();
+        window.hideCheckoutModal();
+        window.showToast(`Заказ №${result.orderId} оформлен на сумму ${result.totalAmount}`, 'success');
+        await window.loadCart();
+        await window.loadOrders();
         document.querySelector('.tab-btn[data-tab="orders"]').click();
-    } catch (err) {
-        showToast('Ошибка сети', 'error');
-    }
-}
-
-window.checkout = function () {
-    showCheckoutModal();
+    } catch (err) { window.showToast('Ошибка сети', 'error'); }
 };
 
-function clearAllTables() {
+window.checkout = function () {
+    window.showCheckoutModal();
+};
+
+window.clearAllTables = function () {
     const wishTbody = document.getElementById('wishlist-tbody');
     if (wishTbody) wishTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</tbody>';
     const cartTbody = document.getElementById('cart-tbody');
@@ -442,142 +459,29 @@ function clearAllTables() {
     if (ordTbody) ordTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</tbody>';
     const purTbody = document.getElementById('purchased-items-tbody');
     if (purTbody) purTbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Выберите пользователя</tbody>';
-}
+};
 
-function showActiveTab() {
+window.showActiveTab = function () {
     const activeTab = document.querySelector('.tab-btn.active');
     if (!activeTab) return;
     const tabId = activeTab.dataset.tab;
-    if (tabId === 'wishlist') renderWishlist();
-    else if (tabId === 'cart') renderCart();
-    else if (tabId === 'orders') renderOrders();
-    else if (tabId === 'reviews') renderReviews();
-}
+    if (tabId === 'wishlist') window.renderWishlist();
+    else if (tabId === 'cart') window.renderCart();
+    else if (tabId === 'orders') window.renderOrders();
+    else if (tabId === 'reviews') window.renderReviews();
+};
 
-async function loadDashboard() {
-    const user = await getCurrentUser();
+window.loadDashboard = async function () {
+    const user = await window.getCurrentUser();
     if (!user) {
-        clearAllTables();
+        window.clearAllTables();
         const profileTitle = document.querySelector('#user-profile h2') || document.querySelector('.profile-header h2') || document.getElementById('profile-title');
         if (profileTitle) profileTitle.textContent = 'Мой профиль';
         return;
     }
     const profileTitle = document.querySelector('#user-profile h2') || document.querySelector('.profile-header h2') || document.getElementById('profile-title');
     if (profileTitle) profileTitle.textContent = `${user.full_name} (${user.login})`;
-    if (typeof window.loadUserStatus === 'function') await window.loadUserStatus();
-    await Promise.all([loadWishlist(), loadCart(), loadReviews(), loadOrders()]);
-    showActiveTab();
-}
-
-document.getElementById('wishlist-apply')?.addEventListener('click', loadWishlist);
-document.getElementById('wishlist-reset')?.addEventListener('click', () => {
-    document.getElementById('wishlist-search').value = '';
-    document.getElementById('wishlist-sort').value = 'date_desc';
-    loadWishlist();
-});
-document.getElementById('cart-apply')?.addEventListener('click', loadCart);
-document.getElementById('cart-reset')?.addEventListener('click', () => {
-    document.getElementById('cart-search').value = '';
-    document.getElementById('cart-sort').value = 'date_desc';
-    loadCart();
-});
-document.getElementById('reviews-filter')?.addEventListener('click', loadReviews);
-document.getElementById('reviews-reset')?.addEventListener('click', () => {
-    document.getElementById('reviews-search').value = '';
-    document.getElementById('reviews-rating').value = '';
-    document.getElementById('reviews-sort').value = 'date_desc';
-    loadReviews();
-});
-document.getElementById('orders-apply')?.addEventListener('click', loadOrders);
-document.getElementById('orders-reset')?.addEventListener('click', () => {
-    document.getElementById('orders-status').value = '';
-    document.getElementById('orders-date-from').value = '';
-    document.getElementById('orders-date-to').value = '';
-    document.getElementById('orders-sort').value = 'date_desc';
-    loadOrders();
-});
-
-document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        btn.classList.add('active');
-        const tabContent = document.getElementById(`${btn.dataset.tab}-tab`);
-        if (tabContent) tabContent.classList.add('active');
-        showActiveTab();
-        setTimeout(function () {
-            if (typeof window.initToggleFilters === 'function') window.initToggleFilters();
-            if (typeof window.initToggleAddSections === 'function') window.initToggleAddSections();
-        }, 50);
-    });
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-    const checkoutBtn = document.getElementById('checkout-btn');
-    if (checkoutBtn) checkoutBtn.addEventListener('click', window.checkout);
-    const closeModal = document.getElementById('modal-order-close');
-    if (closeModal) closeModal.addEventListener('click', window.closeOrderModal);
-    window.addEventListener('click', (e) => {
-        const modal = document.getElementById('order-details-modal');
-        if (e.target === modal) modal.style.display = 'none';
-    });
-    const cartConfirmBtn = document.getElementById('cart-confirm-btn');
-    if (cartConfirmBtn) {
-        cartConfirmBtn.addEventListener('click', () => {
-            if (window.currentProductForCart) {
-                const quantity = parseInt(document.getElementById('cart-quantity').value);
-                window.addToCart(window.currentProductForCart.id, window.currentProductForCart.name, quantity);
-                window.hideCartModal();
-            }
-        });
-    }
-    const cartCancelBtn = document.getElementById('cart-cancel-btn');
-    if (cartCancelBtn) cartCancelBtn.addEventListener('click', window.hideCartModal);
-    const reviewConfirmBtn = document.getElementById('review-confirm-btn');
-    if (reviewConfirmBtn) {
-        reviewConfirmBtn.addEventListener('click', () => {
-            if (window.currentProductForReview) {
-                const rating = parseInt(document.getElementById('review-rating').value);
-                const reviewText = document.getElementById('review-text').value;
-                window.addReview(window.currentProductForReview.id, window.currentProductForReview.name, rating, reviewText);
-                window.hideReviewModal();
-                loadReviews();
-            }
-        });
-    }
-    const reviewCancelBtn = document.getElementById('review-cancel-btn');
-    if (reviewCancelBtn) reviewCancelBtn.addEventListener('click', window.hideReviewModal);
-    const removeCartConfirm = document.getElementById('remove-cart-confirm-btn');
-    if (removeCartConfirm) {
-        removeCartConfirm.addEventListener('click', () => {
-            if (window.currentProductForRemove) {
-                const quantity = parseInt(document.getElementById('remove-cart-quantity').value);
-                if (quantity && quantity > 0 && quantity <= window.currentProductForRemove.currentQuantity) {
-                    if (typeof window.removeFromCartWithQuantity === 'function') {
-                        window.removeFromCartWithQuantity(window.currentProductForRemove.id, quantity);
-                    } else {
-                        console.error('removeFromCartWithQuantity is not defined');
-                        window.showToast('Ошибка: функция удаления не найдена', 'error');
-                    }
-                } else {
-                    window.showToast('Некорректное количество', 'error');
-                }
-            }
-        });
-    }
-    const removeCartCancel = document.getElementById('remove-cart-cancel-btn');
-    if (removeCartCancel) removeCartCancel.addEventListener('click', window.hideRemoveFromCartModal);
-    const checkoutConfirmBtn = document.getElementById('checkout-confirm-btn');
-    if (checkoutConfirmBtn) checkoutConfirmBtn.addEventListener('click', confirmCheckout);
-    const checkoutCancelBtn = document.getElementById('checkout-cancel-btn');
-    if (checkoutCancelBtn) checkoutCancelBtn.addEventListener('click', hideCheckoutModal);
-    window.addEventListener('click', (e) => {
-        const modal = document.getElementById('checkout-modal');
-        if (e.target === modal) modal.style.display = 'none';
-    });
-    setTimeout(function () {
-        if (typeof window.initToggleAddSections === 'function') window.initToggleAddSections();
-    }, 100);
-});
-
-loadDashboard();
+    await window.loadUserStatus();
+    await Promise.all([window.loadWishlist(), window.loadCart(), window.loadReviews(), window.loadOrders()]);
+    window.showActiveTab();
+};

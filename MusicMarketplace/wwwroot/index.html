@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿<!-- index.html -->
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -14,9 +15,7 @@
             <li><a href="/artists">Исполнители</a></li>
             <li><a href="/user">Мой профиль</a></li>
             <li style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
-                <select id="user-select">
-                    <option value="">-- Выберите пользователя --</option>
-                </select>
+                <select id="user-select"><option value="">-- Выберите пользователя --</option></select>
                 <button id="manage-users-btn" title="Управление пользователями" class="manage-users-btn">⚙️👤</button>
             </li>
         </ul>
@@ -25,16 +24,23 @@
         <h1>Добро пожаловать в панель управления музыкальным маркетплейсом</h1>
         <p>Выберите раздел в меню для управления данными.</p>
     </div>
-    <script src="js/toast.js"></script>
-    <script src="js/validation.js"></script>
-    <script src="js/users/user-menu.js"></script>
-    <script>
-        initUserMenu();
-        setTimeout(function () {
-            if (typeof initAllValidations === 'function') {
-                initAllValidations();
-            }
-        }, 100);
-    </script>
+
+    <script src="js/config.js"></script>
+    <script src="js/utils/toast.js"></script>
+    <script src="js/utils/validators.js"></script>
+    <script src="js/utils/helpers.js"></script>
+    <script src="js/utils/api.js"></script>
+    <script src="js/utils/modals.js"></script>
+    <script src="js/components/productForms.js"></script>
+    <script src="js/components/manufacturerForm.js"></script>
+    <script src="js/components/genreForm.js"></script>
+    <script src="js/components/artistConcertForms.js"></script>
+    <script src="js/components/userForm.js"></script>
+    <script src="js/components/catalog.js"></script>
+    <script src="js/components/cartWishlist.js"></script>
+    <script src="js/components/userDashboard.js"></script>
+    <script src="js/components/userMenu.js"></script>
+    <script src="js/pages/index.js"></script>
+    <script src="js/main.js"></script>
 </body>
 </html>

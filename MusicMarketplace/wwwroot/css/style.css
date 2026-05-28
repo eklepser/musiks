@@ -815,4 +815,22 @@ input[type=number] {
 .form-card h3 {
     margin-bottom: 15px;
 }
-ы
+
+.form-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+    .form-actions button {
+        margin: 0;
+    }
+
+.wishlist-btn.active {
+    background: #dc3545 !important;
+    color: white;
+}
+
+    .wishlist-btn.active:hover {
+        background: #b02a37 !important;
+    }
