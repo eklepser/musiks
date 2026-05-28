@@ -29,24 +29,22 @@
         </div>
         <div id="artists-tab" class="tab-content active">
             <div class="add-section-card">
-                <h3 style="display: none;">Добавить исполнителя</h3>
-                <div class="add-section-container">
-                    <div class="form-card" style="margin-bottom: 0;">
-                        <input type="hidden" id="artist-edit-id">
-                        <div class="form-group-row">
-                            <input type="text" id="artist-name" placeholder="Имя*" required minlength="2" maxlength="100" data-letters-only="true">
-                            <select id="artist-country">
-                                <option value="">Не указано</option>
-                            </select>
-                            <input type="number" id="artist-debut-year" class="year-field" placeholder="Год дебюта" min="1900" max="2026" data-numeric="true">
-                            <select id="artist-language">
-                                <option value="">Не указано</option>
-                            </select>
-                        </div>
-                        <div class="form-actions">
-                            <button id="artist-submit">Добавить</button>
-                            <button id="artist-cancel" style="display:none;">Отмена</button>
-                        </div>
+                <h3>Добавление исполнителя</h3>
+                <div class="form-card" style="margin-bottom: 0;">
+                    <input type="hidden" id="artist-edit-id">
+                    <div class="form-group-row">
+                        <input type="text" id="artist-name" placeholder="Имя*" required minlength="2" maxlength="100" data-letters-only="true">
+                        <select id="artist-country">
+                            <option value="">Не указано</option>
+                        </select>
+                        <input type="number" id="artist-debut-year" class="year-field" placeholder="Год дебюта" min="1900" max="2026" data-numeric="true">
+                        <select id="artist-language">
+                            <option value="">Не указано</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button id="artist-submit">Добавить</button>
+                        <button id="artist-cancel" style="display:none;">Отмена</button>
                     </div>
                 </div>
             </div>
@@ -82,26 +80,24 @@
         </div>
         <div id="concerts-tab" class="tab-content">
             <div class="add-section-card">
-                <h3 style="display: none;">Добавить концерт</h3>
-                <div class="add-section-container">
-                    <div class="form-card" style="margin-bottom: 0;">
-                        <input type="hidden" id="concert-edit-id">
-                        <div class="form-group-row">
-                            <input type="text" id="concert-title" placeholder="Название*" required minlength="2" maxlength="150">
-                            <input type="text" id="concert-venue" placeholder="Место*" required minlength="2" maxlength="100">
-                            <input type="datetime-local" id="concert-datetime" required>
+                <h3>Добавление концерта</h3>
+                <div class="form-card" style="margin-bottom: 0;">
+                    <input type="hidden" id="concert-edit-id">
+                    <div class="form-group-row">
+                        <input type="text" id="concert-title" placeholder="Название*" required minlength="2" maxlength="150">
+                        <input type="text" id="concert-venue" placeholder="Место*" required minlength="2" maxlength="100">
+                        <input type="datetime-local" id="concert-datetime" required>
+                    </div>
+                    <div class="form-grid-item" style="margin-bottom: 20px; margin-top: 15px;">
+                        <label>Исполнители:</label>
+                        <div class="selected-list-container">
+                            <div id="selected-artists-list" class="selected-list"></div>
+                            <button type="button" id="open-artists-modal-btn" class="artists-btn">Выбрать исполнителей</button>
                         </div>
-                        <div class="form-grid-item" style="margin-bottom: 20px; margin-top: 15px;">
-                            <label>Исполнители:</label>
-                            <div class="selected-list-container">
-                                <div id="selected-artists-list" class="selected-list"></div>
-                                <button type="button" id="open-artists-modal-btn" class="artists-btn">Выбрать исполнителей</button>
-                            </div>
-                        </div>
-                        <div class="form-actions">
-                            <button id="concert-submit">Добавить</button>
-                            <button id="concert-cancel" style="display:none;">Отмена</button>
-                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button id="concert-submit">Добавить</button>
+                        <button id="concert-cancel" style="display:none;">Отмена</button>
                     </div>
                 </div>
             </div>

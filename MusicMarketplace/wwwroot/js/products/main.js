@@ -1,4 +1,5 @@
-﻿document.getElementById('ticket-submit')?.addEventListener('click', saveTicket);
+﻿// main.js
+document.getElementById('ticket-submit')?.addEventListener('click', saveTicket);
 document.getElementById('ticket-cancel')?.addEventListener('click', clearTicketForm);
 document.getElementById('clothing-submit')?.addEventListener('click', saveClothing);
 document.getElementById('clothing-cancel')?.addEventListener('click', clearClothingForm);
@@ -83,6 +84,10 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
             refreshCatalogFilters();
             hideEditPanel();
         } else if (btn.dataset.tab === 'add') {
+            resetGlobalProductState();
+            if (typeof clearClothingForm === 'function') clearClothingForm();
+            if (typeof clearAccessoryForm === 'function') clearAccessoryForm();
+            if (typeof clearTicketForm === 'function') clearTicketForm();
             loadManufacturersForSelect('ticket-manufacturer-id');
             loadManufacturersForSelect('clothing-manufacturer-id');
             loadManufacturersForSelect('accessory-manufacturer-id');
@@ -205,7 +210,6 @@ setTimeout(function () {
     }
 }, 100);
 
-// Добавьте эти строки в конец файла main.js для инициализации live-валидации при переключении вкладок
 function initAllFormsLiveValidation() {
     if (typeof initTicketLiveValidation === 'function') initTicketLiveValidation();
     if (typeof initClothingLiveValidation === 'function') initClothingLiveValidation();
@@ -214,19 +218,36 @@ function initAllFormsLiveValidation() {
     if (typeof initGenreLiveValidation === 'function') initGenreLiveValidation();
 }
 
-// Вызвать после загрузки страницы
 setTimeout(function () {
     initAllFormsLiveValidation();
 }, 200);
 
-// Инициализация даталистов при загрузке
 setTimeout(function () {
     if (typeof initCountryDatalists === 'function') initCountryDatalists();
     if (typeof initLanguageDatalists === 'function') initLanguageDatalists();
 }, 200);
 
-// Инициализация стран и языков
 setTimeout(function () {
     if (typeof initCountrySelect === 'function') initCountrySelect();
     if (typeof initLanguageSelect === 'function') initLanguageSelect();
 }, 200);
+
+function resetGlobalProductState() {
+    if (typeof selectedArtistsForClothing !== 'undefined') selectedArtistsForClothing = [];
+    if (typeof selectedArtistsForAccessory !== 'undefined') selectedArtistsForAccessory = [];
+    if (typeof window.selectedGenresForTicket !== 'undefined') window.selectedGenresForTicket = [];
+    if (typeof window.selectedGenresForClothing !== 'undefined') window.selectedGenresForClothing = [];
+    if (typeof window.selectedGenresForAccessory !== 'undefined') window.selectedGenresForAccessory = [];
+
+    if (typeof renderClothingSelectedArtists === 'function') renderClothingSelectedArtists();
+    if (typeof renderClothingSelectedGenres === 'function') renderClothingSelectedGenres();
+    if (typeof renderAccessorySelectedArtists === 'function') renderAccessorySelectedArtists();
+    if (typeof renderAccessorySelectedGenres === 'function') renderAccessorySelectedGenres();
+    if (typeof renderTicketSelectedGenres === 'function') renderTicketSelectedGenres();
+}
+
+const originalHideEditPanel = hideEditPanel;
+window.hideEditPanel = function () {
+    originalHideEditPanel();
+    resetGlobalProductState();
+};

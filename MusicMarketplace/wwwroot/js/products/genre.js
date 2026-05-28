@@ -1,4 +1,5 @@
-﻿let genreEditId = null;
+﻿// genre.js
+let genreEditId = null;
 
 async function loadGenresTable() {
     const searchName = document.getElementById('genre-search-name');
@@ -52,9 +53,8 @@ async function loadGenresTable() {
 }
 
 function fillGenreForm(item) {
-    if (typeof openAddSection === 'function') {
-        openAddSection('#genres-tab .add-section-card');
-    }
+    const titleEl = document.querySelector('#genres-tab .add-section-card h3');
+    if (titleEl) titleEl.textContent = 'Редактирование жанра';
     const nameInput = document.getElementById('genre-name');
     const descInput = document.getElementById('genre-description');
     const editIdInput = document.getElementById('genre-edit-id');
@@ -85,6 +85,8 @@ function fillGenreForm(item) {
 }
 
 function clearGenreForm() {
+    const titleEl = document.querySelector('#genres-tab .add-section-card h3');
+    if (titleEl) titleEl.textContent = 'Добавление жанра';
     const nameInput = document.getElementById('genre-name');
     const descInput = document.getElementById('genre-description');
     const editIdInput = document.getElementById('genre-edit-id');

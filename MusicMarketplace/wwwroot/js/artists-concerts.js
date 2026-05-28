@@ -1,4 +1,5 @@
-﻿const ARTISTS_FILTER_URL = 'https://localhost:7062/api/Artists/filter';
+﻿// artists-concerts.js
+const ARTISTS_FILTER_URL = 'https://localhost:7062/api/Artists/filter';
 const CONCERTS_FILTER_URL = 'https://localhost:7062/api/Concerts/filter';
 const CONCERTS_ARTISTS_URL = 'https://localhost:7062/api/Concerts/filter/artists';
 
@@ -38,6 +39,8 @@ async function loadArtistConcerts() {
     const resp = await fetch('https://localhost:7062/api/ArtistConcerts');
     if (resp.ok) {
         artistConcertLinks = await resp.json();
+    } else {
+        console.error('Failed to load artist-concert links');
     }
 }
 
@@ -138,7 +141,7 @@ function updateConcertFilterOptions() {
 function renderSelectedArtistsList() {
     const container = document.getElementById('selected-artists-list');
     if (!container) return;
-    if (selectedArtistsForConcert.length === 0) {
+    if (!selectedArtistsForConcert || selectedArtistsForConcert.length === 0) {
         container.innerHTML = '<span class="placeholder-text">Исполнители не выбраны</span>';
         return;
     }
@@ -225,7 +228,7 @@ async function renderConcerts() {
         if (!tbody) return;
         tbody.innerHTML = '';
         if (concerts.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Нет данных</tbody>';
+            tbody.innerHTML = '<td><td colspan="6" class="centered-message">Нет данных</tbody>';
             if (countSpan) countSpan.innerText = '0';
             return;
         }
@@ -307,6 +310,8 @@ function fillArtistForm(artist) {
     if (typeof openAddSection === 'function') {
         openAddSection('#artists-tab .add-section-card');
     }
+    const titleEl = document.querySelector('#artists-tab .add-section-card h3');
+    if (titleEl) titleEl.textContent = 'Редактирование исполнителя';
     const countrySelect = document.getElementById('artist-country');
     const languageSelect = document.getElementById('artist-language');
     const nameInput = document.getElementById('artist-name');
@@ -353,6 +358,8 @@ function fillArtistForm(artist) {
 }
 
 function clearArtistForm() {
+    const titleEl = document.querySelector('#artists-tab .add-section-card h3');
+    if (titleEl) titleEl.textContent = 'Добавление исполнителя';
     const nameInput = document.getElementById('artist-name');
     const countrySelect = document.getElementById('artist-country');
     const debutInput = document.getElementById('artist-debut-year');
@@ -461,11 +468,41 @@ async function deleteArtist(id, name) {
     }
 }
 
-function fillConcertForm(concert) {
+async function fillConcertForm(concert) {
     if (typeof openAddSection === 'function') {
         openAddSection('#concerts-tab .add-section-card');
     }
-    const datetimeLocal = concert.datetime ? concert.datetime.slice(0, 16) : '';
+    const titleEl = document.querySelector('#concerts-tab .add-section-card h3');
+    if (titleEl) titleEl.textContent = 'Редактирование концерта';
+
+    // Загружаем данные концерта
+    let concertData = concert;
+    if (concert && concert.concert_id) {
+        try {
+            const resp = await fetch(`https://localhost:7062/api/Concerts/${concert.concert_id}`);
+            if (resp.ok) {
+                concertData = await resp.json();
+            }
+        } catch (e) {
+            console.warn('Не удалось загрузить концерт по ID, используем переданные данные');
+        }
+    }
+
+    // Загружаем исполнителей для этого концерта через отдельный API
+    let artistIds = [];
+    if (concert && concert.concert_id) {
+        try {
+            const resp = await fetch(`https://localhost:7062/api/ArtistConcerts/byConcert/${concert.concert_id}`);
+            if (resp.ok) {
+                const links = await resp.json();
+                artistIds = links.map(link => link.artist_id);
+            }
+        } catch (e) {
+            console.warn('Не удалось загрузить исполнителей для концерта');
+        }
+    }
+
+    const datetimeLocal = concertData.datetime ? concertData.datetime.slice(0, 16) : '';
     const titleInput = document.getElementById('concert-title');
     const venueInput = document.getElementById('concert-venue');
     const datetimeInput = document.getElementById('concert-datetime');
@@ -473,14 +510,13 @@ function fillConcertForm(concert) {
     const submitBtn = document.getElementById('concert-submit');
     const cancelBtn = document.getElementById('concert-cancel');
 
-    if (titleInput) titleInput.value = concert.title;
-    if (venueInput) venueInput.value = concert.venue;
+    if (titleInput) titleInput.value = concertData.title;
+    if (venueInput) venueInput.value = concertData.venue;
     if (datetimeInput) datetimeInput.value = datetimeLocal;
-    if (editIdInput) editIdInput.value = concert.concert_id;
-    currentEditConcertId = concert.concert_id;
+    if (editIdInput) editIdInput.value = concertData.concert_id;
+    currentEditConcertId = concertData.concert_id;
 
-    const currentArtistIds = artistConcertLinks.filter(link => link.concert_id === concert.concert_id).map(link => link.artist_id);
-    selectedArtistsForConcert = [...currentArtistIds];
+    selectedArtistsForConcert = [...artistIds];
     renderSelectedArtistsList();
 
     if (submitBtn) submitBtn.innerText = 'Сохранить';
@@ -511,6 +547,8 @@ function fillConcertForm(concert) {
 }
 
 function clearConcertForm() {
+    const titleEl = document.querySelector('#concerts-tab .add-section-card h3');
+    if (titleEl) titleEl.textContent = 'Добавление концерта';
     const titleInput = document.getElementById('concert-title');
     const venueInput = document.getElementById('concert-venue');
     const datetimeInput = document.getElementById('concert-datetime');

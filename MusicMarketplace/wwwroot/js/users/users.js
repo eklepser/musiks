@@ -1,4 +1,5 @@
-﻿const USERS_URL = 'https://localhost:7062/api/Users';
+﻿// users.js
+const USERS_URL = 'https://localhost:7062/api/Users';
 let usersData = [];
 let currentEditUserId = null;
 
@@ -96,9 +97,8 @@ function validateFieldOnDemand(element, validator, required) {
 }
 
 function fillUserForm(user) {
-    if (typeof openAddSection === 'function') {
-        openAddSection('.add-section-card');
-    }
+    const titleEl = document.querySelector('.add-section-card h3');
+    if (titleEl) titleEl.textContent = 'Редактирование пользователя';
     const loginInput = document.getElementById('user-login');
     const emailInput = document.getElementById('user-email');
     const fullNameInput = document.getElementById('user-full-name');
@@ -113,11 +113,9 @@ function fillUserForm(user) {
 
     currentEditUserId = user.user_id;
 
-    const formTitle = document.getElementById('user-form-title');
     const submitBtn = document.getElementById('user-submit');
     const cancelBtn = document.getElementById('user-cancel');
 
-    if (formTitle) formTitle.innerText = 'Редактировать пользователя';
     if (submitBtn) submitBtn.innerText = 'Сохранить';
     if (cancelBtn) cancelBtn.style.display = 'inline-block';
 
@@ -142,12 +140,13 @@ function fillUserForm(user) {
 }
 
 function clearUserForm() {
+    const titleEl = document.querySelector('.add-section-card h3');
+    if (titleEl) titleEl.textContent = 'Добавление пользователя';
     const loginInput = document.getElementById('user-login');
     const emailInput = document.getElementById('user-email');
     const fullNameInput = document.getElementById('user-full-name');
     const passwordInput = document.getElementById('user-password');
     const editIdInput = document.getElementById('user-edit-id');
-    const formTitle = document.getElementById('user-form-title');
     const submitBtn = document.getElementById('user-submit');
     const cancelBtn = document.getElementById('user-cancel');
 
@@ -159,7 +158,6 @@ function clearUserForm() {
 
     currentEditUserId = null;
 
-    if (formTitle) formTitle.innerText = 'Добавить пользователя';
     if (submitBtn) submitBtn.innerText = 'Добавить';
     if (cancelBtn) cancelBtn.style.display = 'none';
 
@@ -335,6 +333,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initUserLiveValidation();
     setTimeout(function () {
         if (typeof window.initToggleFilters === 'function') window.initToggleFilters();
-        if (typeof window.initToggleAddSections === 'function') window.initToggleAddSections();
     }, 100);
 });

@@ -41,6 +41,7 @@ namespace MusicMarketplace
             builder.Services.AddScoped<TicketsService>();
             builder.Services.AddScoped<UsersService>();
             builder.Services.AddScoped<WishlistsService>();
+            builder.Services.AddScoped<ArtistConcertsService>();
 
             var app = builder.Build();
 

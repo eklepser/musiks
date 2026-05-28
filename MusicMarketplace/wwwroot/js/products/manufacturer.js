@@ -1,4 +1,5 @@
-﻿let manufacturerEditId = null;
+﻿// manufacturer.js
+let manufacturerEditId = null;
 
 async function loadManufacturersTable() {
     const searchName = document.getElementById('manufacturer-search-name');
@@ -56,9 +57,8 @@ async function loadManufacturersTable() {
 }
 
 function fillManufacturerForm(item) {
-    if (typeof openAddSection === 'function') {
-        openAddSection('#manufacturers-tab .add-section-card');
-    }
+    const titleEl = document.querySelector('#manufacturers-tab .add-section-card h3');
+    if (titleEl) titleEl.textContent = 'Редактирование производителя';
     const nameInput = document.getElementById('manufacturer-name');
     const contactInput = document.getElementById('manufacturer-contact');
     const countryInput = document.getElementById('manufacturer-country');
@@ -95,6 +95,8 @@ function fillManufacturerForm(item) {
 }
 
 function clearManufacturerForm() {
+    const titleEl = document.querySelector('#manufacturers-tab .add-section-card h3');
+    if (titleEl) titleEl.textContent = 'Добавление производителя';
     const nameInput = document.getElementById('manufacturer-name');
     const contactInput = document.getElementById('manufacturer-contact');
     const countryInput = document.getElementById('manufacturer-country');
