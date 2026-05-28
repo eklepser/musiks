@@ -383,12 +383,18 @@ window.ArtistConcertForms = (function () {
         if (!confirmed) return;
         try {
             const resp = await fetch(`${window.API_URLS.ARTISTS}/${id}`, { method: 'DELETE' });
-            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            if (!resp.ok) {
+                const errorMsg = await window.parseErrorMessage(resp);
+                window.showToast(errorMsg, 'error');
+                return;
+            }
             clearArtistForm();
             await loadArtists();
             await renderArtistsTable();
             window.showToast(`Исполнитель «${name}» удалён`, 'success');
-        } catch (err) { window.showToast('Ошибка удаления', 'error'); }
+        } catch (err) {
+            window.showToast('Ошибка сети', 'error');
+        }
     }
 
     async function fillConcertForm(concert) {
@@ -516,13 +522,19 @@ window.ArtistConcertForms = (function () {
         if (!confirmed) return;
         try {
             const resp = await fetch(`${window.API_URLS.CONCERTS}/${id}`, { method: 'DELETE' });
-            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            if (!resp.ok) {
+                const errorMsg = await window.parseErrorMessage(resp);
+                window.showToast(errorMsg, 'error');
+                return;
+            }
             clearConcertForm();
             await loadConcerts();
             await loadArtistConcerts();
             await renderConcertsTable();
             window.showToast(`Концерт «${title}» удалён`, 'success');
-        } catch (err) { window.showToast('Ошибка удаления', 'error'); }
+        } catch (err) {
+            window.showToast('Ошибка сети', 'error');
+        }
     }
 
     function openArtistsModal() {

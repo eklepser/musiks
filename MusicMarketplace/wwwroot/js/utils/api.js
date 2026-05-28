@@ -1,5 +1,4 @@
-﻿// js/utils/api.js
-window.api = {
+﻿window.api = {
     async get(url) {
         const resp = await fetch(url);
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);

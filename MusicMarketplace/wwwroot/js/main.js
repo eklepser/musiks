@@ -1,5 +1,4 @@
-﻿// js/main.js
-(function () {
+﻿(function () {
     function initAll() {
         if (typeof window.initUserMenu === 'function') window.initUserMenu();
         if (typeof window.initAllValidations === 'function') window.initAllValidations();

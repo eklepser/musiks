@@ -433,3 +433,24 @@ window.loadGenreNameDatalist = async function () {
         }
     } catch (err) { console.error(err); }
 };
+
+window.parseErrorMessage = async function (resp) {
+    try {
+        const contentType = resp.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const error = await resp.json();
+            if (error.message) return error.message;
+            if (error.title && error.detail) return error.detail;
+            if (error.errors) {
+                const messages = Object.values(error.errors).flat();
+                return messages.join('; ');
+            }
+            return 'Произошла ошибка';
+        } else {
+            const text = await resp.text();
+            return text || 'Произошла ошибка';
+        }
+    } catch (e) {
+        return 'Произошла ошибка';
+    }
+};

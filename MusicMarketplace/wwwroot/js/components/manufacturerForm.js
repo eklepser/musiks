@@ -190,7 +190,9 @@ window.ManufacturerForm = (function () {
         ];
         fields.forEach(f => {
             const el = document.getElementById(f.id);
-            if (el && typeof window.attachLiveValidation === 'function') window.attachLiveValidation(el, f.validator, f.required);
+            if (el && typeof window.attachLiveValidation === 'function') {
+                window.attachLiveValidation(el, f.validator, f.required);
+            }
         });
     }
 
@@ -200,3 +202,9 @@ window.ManufacturerForm = (function () {
 window.loadManufacturersTable = function () {
     return window.ManufacturerForm.loadTable();
 };
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => window.ManufacturerForm.initLiveValidation());
+} else {
+    window.ManufacturerForm.initLiveValidation();
+}

@@ -16,7 +16,7 @@ window.GenreForm = (function () {
             if (!tbody) return;
             tbody.innerHTML = '';
             if (items.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="centered-message">Нет данных</tbody>';
+                tbody.innerHTML = '<td><td colspan="4" class="centered-message">Нет данных</tbody>';
                 document.getElementById('genre-found-count').innerText = '0';
                 return;
             }
@@ -160,7 +160,9 @@ window.GenreForm = (function () {
         ];
         fields.forEach(f => {
             const el = document.getElementById(f.id);
-            if (el && typeof window.attachLiveValidation === 'function') window.attachLiveValidation(el, f.validator, f.required);
+            if (el && typeof window.attachLiveValidation === 'function') {
+                window.attachLiveValidation(el, f.validator, f.required);
+            }
         });
     }
 
@@ -170,3 +172,9 @@ window.GenreForm = (function () {
 window.loadGenresTable = function () {
     return window.GenreForm.loadTable();
 };
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => window.GenreForm.initLiveValidation());
+} else {
+    window.GenreForm.initLiveValidation();
+}
