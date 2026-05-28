@@ -78,7 +78,7 @@
                     </div>
                 </div>
             </div>
-            <table id="reviews-table"><thead><tr><th>Товар</th><th>Оценка</th><th>Текст отзыва</th><th>Дата</th><th>Действия</th></tr></thead><tbody id="reviews-tbody"></tr><td colspan="5" class="centered-message">Загрузка...</tbody></table>
+            <table id="reviews-table"><thead><tr><th>Товар</th><th>Оценка</th><th>Текст отзыва</th><th>Дата</th><th>Действия</th></td></thead><tbody id="reviews-tbody"><tr><td colspan="5" class="centered-message">Загрузка...</tbody></table>
         </div>
     </div>
     <div id="order-details-modal" class="modal" style="display:none;">
@@ -139,13 +139,11 @@
     <script src="js/products/cart-wishlist.js"></script>
     <script src="js/users/user-menu.js"></script>
     <script src="js/users/user-dashboard.js"></script>
-    <script src="js/users/users.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             if (typeof initUserMenu === 'function') initUserMenu();
             setTimeout(function () {
                 if (typeof initAllValidations === 'function') initAllValidations();
-                if (typeof initUserLiveValidation === 'function') initUserLiveValidation();
             }, 100);
         });
     </script>

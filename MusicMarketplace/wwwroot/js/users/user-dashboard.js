@@ -154,7 +154,13 @@ function renderCart() {
         const delBtn = document.createElement('button');
         delBtn.textContent = 'Удалить';
         delBtn.className = 'delete-btn';
-        delBtn.onclick = () => window.showRemoveFromCartModal(item.product_id, item.name, item.quantity);
+        delBtn.onclick = () => {
+            if (typeof window.showRemoveFromCartModal === 'function') {
+                window.showRemoveFromCartModal(item.product_id, item.name, item.quantity);
+            } else {
+                console.error('showRemoveFromCartModal is not defined');
+            }
+        };
         btnRow.appendChild(delBtn);
         actions.appendChild(btnRow);
     });
@@ -191,7 +197,7 @@ function renderOrders() {
     if (!tbody) return;
     tbody.innerHTML = '';
     if (!window.ordersData || window.ordersData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Нет заказов</tbody>';
+        tbody.innerHTML = '<td><td colspan="5" style="text-align: center;">Нет заказов</tbody>';
         renderPurchasedItems([]);
         return;
     }
@@ -547,7 +553,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (window.currentProductForRemove) {
                 const quantity = parseInt(document.getElementById('remove-cart-quantity').value);
                 if (quantity && quantity > 0 && quantity <= window.currentProductForRemove.currentQuantity) {
-                    window.removeFromCartWithQuantity(window.currentProductForRemove.id, quantity);
+                    if (typeof window.removeFromCartWithQuantity === 'function') {
+                        window.removeFromCartWithQuantity(window.currentProductForRemove.id, quantity);
+                    } else {
+                        console.error('removeFromCartWithQuantity is not defined');
+                        window.showToast('Ошибка: функция удаления не найдена', 'error');
+                    }
                 } else {
                     window.showToast('Некорректное количество', 'error');
                 }

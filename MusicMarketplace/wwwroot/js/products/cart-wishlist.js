@@ -85,35 +85,47 @@ window.addToCart = async function (productId, productName, quantity = 1) {
 
 window.showRemoveFromCartModal = function (productId, productName, currentQuantity) {
     if (currentQuantity <= 1) {
-        removeFromCart(productId);
+        window.removeFromCart(productId);
         return;
     }
-    currentProductForRemove = { id: productId, name: productName, currentQuantity: currentQuantity };
+    window.currentProductForRemove = { id: productId, name: productName, currentQuantity: currentQuantity };
     const modal = document.getElementById('remove-from-cart-modal');
     if (!modal) return;
-    document.getElementById('remove-cart-product-name').innerText = productName;
-    document.getElementById('remove-cart-quantity').value = 1;
-    document.getElementById('remove-cart-quantity').max = currentQuantity;
-    document.getElementById('remove-cart-max').innerText = currentQuantity;
+    const productNameSpan = document.getElementById('remove-cart-product-name');
+    const quantityInput = document.getElementById('remove-cart-quantity');
+    const maxSpan = document.getElementById('remove-cart-max');
+    if (productNameSpan) productNameSpan.innerText = productName;
+    if (quantityInput) {
+        quantityInput.value = 1;
+        quantityInput.max = currentQuantity;
+    }
+    if (maxSpan) maxSpan.innerText = currentQuantity;
     modal.style.display = 'block';
 };
 
 window.hideRemoveFromCartModal = function () {
     const modal = document.getElementById('remove-from-cart-modal');
     if (modal) modal.style.display = 'none';
-    currentProductForRemove = null;
+    window.currentProductForRemove = null;
 };
 
 window.removeFromCartWithQuantity = async function (productId, quantity) {
     const userId = getCurrentUserId();
     if (!userId) return;
-    const resp = await fetch(`https://localhost:7062/api/Carts/${userId}/${productId}?quantity=${quantity}`, { method: 'DELETE' });
-    if (resp.ok) {
-        if (typeof loadUserStatus === 'function') await loadUserStatus();
-        if (typeof loadCart === 'function') await loadCart();
-        showToast(`Товар удалён из корзины (${quantity} шт.)`, 'success');
-        hideRemoveFromCartModal();
-    } else showToast('Ошибка удаления', 'error');
+    try {
+        const resp = await fetch(`https://localhost:7062/api/Carts/${userId}/${productId}?quantity=${quantity}`, { method: 'DELETE' });
+        if (resp.ok) {
+            if (typeof loadUserStatus === 'function') await loadUserStatus();
+            if (typeof loadCart === 'function') await loadCart();
+            showToast(`Товар удалён из корзины (${quantity} шт.)`, 'success');
+            window.hideRemoveFromCartModal();
+        } else {
+            const error = await resp.json();
+            showToast(error.message || 'Ошибка удаления', 'error');
+        }
+    } catch (err) {
+        showToast('Ошибка сети', 'error');
+    }
 };
 
 window.removeFromCart = async function (productId) {
@@ -126,12 +138,19 @@ window.removeFromCart = async function (productId) {
         noText: 'Отмена'
     });
     if (!confirmed) return;
-    const resp = await fetch(`https://localhost:7062/api/Carts/${userId}/${productId}`, { method: 'DELETE' });
-    if (resp.ok) {
-        if (typeof loadUserStatus === 'function') await loadUserStatus();
-        if (typeof loadCart === 'function') await loadCart();
-        showToast('Товар удалён из корзины', 'success');
-    } else showToast('Ошибка удаления', 'error');
+    try {
+        const resp = await fetch(`https://localhost:7062/api/Carts/${userId}/${productId}`, { method: 'DELETE' });
+        if (resp.ok) {
+            if (typeof loadUserStatus === 'function') await loadUserStatus();
+            if (typeof loadCart === 'function') await loadCart();
+            showToast('Товар удалён из корзины', 'success');
+        } else {
+            const error = await resp.json();
+            showToast(error.message || 'Ошибка удаления', 'error');
+        }
+    } catch (err) {
+        showToast('Ошибка сети', 'error');
+    }
 };
 
 window.addReview = async function (productId, productName, rating, reviewText) {

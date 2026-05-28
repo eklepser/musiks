@@ -26,11 +26,12 @@
             <h3 style="display: none;">Добавить пользователя</h3>
             <div class="add-section-container">
                 <div class="form-card" style="margin-bottom: 0;">
+                    <h2 id="user-form-title">Добавить пользователя</h2>
                     <input type="hidden" id="user-edit-id">
                     <div class="form-group">
-                        <input type="text" id="user-login" placeholder="Логин*" required maxlength="50" data-letters-only="true">
+                        <input type="text" id="user-login" placeholder="Логин*" required maxlength="50">
                         <input type="email" id="user-email" placeholder="Email*" required maxlength="100">
-                        <input type="text" id="user-full-name" placeholder="ФИО*" required maxlength="100" data-letters-only="true">
+                        <input type="text" id="user-full-name" placeholder="ФИО*" required maxlength="100">
                         <div class="password-field">
                             <input type="password" id="user-password" placeholder="Пароль*" maxlength="50">
                             <span id="password-hint" class="password-hint">Оставьте пароль пустым, чтобы сохранить старый пароль</span>

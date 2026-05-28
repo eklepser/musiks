@@ -84,42 +84,84 @@ function togglePasswordHint(isEditing) {
     }
 }
 
+function validateFieldOnDemand(element, validator, required) {
+    if (!element) return;
+    const value = element.type === 'checkbox' ? element.checked : element.value;
+    if (!required && (!value || value.toString().trim() === '')) {
+        if (typeof clearFieldValidity === 'function') clearFieldValidity(element);
+        return;
+    }
+    const error = validator(value);
+    if (typeof setFieldValidity === 'function') setFieldValidity(element, !error, error);
+}
+
 function fillUserForm(user) {
-    document.getElementById('user-login').value = user.login;
-    document.getElementById('user-email').value = user.email;
-    document.getElementById('user-full-name').value = user.full_name;
-    document.getElementById('user-password').value = '';
-    document.getElementById('user-edit-id').value = user.user_id;
+    if (typeof openAddSection === 'function') {
+        openAddSection('.add-section-card');
+    }
+    const loginInput = document.getElementById('user-login');
+    const emailInput = document.getElementById('user-email');
+    const fullNameInput = document.getElementById('user-full-name');
+    const passwordInput = document.getElementById('user-password');
+    const editIdInput = document.getElementById('user-edit-id');
+
+    if (loginInput) loginInput.value = user.login;
+    if (emailInput) emailInput.value = user.email;
+    if (fullNameInput) fullNameInput.value = user.full_name;
+    if (passwordInput) passwordInput.value = '';
+    if (editIdInput) editIdInput.value = user.user_id;
 
     currentEditUserId = user.user_id;
 
-    document.getElementById('user-form-title').innerText = 'Редактировать пользователя';
-    document.getElementById('user-submit').innerText = 'Сохранить';
-    document.getElementById('user-cancel').style.display = 'inline-block';
+    const formTitle = document.getElementById('user-form-title');
+    const submitBtn = document.getElementById('user-submit');
+    const cancelBtn = document.getElementById('user-cancel');
+
+    if (formTitle) formTitle.innerText = 'Редактировать пользователя';
+    if (submitBtn) submitBtn.innerText = 'Сохранить';
+    if (cancelBtn) cancelBtn.style.display = 'inline-block';
 
     togglePasswordHint(true);
 
-    const fields = ['user-login', 'user-email', 'user-full-name', 'user-password'];
-    fields.forEach(id => {
-        const el = document.getElementById(id);
-        if (el && typeof clearFieldValidity === 'function') clearFieldValidity(el);
-    });
+    setTimeout(() => {
+        if (loginInput && typeof validateLogin === 'function') {
+            validateFieldOnDemand(loginInput, validateLogin, true);
+        }
+        if (emailInput && typeof validateEmail === 'function') {
+            validateFieldOnDemand(emailInput, validateEmail, true);
+        }
+        if (fullNameInput && typeof validateFullName === 'function') {
+            validateFieldOnDemand(fullNameInput, validateFullName, true);
+        }
+        if (passwordInput && typeof validatePassword === 'function') {
+            validateFieldOnDemand(passwordInput, (v) => validatePassword(v, false), false);
+        }
+    }, 10);
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function clearUserForm() {
-    document.getElementById('user-login').value = '';
-    document.getElementById('user-email').value = '';
-    document.getElementById('user-full-name').value = '';
-    document.getElementById('user-password').value = '';
-    document.getElementById('user-edit-id').value = '';
+    const loginInput = document.getElementById('user-login');
+    const emailInput = document.getElementById('user-email');
+    const fullNameInput = document.getElementById('user-full-name');
+    const passwordInput = document.getElementById('user-password');
+    const editIdInput = document.getElementById('user-edit-id');
+    const formTitle = document.getElementById('user-form-title');
+    const submitBtn = document.getElementById('user-submit');
+    const cancelBtn = document.getElementById('user-cancel');
+
+    if (loginInput) loginInput.value = '';
+    if (emailInput) emailInput.value = '';
+    if (fullNameInput) fullNameInput.value = '';
+    if (passwordInput) passwordInput.value = '';
+    if (editIdInput) editIdInput.value = '';
 
     currentEditUserId = null;
 
-    document.getElementById('user-form-title').innerText = 'Добавить пользователя';
-    document.getElementById('user-submit').innerText = 'Добавить';
-    document.getElementById('user-cancel').style.display = 'none';
+    if (formTitle) formTitle.innerText = 'Добавить пользователя';
+    if (submitBtn) submitBtn.innerText = 'Добавить';
+    if (cancelBtn) cancelBtn.style.display = 'none';
 
     togglePasswordHint(false);
 
@@ -145,31 +187,47 @@ function initUserLiveValidation() {
     });
 }
 
-function validateUserFields(login, email, fullName, password, isUpdate = false) {
+function validateLogin(login) {
     if (!login || login.trim() === '') return 'Логин обязателен';
     if (login.length < 3 || login.length > 50) return 'Логин должен содержать от 3 до 50 символов';
     if (/^\d+$/.test(login.trim())) return 'Логин не может состоять только из цифр';
     if (!/^[a-zA-Z0-9_-]+$/.test(login.trim())) return 'Логин может содержать только буквы, цифры, дефис и подчеркивание';
+    return null;
+}
 
-    if (!email || email.trim() === '') return 'Email обязателен';
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailPattern.test(email)) return 'Некорректный формат email';
-
-    if (!fullName || fullName.trim() === '') return 'Полное имя обязательно';
-    if (fullName.length < 2 || fullName.length > 100) return 'Полное имя должно содержать от 2 до 100 символов';
+function validateFullName(fullName) {
+    if (!fullName || fullName.trim() === '') return 'ФИО обязательно';
+    if (fullName.length < 2 || fullName.length > 100) return 'ФИО должно содержать от 2 до 100 символов';
     if (/^\d+$/.test(fullName.trim())) return 'ФИО не может состоять только из цифр';
     if (fullName.trim().split(/\s+/).length < 2) return 'ФИО должно содержать минимум два слова';
+    return null;
+}
 
-    if (!isUpdate && (!password || password.trim() === '')) {
-        return 'Пароль обязателен при создании пользователя';
-    }
-    if (password && password.length < 6) {
-        return 'Пароль должен содержать минимум 6 символов';
-    }
-    if (password && password.length > 50) {
-        return 'Пароль не должен превышать 50 символов';
-    }
+function validateEmail(email) {
+    if (!email || email.trim() === '') return 'Email обязателен';
+    if (email.length < 5 || email.length > 100) return 'Email должен содержать от 5 до 100 символов';
+    const emailPattern = /^[^\s@]+@([^\s@]+\.)+[^\s@]+$/;
+    if (!emailPattern.test(email.trim())) return 'Введите корректный email адрес';
+    return null;
+}
 
+function validatePassword(password, isRequired = true) {
+    if (!isRequired && (!password || password.trim() === '')) return null;
+    if (!password || password.trim() === '') return 'Пароль обязателен';
+    if (password.length < 6) return 'Пароль должен содержать минимум 6 символов';
+    if (password.length > 50) return 'Пароль не должен превышать 50 символов';
+    return null;
+}
+
+function validateUserFields(login, email, fullName, password, isUpdate = false) {
+    let err = validateLogin(login);
+    if (err) return err;
+    err = validateEmail(email);
+    if (err) return err;
+    err = validateFullName(fullName);
+    if (err) return err;
+    err = validatePassword(password, !isUpdate);
+    if (err) return err;
     return null;
 }
 
