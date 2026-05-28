@@ -365,6 +365,21 @@ function initToggleAddSections() {
     });
 }
 
+function openAddSection(containerSelector) {
+    const addSection = document.querySelector(containerSelector);
+    if (!addSection) return;
+    const container = addSection.querySelector('.add-section-container');
+    if (!container) return;
+    if (container.classList.contains('hidden')) {
+        container.classList.remove('hidden');
+        const icon = addSection.querySelector('.toggle-add-icon');
+        if (icon) {
+            icon.innerHTML = '▼';
+            icon.title = 'Скрыть форму';
+        }
+    }
+}
+
 const POPULAR_COUNTRIES = [
     "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria",
     "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia",
@@ -534,6 +549,7 @@ window.clearFieldValidity = clearFieldValidity;
 window.attachLiveValidation = attachLiveValidation;
 window.initToggleFilters = initToggleFilters;
 window.initToggleAddSections = initToggleAddSections;
+window.openAddSection = openAddSection;
 window.initAllValidations = initAllValidations;
 window.initCountrySelect = initCountrySelect;
 window.initLanguageSelect = initLanguageSelect;

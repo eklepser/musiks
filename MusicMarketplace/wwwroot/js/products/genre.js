@@ -17,7 +17,7 @@ async function loadGenresTable() {
         if (!tbody) return;
         tbody.innerHTML = '';
         if (items.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="centered-message">Нет данных</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="centered-message">Нет данных</tbody>';
             const countSpan = document.getElementById('genre-found-count');
             if (countSpan) countSpan.innerText = '0';
             return;
@@ -45,31 +45,42 @@ async function loadGenresTable() {
         });
     } catch (err) {
         const tbody = document.getElementById('genres-tbody');
-        if (tbody) tbody.innerHTML = '<tr><td colspan="4" class="centered-message">Ошибка загрузки</td></tr>';
+        if (tbody) tbody.innerHTML = '<tr><td colspan="4" class="centered-message">Ошибка загрузки</tbody>';
         const countSpan = document.getElementById('genre-found-count');
         if (countSpan) countSpan.innerText = '0';
     }
 }
 
 function fillGenreForm(item) {
+    if (typeof openAddSection === 'function') {
+        openAddSection('#genres-tab .add-section-card');
+    }
     const nameInput = document.getElementById('genre-name');
     const descInput = document.getElementById('genre-description');
     const editIdInput = document.getElementById('genre-edit-id');
-    const formTitle = document.getElementById('genre-form-title');
     const submitBtn = document.getElementById('genre-submit');
     const cancelBtn = document.getElementById('genre-cancel');
-    if (!nameInput || !descInput || !editIdInput || !formTitle || !submitBtn || !cancelBtn) return;
+    if (!nameInput || !descInput || !editIdInput || !submitBtn || !cancelBtn) return;
     nameInput.value = item.name;
     descInput.value = item.description || '';
     editIdInput.value = item.genre_id;
     genreEditId = item.genre_id;
-    formTitle.innerText = 'Редактировать жанр';
     submitBtn.innerText = 'Сохранить';
     cancelBtn.style.display = 'inline-block';
     if (typeof clearFieldValidity === 'function') {
         clearFieldValidity(nameInput);
         clearFieldValidity(descInput);
     }
+    setTimeout(() => {
+        if (nameInput && typeof validateRequiredString === 'function') {
+            const error = validateRequiredString(nameInput.value, 'Название', 2, 50, true);
+            if (typeof setFieldValidity === 'function') setFieldValidity(nameInput, !error, error);
+        }
+        if (descInput && descInput.value.trim() && typeof validateOptionalString === 'function') {
+            const error = validateOptionalString(descInput.value, 'Описание', 500);
+            if (typeof setFieldValidity === 'function') setFieldValidity(descInput, !error, error);
+        }
+    }, 10);
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -77,7 +88,6 @@ function clearGenreForm() {
     const nameInput = document.getElementById('genre-name');
     const descInput = document.getElementById('genre-description');
     const editIdInput = document.getElementById('genre-edit-id');
-    const formTitle = document.getElementById('genre-form-title');
     const submitBtn = document.getElementById('genre-submit');
     const cancelBtn = document.getElementById('genre-cancel');
     if (nameInput) {
@@ -90,7 +100,6 @@ function clearGenreForm() {
     }
     if (editIdInput) editIdInput.value = '';
     genreEditId = null;
-    if (formTitle) formTitle.innerText = 'Добавить жанр';
     if (submitBtn) submitBtn.innerText = 'Добавить';
     if (cancelBtn) cancelBtn.style.display = 'none';
 }

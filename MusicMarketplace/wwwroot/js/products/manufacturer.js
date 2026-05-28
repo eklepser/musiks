@@ -20,7 +20,7 @@ async function loadManufacturersTable() {
         if (!tbody) return;
         tbody.innerHTML = '';
         if (items.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="centered-message">Нет данных</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="centered-message">Нет данных</tbody>';
             const countSpan = document.getElementById('manufacturer-found-count');
             if (countSpan) countSpan.innerText = '0';
             return;
@@ -49,33 +49,48 @@ async function loadManufacturersTable() {
         });
     } catch (err) {
         const tbody = document.getElementById('manufacturers-tbody');
-        if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="centered-message">Ошибка загрузки</td></tr>';
+        if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="centered-message">Ошибка загрузки</tbody>';
         const countSpan = document.getElementById('manufacturer-found-count');
         if (countSpan) countSpan.innerText = '0';
     }
 }
 
 function fillManufacturerForm(item) {
+    if (typeof openAddSection === 'function') {
+        openAddSection('#manufacturers-tab .add-section-card');
+    }
     const nameInput = document.getElementById('manufacturer-name');
     const contactInput = document.getElementById('manufacturer-contact');
     const countryInput = document.getElementById('manufacturer-country');
     const editIdInput = document.getElementById('manufacturer-edit-id');
-    const formTitle = document.getElementById('manufacturer-form-title');
     const submitBtn = document.getElementById('manufacturer-submit');
     const cancelBtn = document.getElementById('manufacturer-cancel');
-    if (!nameInput || !contactInput || !countryInput || !editIdInput || !formTitle || !submitBtn || !cancelBtn) return;
+    if (!nameInput || !contactInput || !countryInput || !editIdInput || !submitBtn || !cancelBtn) return;
     nameInput.value = item.name;
     contactInput.value = item.contact_info || '';
     if (countryInput) countryInput.value = item.country || '';
     editIdInput.value = item.manufacturer_id;
     manufacturerEditId = item.manufacturer_id;
-    formTitle.innerText = 'Редактировать производителя';
     submitBtn.innerText = 'Сохранить';
     cancelBtn.style.display = 'inline-block';
     const fields = [nameInput, contactInput, countryInput];
     fields.forEach(el => {
         if (el && typeof clearFieldValidity === 'function') clearFieldValidity(el);
     });
+    setTimeout(() => {
+        if (nameInput && typeof validateRequiredString === 'function') {
+            const error = validateRequiredString(nameInput.value, 'Название', 2, 100, true);
+            if (typeof setFieldValidity === 'function') setFieldValidity(nameInput, !error, error);
+        }
+        if (contactInput && typeof validateContactInfo === 'function') {
+            const error = validateContactInfo(contactInput.value);
+            if (typeof setFieldValidity === 'function') setFieldValidity(contactInput, !error, error);
+        }
+        if (countryInput && countryInput.value.trim() && typeof validateOptionalString === 'function') {
+            const error = validateOptionalString(countryInput.value, 'Страна', 50);
+            if (typeof setFieldValidity === 'function') setFieldValidity(countryInput, !error, error);
+        }
+    }, 10);
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -84,7 +99,6 @@ function clearManufacturerForm() {
     const contactInput = document.getElementById('manufacturer-contact');
     const countryInput = document.getElementById('manufacturer-country');
     const editIdInput = document.getElementById('manufacturer-edit-id');
-    const formTitle = document.getElementById('manufacturer-form-title');
     const submitBtn = document.getElementById('manufacturer-submit');
     const cancelBtn = document.getElementById('manufacturer-cancel');
     if (nameInput) {
@@ -101,7 +115,6 @@ function clearManufacturerForm() {
     }
     if (editIdInput) editIdInput.value = '';
     manufacturerEditId = null;
-    if (formTitle) formTitle.innerText = 'Добавить производителя';
     if (submitBtn) submitBtn.innerText = 'Добавить';
     if (cancelBtn) cancelBtn.style.display = 'none';
 }
