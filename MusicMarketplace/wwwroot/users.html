@@ -22,21 +22,25 @@
     </div>
     <div class="container">
         <h1>Управление пользователями</h1>
-        <div class="form-card">
-            <h2 id="user-form-title">Добавить пользователя</h2>
-            <input type="hidden" id="user-edit-id">
-            <div class="form-group">
-                <input type="text" id="user-login" placeholder="Логин*" required maxlength="50">
-                <input type="email" id="user-email" placeholder="Email*" required maxlength="100">
-                <input type="text" id="user-full-name" placeholder="ФИО*" required maxlength="100">
-                <div class="password-field">
-                    <input type="password" id="user-password" placeholder="Пароль*" maxlength="50">
-                    <span id="password-hint" class="password-hint">Оставьте пароль пустым, чтобы сохранить старый пароль</span>
+        <div class="add-section-card">
+            <h3 style="display: none;">Добавить пользователя</h3>
+            <div class="add-section-container">
+                <div class="form-card" style="margin-bottom: 0;">
+                    <input type="hidden" id="user-edit-id">
+                    <div class="form-group">
+                        <input type="text" id="user-login" placeholder="Логин*" required maxlength="50" data-letters-only="true">
+                        <input type="email" id="user-email" placeholder="Email*" required maxlength="100">
+                        <input type="text" id="user-full-name" placeholder="ФИО*" required maxlength="100" data-letters-only="true">
+                        <div class="password-field">
+                            <input type="password" id="user-password" placeholder="Пароль*" maxlength="50">
+                            <span id="password-hint" class="password-hint">Оставьте пароль пустым, чтобы сохранить старый пароль</span>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button id="user-submit">Добавить</button>
+                        <button id="user-cancel" style="display:none;">Отмена</button>
+                    </div>
                 </div>
-            </div>
-            <div class="form-actions">
-                <button id="user-submit">Добавить</button>
-                <button id="user-cancel" style="display:none;">Отмена</button>
             </div>
         </div>
         <div class="filters-card">
@@ -61,7 +65,8 @@
                 <tr><th>ID</th><th>Логин</th><th>ФИО</th><th>Email</th><th>Дата регистрации</th><th>Действия</th></tr>
             </thead>
             <tbody id="users-tbody">
-                <tr><td colspan="6" class="centered-message">Загрузка...</td></tr>
+                <tr><td colspan="6" class="centered-message">Загрузка...
+            </tbody>
             </tbody>
         </table>
     </div>
@@ -74,6 +79,7 @@
             if (typeof initUserMenu === 'function') initUserMenu();
             setTimeout(function () {
                 if (typeof initAllValidations === 'function') initAllValidations();
+                if (typeof initUserLiveValidation === 'function') initUserLiveValidation();
             }, 100);
         });
     </script>

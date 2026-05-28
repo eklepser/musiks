@@ -130,7 +130,7 @@ body {
         border-color: #7b2cbf;
     }
 
-.form-card, .filters-card {
+.form-card, .filters-card, .add-section-card {
     background: #fff;
     padding: 25px;
     border-radius: 12px;
@@ -170,7 +170,7 @@ button {
     cursor: pointer;
     font-size: 14px;
     font-weight: 600;
-    transition: background 0.2s, transform 0.1s;
+    transition: all 0.2s ease;
 }
 
     button:hover {
@@ -185,6 +185,7 @@ button {
 
     .edit-btn:hover {
         background: #e0a800;
+        transform: translateY(-1px);
     }
 
 .delete-btn {
@@ -193,6 +194,7 @@ button {
 
     .delete-btn:hover {
         background: #b02a37;
+        transform: translateY(-1px);
     }
 
 .cancel-btn {
@@ -218,24 +220,46 @@ button {
     color: #333;
 }
 
+    .wishlist-btn:hover {
+        background: #e0a800;
+        transform: translateY(-1px);
+    }
+
     .wishlist-btn.active {
         background: #7b2cbf;
         color: white;
     }
+
+        .wishlist-btn.active:hover {
+            background: #5a1d8f;
+        }
 
 .cart-btn {
     background: #28a745;
     color: white;
 }
 
+    .cart-btn:hover {
+        background: #1e7e34;
+        transform: translateY(-1px);
+    }
+
     .cart-btn.active {
         background: #7b2cbf;
     }
+
+        .cart-btn.active:hover {
+            background: #5a1d8f;
+        }
 
 .complete-btn {
     background: #28a745;
     color: white;
 }
+
+    .complete-btn:hover {
+        background: #1e7e34;
+    }
 
 .review-btn {
     background: #17a2b8;
@@ -255,7 +279,7 @@ button {
 }
 
     .checkout-btn:hover {
-        background: #218838;
+        background: #1e7e34;
     }
 
 .form-actions {
@@ -403,11 +427,21 @@ table td:last-child {
         display: block;
     }
 
-.filter-group-container.hidden {
+.filter-group-container.hidden,
+.add-section-container.hidden {
     display: none;
 }
 
-.filters-header {
+.filter-group-container,
+.add-section-container {
+    margin-top: 15px;
+}
+
+.form-card {
+    margin-top: 15px;
+}
+
+.filters-header, .add-section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -415,17 +449,16 @@ table td:last-child {
     padding: 10px 15px;
     background: #f8f9fa;
     border-radius: 8px;
-    margin-bottom: 15px;
     user-select: none;
 }
 
-    .filters-header h3 {
+    .filters-header h3, .add-section-header h3 {
         margin: 0;
         font-size: 1.1rem;
         color: #333;
     }
 
-.toggle-filters-icon {
+.toggle-filters-icon, .toggle-add-icon {
     font-size: 1.2rem;
     background: none;
     border: none;
@@ -434,7 +467,7 @@ table td:last-child {
     color: #666;
 }
 
-    .toggle-filters-icon:hover {
+    .toggle-filters-icon:hover, .toggle-add-icon:hover {
         color: #333;
     }
 
@@ -453,7 +486,7 @@ table td:last-child {
     background: #fff;
     margin: 8% auto;
     padding: 30px;
-    width: 500px;
+    width: 650px;
     max-width: 90%;
     border-radius: 16px;
     box-shadow: 0 10px 25px rgba(0,0,0,0.2);
@@ -654,6 +687,7 @@ table td:last-child {
 
 .checkout-container {
     margin-bottom: 15px;
+    text-align: center;
 }
 
 input[type=number]::-webkit-inner-spin-button,
@@ -728,36 +762,33 @@ input[type=number] {
     padding: 10px;
 }
 
-    #order-details-modal th:first-child {
-        width: 40%;
-    }
-
-    #order-details-modal th:nth-child(2) {
-        width: 15%;
-    }
-
-    #order-details-modal th:nth-child(3) {
-        width: 20%;
-    }
-
-    #order-details-modal th:last-child {
-        width: 25%;
-    }
-
+    #order-details-modal th:first-child,
     #checkout-modal th:first-child {
-        width: 50%;
+        width: auto;
     }
 
+    #order-details-modal th:nth-child(2),
     #checkout-modal th:nth-child(2) {
-        width: 15%;
+        width: auto;
     }
 
+    #order-details-modal th:nth-child(3),
     #checkout-modal th:nth-child(3) {
-        width: 15%;
+        width: auto;
     }
 
+    #order-details-modal th:last-child,
     #checkout-modal th:last-child {
-        width: 20%;
+        width: auto;
+    }
+
+    #order-details-modal th:last-child,
+    #order-details-modal td:last-child,
+    #checkout-modal th:last-child,
+    #checkout-modal td:last-child {
+        width: auto;
+        min-width: auto;
+        max-width: none;
     }
 
 #checkout-user-info {
@@ -766,22 +797,15 @@ input[type=number] {
     background: #f8f9fa;
     border-radius: 10px;
     border-left: 4px solid #7b2cbf;
+    color: #2c2c2c;
 }
 
     #checkout-user-info strong {
-        color: #7b2cbf;
+        color: #2c2c2c;
     }
 
 .modal-content .form-group {
     justify-content: center;
-}
-
-#checkout-modal .modal-content {
-    width: 650px;
-}
-
-#order-details-modal .modal-content {
-    width: 600px;
 }
 
 .form-card h2, .form-card h3 {
@@ -791,3 +815,4 @@ input[type=number] {
 .form-card h3 {
     margin-bottom: 15px;
 }
+ы

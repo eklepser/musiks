@@ -300,6 +300,71 @@ function initToggleFilters() {
     });
 }
 
+function initToggleAddSections() {
+    document.querySelectorAll('.add-section-card').forEach(card => {
+        let header = card.querySelector('.add-section-header');
+        if (!header) {
+            header = document.createElement('div');
+            header.className = 'add-section-header';
+            const title = document.createElement('h3');
+            const originalTitle = card.querySelector('h3');
+            if (originalTitle) {
+                title.textContent = originalTitle.textContent;
+                originalTitle.style.display = 'none';
+            } else {
+                title.textContent = 'Добавление';
+            }
+            const icon = document.createElement('button');
+            icon.className = 'toggle-add-icon';
+            icon.innerHTML = '▼';
+            icon.title = 'Скрыть форму';
+            header.appendChild(title);
+            header.appendChild(icon);
+            const container = card.querySelector('.add-section-container');
+            if (container) {
+                card.insertBefore(header, container);
+            } else {
+                const formContainer = document.createElement('div');
+                formContainer.className = 'add-section-container';
+                while (card.children.length > 0) {
+                    formContainer.appendChild(card.children[0]);
+                }
+                card.appendChild(header);
+                card.appendChild(formContainer);
+            }
+        }
+        const icon = header.querySelector('.toggle-add-icon');
+        const container = card.querySelector('.add-section-container');
+        if (icon && container) {
+            icon.removeEventListener('click', icon._handler);
+            const isHidden = container.classList.contains('hidden');
+            icon.innerHTML = isHidden ? '▲' : '▼';
+            icon.title = isHidden ? 'Показать форму' : 'Скрыть форму';
+            const handler = function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                container.classList.toggle('hidden');
+                const nowHidden = container.classList.contains('hidden');
+                icon.innerHTML = nowHidden ? '▲' : '▼';
+                icon.title = nowHidden ? 'Показать форму' : 'Скрыть форму';
+            };
+            icon._handler = handler;
+            icon.addEventListener('click', handler);
+            header.style.cursor = 'pointer';
+            header.removeEventListener('click', header._clickHandler);
+            header._clickHandler = function (e) {
+                if (e.target !== icon) {
+                    container.classList.toggle('hidden');
+                    const nowHidden = container.classList.contains('hidden');
+                    icon.innerHTML = nowHidden ? '▲' : '▼';
+                    icon.title = nowHidden ? 'Показать форму' : 'Скрыть форму';
+                }
+            };
+            header.addEventListener('click', header._clickHandler);
+        }
+    });
+}
+
 const POPULAR_COUNTRIES = [
     "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria",
     "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia",
@@ -454,6 +519,7 @@ function initAllValidations() {
     initNumericInputs();
     initLettersOnlyInputs();
     initToggleFilters();
+    initToggleAddSections();
     setTimeout(function () {
         if (typeof initCountrySelect === 'function') initCountrySelect();
         if (typeof initLanguageSelect === 'function') initLanguageSelect();
@@ -467,6 +533,7 @@ window.setFieldValidity = setFieldValidity;
 window.clearFieldValidity = clearFieldValidity;
 window.attachLiveValidation = attachLiveValidation;
 window.initToggleFilters = initToggleFilters;
+window.initToggleAddSections = initToggleAddSections;
 window.initAllValidations = initAllValidations;
 window.initCountrySelect = initCountrySelect;
 window.initLanguageSelect = initLanguageSelect;

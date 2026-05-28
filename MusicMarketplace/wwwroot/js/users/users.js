@@ -99,6 +99,12 @@ function fillUserForm(user) {
 
     togglePasswordHint(true);
 
+    const fields = ['user-login', 'user-email', 'user-full-name', 'user-password'];
+    fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && typeof clearFieldValidity === 'function') clearFieldValidity(el);
+    });
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -116,11 +122,34 @@ function clearUserForm() {
     document.getElementById('user-cancel').style.display = 'none';
 
     togglePasswordHint(false);
+
+    const fields = ['user-login', 'user-email', 'user-full-name', 'user-password'];
+    fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && typeof clearFieldValidity === 'function') clearFieldValidity(el);
+    });
+}
+
+function initUserLiveValidation() {
+    const fields = [
+        { id: 'user-login', required: true, validator: (v) => validateLogin(v) },
+        { id: 'user-email', required: true, validator: (v) => validateEmail(v) },
+        { id: 'user-full-name', required: true, validator: (v) => validateFullName(v) },
+        { id: 'user-password', required: false, validator: (v) => validatePassword(v, false) }
+    ];
+    fields.forEach(f => {
+        const el = document.getElementById(f.id);
+        if (el && typeof attachLiveValidation === 'function') {
+            attachLiveValidation(el, f.validator, f.required);
+        }
+    });
 }
 
 function validateUserFields(login, email, fullName, password, isUpdate = false) {
     if (!login || login.trim() === '') return 'Логин обязателен';
     if (login.length < 3 || login.length > 50) return 'Логин должен содержать от 3 до 50 символов';
+    if (/^\d+$/.test(login.trim())) return 'Логин не может состоять только из цифр';
+    if (!/^[a-zA-Z0-9_-]+$/.test(login.trim())) return 'Логин может содержать только буквы, цифры, дефис и подчеркивание';
 
     if (!email || email.trim() === '') return 'Email обязателен';
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -128,12 +157,17 @@ function validateUserFields(login, email, fullName, password, isUpdate = false) 
 
     if (!fullName || fullName.trim() === '') return 'Полное имя обязательно';
     if (fullName.length < 2 || fullName.length > 100) return 'Полное имя должно содержать от 2 до 100 символов';
+    if (/^\d+$/.test(fullName.trim())) return 'ФИО не может состоять только из цифр';
+    if (fullName.trim().split(/\s+/).length < 2) return 'ФИО должно содержать минимум два слова';
 
     if (!isUpdate && (!password || password.trim() === '')) {
         return 'Пароль обязателен при создании пользователя';
     }
     if (password && password.length < 6) {
         return 'Пароль должен содержать минимум 6 символов';
+    }
+    if (password && password.length > 50) {
+        return 'Пароль не должен превышать 50 символов';
     }
 
     return null;
@@ -224,29 +258,25 @@ async function deleteUser(id, name) {
     }
 }
 
+function applyFilters() {
+    renderUsersTable();
+}
+
+function clearFilters() {
+    document.getElementById('sort-by').value = 'date_desc';
+    renderUsersTable();
+}
+
 document.getElementById('user-submit')?.addEventListener('click', saveUser);
 document.getElementById('user-cancel')?.addEventListener('click', clearUserForm);
-document.getElementById('apply-filters')?.addEventListener('click', () => {
-    renderUsersTable();
-});
-document.getElementById('clear-filters')?.addEventListener('click', () => {
-    document.getElementById('sort-by').value = 'date_desc';
-    renderUsersTable();
-});
+document.getElementById('apply-filters')?.addEventListener('click', applyFilters);
+document.getElementById('clear-filters')?.addEventListener('click', clearFilters);
 
 document.addEventListener('DOMContentLoaded', () => {
     loadUsers();
+    initUserLiveValidation();
     setTimeout(function () {
         if (typeof window.initToggleFilters === 'function') window.initToggleFilters();
-    }, 100);
-});
-    document.getElementById('sort-by').value = 'date_desc';
-    renderUsersTable();
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-    loadUsers();
-    setTimeout(function () {
-        if (typeof window.initToggleFilters === 'function') window.initToggleFilters();
+        if (typeof window.initToggleAddSections === 'function') window.initToggleAddSections();
     }, 100);
 });

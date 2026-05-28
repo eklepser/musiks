@@ -90,8 +90,16 @@ async function loadOrders() {
                 return { ...order, items };
             });
             renderOrders();
+        } else {
+            console.error('Failed to load orders:', resp.status);
+            window.ordersData = [];
+            renderOrders();
         }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+        console.error('Error loading orders:', e);
+        window.ordersData = [];
+        renderOrders();
+    }
 }
 
 function renderWishlist() {
@@ -99,7 +107,7 @@ function renderWishlist() {
     if (!tbody) return;
     tbody.innerHTML = '';
     if (!window.wishlistData || window.wishlistData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Вишлист пуст</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Вишлист пуст</tbody>';
         return;
     }
     window.wishlistData.forEach(item => {
@@ -112,8 +120,9 @@ function renderWishlist() {
         const btnRow = document.createElement('div');
         btnRow.className = 'action-buttons-row';
         const cartBtn = document.createElement('button');
-        cartBtn.textContent = '🛒 В корзину';
+        cartBtn.textContent = '🛒';
         cartBtn.classList.add('cart-btn');
+        cartBtn.title = 'В корзину';
         cartBtn.onclick = () => window.addToCart(item.product_id, item.name, 1);
         const delBtn = document.createElement('button');
         delBtn.textContent = 'Удалить';
@@ -129,7 +138,7 @@ function renderCart() {
     if (!tbody) return;
     tbody.innerHTML = '';
     if (!window.cartData || window.cartData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Корзина пуста</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Корзина пуста</tbody>';
         return;
     }
     window.cartData.forEach(item => {
@@ -156,7 +165,7 @@ function renderReviews() {
     if (!tbody) return;
     tbody.innerHTML = '';
     if (!window.reviewsData || window.reviewsData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Отзывов нет</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Отзывов нет</tbody>';
         return;
     }
     window.reviewsData.forEach(r => {
@@ -182,7 +191,8 @@ function renderOrders() {
     if (!tbody) return;
     tbody.innerHTML = '';
     if (!window.ordersData || window.ordersData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Нет заказов</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Нет заказов</tbody>';
+        renderPurchasedItems([]);
         return;
     }
     window.ordersData.forEach(order => {
@@ -240,7 +250,7 @@ function renderPurchasedItems(orders) {
     if (!tbody) return;
     tbody.innerHTML = '';
     if (items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Нет товаров в завершённых заказах</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Нет товаров в завершённых заказах</tbody>';
         return;
     }
     items.forEach(item => {
@@ -287,7 +297,7 @@ window.showOrderDetails = async function (orderId) {
     const tbody = document.getElementById('modal-order-items-tbody');
     tbody.innerHTML = '';
     if (items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Нет товаров</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Нет товаров</tbody>';
     } else {
         items.forEach(item => {
             const row = tbody.insertRow();
@@ -338,9 +348,17 @@ function showCheckoutModal() {
         return;
     }
     const modal = document.getElementById('checkout-modal');
+    if (!modal) {
+        console.error('Checkout modal not found');
+        return;
+    }
     const userInfoDiv = document.getElementById('checkout-user-info');
     const itemsTbody = document.getElementById('checkout-items-tbody');
     const totalSpan = document.getElementById('checkout-total');
+    if (!userInfoDiv || !itemsTbody || !totalSpan) {
+        console.error('Checkout modal elements not found');
+        return;
+    }
     getCurrentUser().then(user => {
         if (user) {
             userInfoDiv.innerHTML = `<strong>Пользователь:</strong> ${user.full_name} (${user.login})<br><strong>Email:</strong> ${user.email}`;
@@ -409,15 +427,15 @@ window.checkout = function () {
 
 function clearAllTables() {
     const wishTbody = document.getElementById('wishlist-tbody');
-    if (wishTbody) wishTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</td></tr>';
+    if (wishTbody) wishTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</tbody>';
     const cartTbody = document.getElementById('cart-tbody');
-    if (cartTbody) cartTbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Выберите пользователя</td></tr>';
+    if (cartTbody) cartTbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Выберите пользователя</tbody>';
     const revTbody = document.getElementById('reviews-tbody');
-    if (revTbody) revTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</td></tr>';
+    if (revTbody) revTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</tbody>';
     const ordTbody = document.getElementById('orders-tbody');
-    if (ordTbody) ordTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</td></tr>';
+    if (ordTbody) ordTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</tbody>';
     const purTbody = document.getElementById('purchased-items-tbody');
-    if (purTbody) purTbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Выберите пользователя</td></tr>';
+    if (purTbody) purTbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Выберите пользователя</tbody>';
 }
 
 function showActiveTab() {
@@ -483,6 +501,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         showActiveTab();
         setTimeout(function () {
             if (typeof window.initToggleFilters === 'function') window.initToggleFilters();
+            if (typeof window.initToggleAddSections === 'function') window.initToggleAddSections();
         }, 50);
     });
 });
@@ -545,32 +564,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const modal = document.getElementById('checkout-modal');
         if (e.target === modal) modal.style.display = 'none';
     });
+    setTimeout(function () {
+        if (typeof window.initToggleAddSections === 'function') window.initToggleAddSections();
+    }, 100);
 });
-
-function initOrderModalStyles() {
-    const modalContent = document.querySelector('#order-details-modal .modal-content');
-    if (modalContent) {
-        modalContent.style.width = '600px';
-        modalContent.style.maxWidth = '90%';
-    }
-    const modalTable = document.querySelector('#order-details-modal table');
-    if (modalTable) {
-        modalTable.style.width = '100%';
-        modalTable.style.tableLayout = 'auto';
-    }
-    const headers = document.querySelectorAll('#order-details-modal th');
-    if (headers.length >= 4) {
-        headers[0].style.width = '40%';
-        headers[1].style.width = '15%';
-        headers[2].style.width = '20%';
-        headers[3].style.width = '25%';
-    }
-}
-
-const originalShowOrderDetails = window.showOrderDetails;
-window.showOrderDetails = async function (orderId) {
-    await originalShowOrderDetails(orderId);
-    initOrderModalStyles();
-};
 
 loadDashboard();
