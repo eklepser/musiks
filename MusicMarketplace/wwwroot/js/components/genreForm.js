@@ -1,5 +1,4 @@
-﻿// js/components/genreForm.js
-window.GenreForm = (function () {
+﻿window.GenreForm = (function () {
     let editId = null;
 
     async function loadTable() {
@@ -16,7 +15,7 @@ window.GenreForm = (function () {
             if (!tbody) return;
             tbody.innerHTML = '';
             if (items.length === 0) {
-                tbody.innerHTML = '<td><td colspan="4" class="centered-message">Нет данных</tbody>';
+                tbody.innerHTML = '<tr><td colspan="4" class="centered-message">Нет данных</td></tr>';
                 document.getElementById('genre-found-count').innerText = '0';
                 return;
             }
@@ -42,7 +41,7 @@ window.GenreForm = (function () {
             });
         } catch (err) {
             const tbody = document.getElementById('genres-tbody');
-            if (tbody) tbody.innerHTML = '<tr><td colspan="4" class="centered-message">Ошибка загрузки</tbody>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="4" class="centered-message">Ошибка загрузки</td></tr>';
             document.getElementById('genre-found-count').innerText = '0';
         }
     }

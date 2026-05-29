@@ -1,5 +1,4 @@
-﻿// js/components/artistConcertForms.js
-window.ArtistConcertForms = (function () {
+﻿window.ArtistConcertForms = (function () {
     let allArtists = [];
     let allConcerts = [];
     let artistConcertLinks = [];

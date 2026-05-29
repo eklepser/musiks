@@ -1,5 +1,4 @@
-﻿// js/utils/validators.js
-window.validateRequiredString = function (value, fieldName, minLength = 2, maxLength = 200, required = true) {
+﻿window.validateRequiredString = function (value, fieldName, minLength = 2, maxLength = 200, required = true) {
     if (!required && (!value || typeof value !== 'string' || value.trim() === '')) return null;
     if (required && (!value || typeof value !== 'string' || value.trim() === '')) return `${fieldName} обязательно для заполнения`;
     if (value && typeof value === 'string') {
@@ -11,10 +10,29 @@ window.validateRequiredString = function (value, fieldName, minLength = 2, maxLe
     return null;
 };
 
-window.validateOptionalString = function (value, fieldName, maxLength = 200) {
+window.validateOptionalString = function (value, fieldName, maxLength = 200, minLength = 0) {
     if (!value || typeof value !== 'string' || value.trim() === '') return null;
     const trimmed = value.trim();
     if (/^\d+$/.test(trimmed)) return `${fieldName} не может быть только числом`;
+    if (trimmed.length < minLength) return `${fieldName} должен содержать не менее ${minLength} символов`;
+    if (trimmed.length > maxLength) return `${fieldName} не должен превышать ${maxLength} символов`;
+    return null;
+};
+
+window.validateNoLeadingDigit = function (value, fieldName, required = false) {
+    if (!required && (!value || value.trim() === '')) return null;
+    if (required && (!value || value.trim() === '')) return `${fieldName} обязательно`;
+    const trimmed = value.trim();
+    if (/^\d/.test(trimmed)) return `${fieldName} не может начинаться с цифры`;
+    return null;
+};
+
+window.validateAlphabeticWithSpaces = function (value, fieldName, minLength = 3, maxLength = 30, required = false) {
+    if (!required && (!value || value.trim() === '')) return null;
+    if (required && (!value || value.trim() === '')) return `${fieldName} обязательно`;
+    const trimmed = value.trim();
+    if (!/^[A-Za-zА-Яа-яЁё\s\-]+$/.test(trimmed)) return `${fieldName} может содержать только буквы, пробелы и дефисы`;
+    if (trimmed.length < minLength) return `${fieldName} должен содержать не менее ${minLength} символов`;
     if (trimmed.length > maxLength) return `${fieldName} не должен превышать ${maxLength} символов`;
     return null;
 };

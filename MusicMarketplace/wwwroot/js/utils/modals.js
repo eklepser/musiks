@@ -1,5 +1,4 @@
-﻿// js/utils/modals.js
-window.showConfirmModal = function (options) {
+﻿window.showConfirmModal = function (options) {
     return new Promise((resolve) => {
         let modal = document.getElementById('confirm-modal');
         if (!modal) {

@@ -1,5 +1,4 @@
-﻿// js/pages/users.js
-(function () {
+﻿(function () {
     document.addEventListener('DOMContentLoaded', async () => {
         await window.UserForm.loadTable();
         window.UserForm.initLiveValidation();

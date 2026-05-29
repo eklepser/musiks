@@ -1,5 +1,4 @@
-﻿// js/config.js
-window.API_URLS = {
+﻿window.API_URLS = {
     TICKETS: 'https://localhost:7062/api/Tickets',
     CLOTHINGS: 'https://localhost:7062/api/Clothings',
     ACCESSORIES: 'https://localhost:7062/api/Accessories',
@@ -19,7 +18,8 @@ window.API_URLS = {
     ORDERS: 'https://localhost:7062/api/Orders',
     ARTISTS_FILTER: 'https://localhost:7062/api/Artists/filter',
     CONCERTS_FILTER: 'https://localhost:7062/api/Concerts/filter',
-    CONCERTS_ARTISTS: 'https://localhost:7062/api/Concerts/filter/artists'
+    CONCERTS_ARTISTS: 'https://localhost:7062/api/Concerts/filter/artists',
+    PRODUCT_NAMES: 'https://localhost:7062/api/Products/names'
 };
 
 window.APP_CONSTANTS = {

@@ -1,5 +1,4 @@
-﻿// js/components/userMenu.js
-window.highlightActiveNavItem = function () {
+﻿window.highlightActiveNavItem = function () {
     const currentPath = window.location.pathname;
     const navLinks = document.querySelectorAll('.nav-menu a');
     navLinks.forEach(link => {

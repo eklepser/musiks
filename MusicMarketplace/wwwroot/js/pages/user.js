@@ -1,5 +1,4 @@
-﻿// js/pages/user.js
-(function () {
+﻿(function () {
     function initTabs() {
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {

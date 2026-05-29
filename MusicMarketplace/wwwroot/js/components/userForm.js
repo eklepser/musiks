@@ -1,5 +1,4 @@
-﻿// js/components/userForm.js
-window.UserForm = (function () {
+﻿window.UserForm = (function () {
     let usersData = [];
     let currentEditUserId = null;
 

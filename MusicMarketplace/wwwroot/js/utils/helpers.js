@@ -1,5 +1,4 @@
-﻿// js/utils/helpers.js
-window.ensureArray = function (data) {
+﻿window.ensureArray = function (data) {
     if (Array.isArray(data)) return data;
     if (typeof data === 'string') {
         try {
@@ -429,6 +428,41 @@ window.loadGenreNameDatalist = async function () {
                 const option = document.createElement('option');
                 option.value = name;
                 datalist.appendChild(option);
+            });
+        }
+    } catch (err) { console.error(err); }
+};
+
+window.loadProductNamesDatalist = async function () {
+    const datalist = document.getElementById('product-name-datalist');
+    if (!datalist) return;
+    try {
+        const resp = await fetch(window.API_URLS.PRODUCT_NAMES);
+        if (resp.ok) {
+            const names = await resp.json();
+            datalist.innerHTML = '';
+            names.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                datalist.appendChild(option);
+            });
+        }
+    } catch (err) { console.error(err); }
+};
+
+window.loadArtistsForFilter = async function () {
+    const select = document.getElementById('filter-artist');
+    if (!select) return;
+    try {
+        const resp = await fetch(window.API_URLS.ARTISTS);
+        if (resp.ok) {
+            const artists = await resp.json();
+            select.innerHTML = '<option value="">Все исполнители</option>';
+            artists.forEach(artist => {
+                const opt = document.createElement('option');
+                opt.value = artist.artist_id;
+                opt.textContent = artist.name;
+                select.appendChild(opt);
             });
         }
     } catch (err) { console.error(err); }

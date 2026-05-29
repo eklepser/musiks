@@ -11,6 +11,8 @@
         if (typeof window.loadManufacturerNameDatalist === 'function') window.loadManufacturerNameDatalist();
         if (typeof window.loadManufacturerCountryDatalist === 'function') window.loadManufacturerCountryDatalist();
         if (typeof window.loadGenreNameDatalist === 'function') window.loadGenreNameDatalist();
+        if (typeof window.loadProductNamesDatalist === 'function') window.loadProductNamesDatalist();
+        if (typeof window.loadArtistsForFilter === 'function') window.loadArtistsForFilter();
         if (typeof window.loadAllArtists === 'function') window.loadAllArtists();
         if (typeof window.loadGenresAndLinks === 'function') window.loadGenresAndLinks();
     }
