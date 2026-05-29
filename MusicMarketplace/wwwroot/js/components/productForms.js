@@ -8,6 +8,14 @@
         if (window.selectedGenresForClothing) window.selectedGenresForClothing = [];
         if (window.selectedGenresForAccessory) window.selectedGenresForAccessory = [];
     }
+    function getApiUrl(type) {
+        switch (type) {
+            case 'ticket': return window.API_URLS.TICKETS;
+            case 'clothing': return window.API_URLS.CLOTHINGS;
+            case 'accessory': return window.API_URLS.ACCESSORIES;
+            default: return '';
+        }
+    }
     function getFormData(type, isEdit = false) {
         const prefix = isEdit ? 'edit-' : '';
         const getVal = (id) => document.getElementById(`${prefix}${type}-${id}`)?.value.trim() || '';
@@ -68,12 +76,85 @@
             if (el) triggerFieldValidation(el);
         });
     }
+    function validateTicketData(data) {
+        let err = window.validateRequiredString(data.name, 'Название', 2, 200, true);
+        if (err) return err;
+        err = window.validatePrice(data.price, true);
+        if (err) return err;
+        err = window.validateStock(data.stock, false);
+        if (err) return err;
+        if (data.description) {
+            err = window.validateNoLeadingDigit(data.description, 'Описание', false, 10, 1000);
+            if (err) return err;
+        }
+        if (data.price_category) {
+            err = window.validateAlphabeticWithSpaces(data.price_category, 'Тип места', 3, 30, false);
+            if (err) return err;
+        }
+        if (!data.manufacturer_id) return 'Выберите производителя';
+        if (!data.concert_id) return 'Выберите концерт';
+        return null;
+    }
+    function validateClothingData(data) {
+        let err = window.validateRequiredString(data.name, 'Название', 2, 200, true);
+        if (err) return err;
+        err = window.validatePrice(data.price, true);
+        if (err) return err;
+        err = window.validateStock(data.stock, false);
+        if (err) return err;
+        if (data.description) {
+            err = window.validateNoLeadingDigit(data.description, 'Описание', false, 10, 1000);
+            if (err) return err;
+        }
+        if (data.material) {
+            err = window.validateNoLeadingDigit(data.material, 'Материал', false, 2, 50);
+            if (err) return err;
+        }
+        if (data.color) {
+            err = window.validateAlphabeticWithSpaces(data.color, 'Цвет', 3, 30, false);
+            if (err) return err;
+        }
+        if (!data.manufacturer_id) return 'Выберите производителя';
+        return null;
+    }
+    function validateAccessoryData(data) {
+        let err = window.validateRequiredString(data.name, 'Название', 2, 200, true);
+        if (err) return err;
+        err = window.validatePrice(data.price, true);
+        if (err) return err;
+        err = window.validateStock(data.stock, false);
+        if (err) return err;
+        if (data.description) {
+            err = window.validateNoLeadingDigit(data.description, 'Описание', false, 10, 1000);
+            if (err) return err;
+        }
+        if (data.material) {
+            err = window.validateNoLeadingDigit(data.material, 'Материал', false, 2, 50);
+            if (err) return err;
+        }
+        if (data.color) {
+            err = window.validateAlphabeticWithSpaces(data.color, 'Цвет', 3, 30, false);
+            if (err) return err;
+        }
+        if (data.accessory_type) {
+            err = window.validateAlphabeticWithSpaces(data.accessory_type, 'Тип аксессуара', 3, 50, false);
+            if (err) return err;
+        }
+        if (!data.manufacturer_id) return 'Выберите производителя';
+        return null;
+    }
     async function save(type) {
         const isEdit = editId !== null;
         const data = getFormData(type, isEdit);
-        if (!data.manufacturer_id) { window.showToast('Выберите производителя', 'error'); return; }
-        if (type === 'ticket' && !data.concert_id) { window.showToast('Выберите концерт', 'error'); return; }
-        let url = window.API_URLS[type.toUpperCase() + 'S'];
+        let validationError = null;
+        if (type === 'ticket') validationError = validateTicketData(data);
+        else if (type === 'clothing') validationError = validateClothingData(data);
+        else if (type === 'accessory') validationError = validateAccessoryData(data);
+        if (validationError) {
+            window.showToast(validationError, 'error');
+            return;
+        }
+        let url = getApiUrl(type);
         let method = 'POST';
         if (isEdit) {
             data[`${type}_id`] = editId;
@@ -185,7 +266,7 @@
         });
         if (!confirmed) return;
         try {
-            const url = window.API_URLS[type.toUpperCase() + 'S'];
+            const url = getApiUrl(type);
             const resp = await fetch(`${url}/${id}`, { method: 'DELETE' });
             if (!resp.ok) {
                 const errorMsg = await window.parseErrorMessage(resp);

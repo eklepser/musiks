@@ -19,11 +19,13 @@ window.validateOptionalString = function (value, fieldName, maxLength = 200, min
     return null;
 };
 
-window.validateNoLeadingDigit = function (value, fieldName, required = false) {
+window.validateNoLeadingDigit = function (value, fieldName, required = false, minLength = 0, maxLength = 200) {
     if (!required && (!value || value.trim() === '')) return null;
     if (required && (!value || value.trim() === '')) return `${fieldName} обязательно`;
     const trimmed = value.trim();
     if (/^\d/.test(trimmed)) return `${fieldName} не может начинаться с цифры`;
+    if (trimmed.length < minLength) return `${fieldName} должен содержать не менее ${minLength} символов`;
+    if (trimmed.length > maxLength) return `${fieldName} не должен превышать ${maxLength} символов`;
     return null;
 };
 

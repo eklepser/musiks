@@ -1,7 +1,9 @@
-﻿using System.Text.Json;
+﻿// ===== Файл: C:\Projects\Studying\ProgTech\MusicMarketplace\MusicMarketplace\Services\AccessoriesService.cs =====
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using MusicMarketplace.DTOs;
 using MusicMarketplace.Models;
+using Npgsql;
 
 namespace MusicMarketplace.Services
 {
@@ -69,8 +71,15 @@ namespace MusicMarketplace.Services
         public async Task<bool> DeleteAsync(int id)
         {
             var sql = "SELECT delete_accessory({0})";
-            var result = await _context.Database.ExecuteSqlRawAsync(sql, id);
-            return result > 0;
+            try
+            {
+                var result = await _context.Database.ExecuteSqlRawAsync(sql, id);
+                return result > 0;
+            }
+            catch (PostgresException ex) when (ex.SqlState == "P0001")
+            {
+                throw new InvalidOperationException(ex.MessageText);
+            }
         }
     }
 }

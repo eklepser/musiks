@@ -51,14 +51,6 @@
             window.loadOrders();
         });
         document.getElementById('checkout-btn')?.addEventListener('click', () => window.checkout());
-        document.getElementById('cart-confirm-btn')?.addEventListener('click', () => {
-            if (window.currentProductForCart) {
-                const quantity = parseInt(document.getElementById('cart-quantity').value);
-                window.addToCart(window.currentProductForCart.id, window.currentProductForCart.name, quantity);
-                window.hideCartModal();
-            }
-        });
-        document.getElementById('cart-cancel-btn')?.addEventListener('click', () => window.hideCartModal());
         document.getElementById('review-confirm-btn')?.addEventListener('click', () => {
             if (window.currentProductForReview) {
                 const rating = parseInt(document.getElementById('review-rating').value);
@@ -71,12 +63,13 @@
         document.getElementById('review-cancel-btn')?.addEventListener('click', () => window.hideReviewModal());
         document.getElementById('remove-cart-confirm-btn')?.addEventListener('click', () => {
             if (window.currentProductForRemove) {
-                const quantity = parseInt(document.getElementById('remove-cart-quantity').value);
-                if (quantity && quantity > 0 && quantity <= window.currentProductForRemove.currentQuantity) {
-                    window.removeFromCartWithQuantity(window.currentProductForRemove.id, quantity);
-                } else {
+                let quantity = parseInt(document.getElementById('remove-cart-quantity').value);
+                if (isNaN(quantity) || quantity < 1 || quantity > window.currentProductForRemove.currentQuantity) {
                     window.showToast('Некорректное количество', 'error');
+                    return;
                 }
+                quantity = Math.floor(quantity);
+                window.removeFromCartWithQuantity(window.currentProductForRemove.id, quantity);
             }
         });
         document.getElementById('remove-cart-cancel-btn')?.addEventListener('click', () => window.hideRemoveFromCartModal());

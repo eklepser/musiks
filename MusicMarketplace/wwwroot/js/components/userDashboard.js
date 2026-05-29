@@ -126,7 +126,7 @@ window.renderWishlist = function () {
     if (!tbody) return;
     tbody.innerHTML = '';
     if (!window.wishlistData || window.wishlistData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Вишлист пуст</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Вишлист пуст</tbody>';
         return;
     }
     window.wishlistData.forEach(item => {
@@ -157,7 +157,7 @@ window.renderCart = function () {
     if (!tbody) return;
     tbody.innerHTML = '';
     if (!window.cartData || window.cartData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Корзина пуста</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Корзина пуста</tbody>';
         return;
     }
     window.cartData.forEach(item => {
@@ -184,7 +184,7 @@ window.renderReviews = function () {
     if (!tbody) return;
     tbody.innerHTML = '';
     if (!window.reviewsData || window.reviewsData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Отзывов нет</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Отзывов нет</tbody>';
         return;
     }
     window.reviewsData.forEach(r => {
@@ -210,7 +210,7 @@ window.renderOrders = function () {
     if (!tbody) return;
     tbody.innerHTML = '';
     if (!window.ordersData || window.ordersData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Нет заказов</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Нет заказов</tbody>';
         window.renderPurchasedItems([]);
         return;
     }
@@ -269,7 +269,7 @@ window.renderPurchasedItems = function (orders) {
     if (!tbody) return;
     tbody.innerHTML = '';
     if (items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Нет товаров в завершённых заказах</td></tr>';
+        tbody.innerHTML = '</table><td colspan="7" style="text-align: center;">Нет товаров в завершённых заказах</tbody>';
         return;
     }
     items.forEach(item => {
@@ -313,7 +313,7 @@ window.showOrderDetails = async function (orderId) {
     const tbody = document.getElementById('modal-order-items-tbody');
     tbody.innerHTML = '';
     if (items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Нет товаров</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Нет товаров</tbody>';
     } else {
         items.forEach(item => {
             const row = tbody.insertRow();
@@ -434,15 +434,15 @@ window.checkout = function () {
 
 window.clearAllTables = function () {
     const wishTbody = document.getElementById('wishlist-tbody');
-    if (wishTbody) wishTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</td></tr>';
+    if (wishTbody) wishTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</tbody>';
     const cartTbody = document.getElementById('cart-tbody');
-    if (cartTbody) cartTbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Выберите пользователя</td></tr>';
+    if (cartTbody) cartTbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Выберите пользователя</tbody>';
     const revTbody = document.getElementById('reviews-tbody');
-    if (revTbody) revTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</td></tr>';
+    if (revTbody) revTbody.innerHTML = '</table><td colspan="5" style="text-align: center;">Выберите пользователя</tbody>';
     const ordTbody = document.getElementById('orders-tbody');
-    if (ordTbody) ordTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</td></tr>';
+    if (ordTbody) ordTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</tbody>';
     const purTbody = document.getElementById('purchased-items-tbody');
-    if (purTbody) purTbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Выберите пользователя</td></tr>';
+    if (purTbody) purTbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Выберите пользователя</tbody>';
 };
 
 window.showActiveTab = function () {
@@ -475,7 +475,12 @@ window.showCartModal = function () {
     const modal = document.getElementById('cart-modal');
     if (!modal) return;
     document.getElementById('cart-product-name').innerText = window.currentProductForCart.name;
-    document.getElementById('cart-quantity').value = 1;
+    const quantityInput = document.getElementById('cart-quantity');
+    if (quantityInput) {
+        quantityInput.value = 1;
+        quantityInput.step = 1;
+        quantityInput.pattern = '\\d+';
+    }
     modal.style.display = 'block';
 };
 

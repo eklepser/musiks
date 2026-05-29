@@ -55,6 +55,17 @@ window.filterNumericInput = function (event) {
     return filtered;
 };
 
+window.filterIntegerInput = function (event) {
+    let value = event.target.value;
+    let cursorPos = event.target.selectionStart;
+    let filtered = value.replace(/[^\d]/g, '');
+    if (filtered !== value) {
+        event.target.value = filtered;
+        event.target.setSelectionRange(cursorPos - 1, cursorPos - 1);
+    }
+    return filtered;
+};
+
 window.filterLettersOnly = function (event) {
     let value = event.target.value;
     let cursorPos = event.target.selectionStart;
@@ -110,6 +121,15 @@ window.initNumericInputs = function () {
         input.addEventListener('input', window.filterNumericInput);
         input.addEventListener('keypress', (e) => {
             if (!/[\d.,]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'Tab') {
+                e.preventDefault();
+            }
+        });
+    });
+    document.querySelectorAll('[data-integer="true"]').forEach(input => {
+        input.removeEventListener('input', window.filterIntegerInput);
+        input.addEventListener('input', window.filterIntegerInput);
+        input.addEventListener('keypress', (e) => {
+            if (!/[\d]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'Tab') {
                 e.preventDefault();
             }
         });

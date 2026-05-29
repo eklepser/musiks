@@ -19,7 +19,7 @@
     ARTISTS_FILTER: 'https://localhost:7062/api/Artists/filter',
     CONCERTS_FILTER: 'https://localhost:7062/api/Concerts/filter',
     CONCERTS_ARTISTS: 'https://localhost:7062/api/Concerts/filter/artists',
-    PRODUCT_NAMES: 'https://localhost:7062/api/Products/names'
+    PRODUCT_NAMES: 'https://localhost:7062/api/Products/filter/names'
 };
 
 window.APP_CONSTANTS = {
