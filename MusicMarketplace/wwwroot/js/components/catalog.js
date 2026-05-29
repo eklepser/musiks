@@ -34,7 +34,7 @@
             if (!tbody) return;
             tbody.innerHTML = '';
             if (items.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" class="centered-message">Нет данных</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" class="centered-message">Нет данных</tbody>';
                 return;
             }
             for (const item of items) {
@@ -85,18 +85,13 @@
                 wishBtn.className = 'wishlist-btn' + (inWishlist ? ' active' : '');
                 wishBtn.title = inWishlist ? 'Удалить из вишлиста' : 'В вишлист';
                 wishBtn.onclick = () => inWishlist ? window.removeFromWishlist?.(item.product_id) : window.addToWishlist?.(item.product_id, item.name);
-                const inCart = window.userCartIds && window.userCartIds.includes(item.product_id);
                 const cartBtn = document.createElement('button');
                 cartBtn.textContent = '🛒';
-                cartBtn.className = 'cart-btn' + (inCart ? ' active' : '');
-                cartBtn.title = inCart ? 'Удалить из корзины' : 'В корзину';
+                cartBtn.className = 'cart-btn';
+                cartBtn.title = 'В корзину';
                 cartBtn.onclick = () => {
-                    if (inCart) {
-                        window.showRemoveFromCartModal?.(item.product_id, item.name);
-                    } else {
-                        window.currentProductForCart = { id: item.product_id, name: item.name };
-                        window.showCartModal?.();
-                    }
+                    window.currentProductForCart = { id: item.product_id, name: item.name };
+                    window.showCartModal?.();
                 };
                 topRow.append(wishBtn, cartBtn);
                 const editBtn = document.createElement('button');
@@ -120,7 +115,7 @@
             }
         } catch (err) {
             console.error(err);
-            document.getElementById('catalog-tbody').innerHTML = '<tr><td colspan="9" class="centered-message">Ошибка загрузки</td></tr>';
+            document.getElementById('catalog-tbody').innerHTML = '<tr><td colspan="9" class="centered-message">Ошибка загрузки</tbody>';
         }
     }
 

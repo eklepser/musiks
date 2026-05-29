@@ -55,13 +55,20 @@ window.filterNumericInput = function (event) {
     return filtered;
 };
 
-window.filterIntegerInput = function (event) {
+window.filterPositiveIntegerInput = function (event) {
     let value = event.target.value;
     let cursorPos = event.target.selectionStart;
+    let oldLength = value.length;
     let filtered = value.replace(/[^\d]/g, '');
+    if (filtered.length > 1 && filtered[0] === '0') {
+        filtered = filtered.replace(/^0+/, '');
+        if (filtered === '') filtered = '0';
+    }
     if (filtered !== value) {
         event.target.value = filtered;
-        event.target.setSelectionRange(cursorPos - 1, cursorPos - 1);
+        let newLength = filtered.length;
+        let delta = newLength - oldLength;
+        event.target.setSelectionRange(cursorPos + delta, cursorPos + delta);
     }
     return filtered;
 };
@@ -125,9 +132,9 @@ window.initNumericInputs = function () {
             }
         });
     });
-    document.querySelectorAll('[data-integer="true"]').forEach(input => {
-        input.removeEventListener('input', window.filterIntegerInput);
-        input.addEventListener('input', window.filterIntegerInput);
+    document.querySelectorAll('[data-positive-integer="true"]').forEach(input => {
+        input.removeEventListener('input', window.filterPositiveIntegerInput);
+        input.addEventListener('input', window.filterPositiveIntegerInput);
         input.addEventListener('keypress', (e) => {
             if (!/[\d]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'Tab') {
                 e.preventDefault();
@@ -508,3 +515,4 @@ window.parseErrorMessage = async function (resp) {
         return 'Произошла ошибка';
     }
 };
+            

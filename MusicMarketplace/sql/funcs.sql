@@ -1250,3 +1250,63 @@ RETURN QUERY EXECUTE query_text;
 END;
 $$ LANGUAGE plpgsql;
 
+-- ===== Файл: C:\Projects\Studying\ProgTech\MusicMarketplace\MusicMarketplace\sql\funcs.sql =====
+-- Изменённые функции удаления с проверкой наличия товара в заказах
+
+CREATE OR REPLACE FUNCTION delete_clothing(p_id INT) RETURNS BOOLEAN AS $$
+DECLARE v_merch_id INT; v_product_id INT;
+BEGIN
+    SELECT merch_id INTO v_merch_id FROM "Clothing" cl WHERE cl.clothing_id = p_id;
+    IF NOT FOUND THEN RETURN FALSE; END IF;
+    SELECT product_id INTO v_product_id FROM "Merch" m WHERE m.merch_id = v_merch_id;
+    -- Проверка, есть ли товар в заказах
+    IF EXISTS (SELECT 1 FROM "OrderItem" oi WHERE oi.product_id = v_product_id) THEN
+        RAISE EXCEPTION 'Невозможно удалить товар, который есть в заказах';
+    END IF;
+    DELETE FROM "Clothing" WHERE clothing_id = p_id;
+    DELETE FROM "Merch" WHERE merch_id = v_merch_id;
+    DELETE FROM "Product" WHERE product_id = v_product_id;
+    RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION delete_accessory(p_id INT) RETURNS BOOLEAN AS $$
+DECLARE v_merch_id INT; v_product_id INT;
+BEGIN
+    SELECT merch_id INTO v_merch_id FROM "Accessory" acc WHERE acc.accessory_id = p_id;
+    IF NOT FOUND THEN RETURN FALSE; END IF;
+    SELECT product_id INTO v_product_id FROM "Merch" m WHERE m.merch_id = v_merch_id;
+    IF EXISTS (SELECT 1 FROM "OrderItem" oi WHERE oi.product_id = v_product_id) THEN
+        RAISE EXCEPTION 'Невозможно удалить товар, который есть в заказах';
+    END IF;
+    DELETE FROM "Accessory" WHERE accessory_id = p_id;
+    DELETE FROM "Merch" WHERE merch_id = v_merch_id;
+    DELETE FROM "Product" WHERE product_id = v_product_id;
+    RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION delete_ticket(p_id INT) RETURNS BOOLEAN AS $$
+DECLARE v_product_id INT;
+BEGIN
+    SELECT product_id INTO v_product_id FROM "Ticket" t WHERE t.ticket_id = p_id;
+    IF NOT FOUND THEN RETURN FALSE; END IF;
+    IF EXISTS (SELECT 1 FROM "OrderItem" oi WHERE oi.product_id = v_product_id) THEN
+        RAISE EXCEPTION 'Невозможно удалить билет, который есть в заказах';
+    END IF;
+    DELETE FROM "Ticket" WHERE ticket_id = p_id;
+    DELETE FROM "Product" WHERE product_id = v_product_id;
+    RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION delete_product(p_id INT) RETURNS BOOLEAN AS $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM "OrderItem" oi WHERE oi.product_id = p_id) THEN
+        RAISE EXCEPTION 'Невозможно удалить товар, который есть в заказах';
+    END IF;
+    DELETE FROM "Product" p WHERE p.product_id = p_id;
+    RETURN FOUND;
+END;
+$$ LANGUAGE plpgsql;
+

@@ -680,5 +680,8 @@
         });
         document.getElementById('modal-merch-close')?.addEventListener('click', window.closeArtistsMerchModal);
         initTabs();
+        if (typeof window.loadUserStatus === 'function') {
+            window.loadUserStatus();
+        }
     });
 })();

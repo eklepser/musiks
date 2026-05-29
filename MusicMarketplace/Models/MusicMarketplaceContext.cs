@@ -170,7 +170,6 @@ public partial class MusicMarketplaceContext : DbContext
             entity.HasKey(e => new { e.user_id, e.product_id });
         });
 
-        // Исправленная конфигурация ArtistConcert
         modelBuilder.Entity<ArtistConcert>(entity =>
         {
             entity.ToTable("ArtistConcert");

@@ -15,7 +15,7 @@
             if (!tbody) return;
             tbody.innerHTML = '';
             if (items.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="centered-message">Нет данных</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" class="centered-message">Нет данных</tbody>';
                 document.getElementById('genre-found-count').innerText = '0';
                 return;
             }
@@ -41,7 +41,7 @@
             });
         } catch (err) {
             const tbody = document.getElementById('genres-tbody');
-            if (tbody) tbody.innerHTML = '<tr><td colspan="4" class="centered-message">Ошибка загрузки</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="4" class="centered-message">Ошибка загрузки</tbody>';
             document.getElementById('genre-found-count').innerText = '0';
         }
     }

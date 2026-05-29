@@ -1,9 +1,7 @@
-﻿// ===== Файл: C:\Projects\Studying\ProgTech\MusicMarketplace\MusicMarketplace\Services\TicketsService.cs =====
-using System.Text.Json;
+﻿using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using MusicMarketplace.DTOs;
 using MusicMarketplace.Models;
-using Npgsql;
 
 namespace MusicMarketplace.Services
 {
@@ -28,17 +26,27 @@ namespace MusicMarketplace.Services
         {
             var genresJson = JsonSerializer.Serialize(dto.genreIds ?? new List<int>());
             var sql = "SELECT * FROM create_ticket({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})";
-            return await _context.Database.SqlQueryRaw<TicketDto>(
+            var raw = await _context.Database.SqlQueryRaw<TicketRawDto>(
                 sql,
-                dto.name,
-                dto.price,
-                dto.description,
-                dto.stock,
-                dto.manufacturer_id,
-                dto.concert_id,
-                dto.price_category,
-                genresJson
+                dto.name, dto.price, dto.description, dto.stock,
+                dto.manufacturer_id, dto.concert_id, dto.price_category, genresJson
             ).FirstOrDefaultAsync();
+
+            if (raw == null) throw new Exception("Failed to create ticket");
+
+            return new TicketDto
+            {
+                ticket_id = raw.ticket_id,
+                product_id = raw.product_id,
+                name = raw.name,
+                price = raw.price,
+                description = raw.description,
+                stock = raw.stock,
+                manufacturer_id = raw.manufacturer_id,
+                concert_id = raw.concert_id,
+                price_category = raw.price_category,
+                genreIds = dto.genreIds
+            };
         }
 
         public async Task<bool> UpdateAsync(int id, TicketDto dto)
@@ -63,15 +71,8 @@ namespace MusicMarketplace.Services
         public async Task<bool> DeleteAsync(int id)
         {
             var sql = "SELECT delete_ticket({0})";
-            try
-            {
-                var result = await _context.Database.ExecuteSqlRawAsync(sql, id);
-                return result > 0;
-            }
-            catch (PostgresException ex) when (ex.SqlState == "P0001")
-            {
-                throw new InvalidOperationException(ex.MessageText);
-            }
+            var result = await _context.Database.ExecuteSqlRawAsync(sql, id);
+            return result > 0;
         }
     }
 }

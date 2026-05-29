@@ -211,7 +211,7 @@
             }
         } catch (err) {
             const tbody = document.getElementById('concerts-tbody');
-            if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Ошибка загрузки</tbody>';
+            if (tbody) tbody.innerHTML = '<td><td colspan="6" class="centered-message">Ошибка загрузки</tbody>';
         }
     }
 

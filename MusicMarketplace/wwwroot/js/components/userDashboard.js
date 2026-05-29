@@ -15,7 +15,13 @@ window.getCurrentUser = async function () {
 
 window.loadUserStatus = async function () {
     const userId = window.getCurrentUserId();
-    if (!userId) return;
+    if (!userId) {
+        window.userWishlistIds = [];
+        window.userCartIds = [];
+        window.userReviewProductIds = [];
+        if (typeof window.Catalog?.render === 'function') window.Catalog.render();
+        return;
+    }
     try {
         const [wishlistRes, cartRes, reviewsRes] = await Promise.all([
             fetch(`${window.API_URLS.WISHLISTS}/byUser/${userId}`),
@@ -23,11 +29,15 @@ window.loadUserStatus = async function () {
             fetch(`${window.API_URLS.REVIEWS}/byUser/${userId}`)
         ]);
         if (wishlistRes.ok) window.userWishlistIds = (await wishlistRes.json()).map(i => i.product_id);
+        else window.userWishlistIds = [];
         if (cartRes.ok) {
             window.userCartObjects = await cartRes.json();
             window.userCartIds = window.userCartObjects.map(i => i.product_id);
+        } else {
+            window.userCartIds = [];
         }
         if (reviewsRes.ok) window.userReviewProductIds = (await reviewsRes.json()).map(i => i.product_id);
+        else window.userReviewProductIds = [];
     } catch (err) { console.error(err); }
     if (typeof window.Catalog?.render === 'function') window.Catalog.render();
 };
@@ -269,7 +279,7 @@ window.renderPurchasedItems = function (orders) {
     if (!tbody) return;
     tbody.innerHTML = '';
     if (items.length === 0) {
-        tbody.innerHTML = '</table><td colspan="7" style="text-align: center;">Нет товаров в завершённых заказах</tbody>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Нет товаров в завершённых заказах</tbody>';
         return;
     }
     items.forEach(item => {
@@ -438,7 +448,7 @@ window.clearAllTables = function () {
     const cartTbody = document.getElementById('cart-tbody');
     if (cartTbody) cartTbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Выберите пользователя</tbody>';
     const revTbody = document.getElementById('reviews-tbody');
-    if (revTbody) revTbody.innerHTML = '</table><td colspan="5" style="text-align: center;">Выберите пользователя</tbody>';
+    if (revTbody) revTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</tbody>';
     const ordTbody = document.getElementById('orders-tbody');
     if (ordTbody) ordTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</tbody>';
     const purTbody = document.getElementById('purchased-items-tbody');
@@ -478,8 +488,8 @@ window.showCartModal = function () {
     const quantityInput = document.getElementById('cart-quantity');
     if (quantityInput) {
         quantityInput.value = 1;
-        quantityInput.step = 1;
-        quantityInput.pattern = '\\d+';
+        quantityInput.setAttribute('data-integer', 'true');
+        quantityInput.inputMode = 'numeric';
     }
     modal.style.display = 'block';
 };
@@ -488,6 +498,109 @@ window.hideCartModal = function () {
     const modal = document.getElementById('cart-modal');
     if (modal) modal.style.display = 'none';
     window.currentProductForCart = null;
+};
+
+window.showRemoveFromCartModal = function (productId, productName, currentQuantity) {
+    if (currentQuantity <= 1) { window.removeFromCart(productId); return; }
+    window.currentProductForRemove = { id: productId, name: productName, currentQuantity: currentQuantity };
+    const modal = document.getElementById('remove-from-cart-modal');
+    if (!modal) return;
+    document.getElementById('remove-cart-product-name').innerText = productName;
+    const quantityInput = document.getElementById('remove-cart-quantity');
+    if (quantityInput) {
+        quantityInput.value = 1;
+        quantityInput.setAttribute('data-integer', 'true');
+        quantityInput.inputMode = 'numeric';
+    }
+    document.getElementById('remove-cart-max').innerText = currentQuantity;
+    modal.style.display = 'block';
+};
+
+window.hideRemoveFromCartModal = function () {
+    const modal = document.getElementById('remove-from-cart-modal');
+    if (modal) modal.style.display = 'none';
+    window.currentProductForRemove = null;
+};
+
+window.removeFromCartWithQuantity = async function (productId, quantity) {
+    const userId = window.getCurrentUserId();
+    if (!userId) return;
+    try {
+        const resp = await fetch(`${window.API_URLS.CARTS}/${userId}/${productId}?quantity=${quantity}`, { method: 'DELETE' });
+        if (resp.ok) {
+            if (typeof window.loadUserStatus === 'function') await window.loadUserStatus();
+            if (typeof window.loadCart === 'function') await window.loadCart();
+            window.showToast(`Товар удалён из корзины (${quantity} шт.)`, 'success');
+            window.hideRemoveFromCartModal();
+        } else {
+            const error = await resp.json();
+            window.showToast(error.message || 'Ошибка удаления', 'error');
+        }
+    } catch (err) { window.showToast('Ошибка сети', 'error'); }
+};
+
+window.removeFromCart = async function (productId) {
+    const userId = window.getCurrentUserId();
+    if (!userId) return;
+    const confirmed = await window.showConfirmModal({
+        title: 'Удаление из корзины',
+        message: `Удалить товар из корзины?`,
+        yesText: 'Да, удалить',
+        noText: 'Отмена'
+    });
+    if (!confirmed) return;
+    try {
+        const resp = await fetch(`${window.API_URLS.CARTS}/${userId}/${productId}`, { method: 'DELETE' });
+        if (resp.ok) {
+            if (typeof window.loadUserStatus === 'function') await window.loadUserStatus();
+            if (typeof window.loadCart === 'function') await window.loadCart();
+            window.showToast('Товар удалён из корзины', 'success');
+        } else {
+            const error = await resp.json();
+            window.showToast(error.message || 'Ошибка удаления', 'error');
+        }
+    } catch (err) { window.showToast('Ошибка сети', 'error'); }
+};
+
+window.addReview = async function (productId, productName, rating, reviewText) {
+    const userId = window.getCurrentUserId();
+    if (!userId) { window.showToast('Сначала выберите пользователя', 'error'); return false; }
+    if (!rating || rating < 1 || rating > 5) { window.showToast('Оценка должна быть от 1 до 5', 'error'); return false; }
+    try {
+        const resp = await fetch(window.API_URLS.REVIEWS, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: userId, product_id: productId, rating: rating, review_text: reviewText })
+        });
+        if (resp.status === 409) {
+            const error = await resp.json();
+            window.showToast(error.message || 'Вы уже оставляли отзыв на этот товар', 'warning');
+            return false;
+        }
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        window.showToast(`Отзыв на товар «${productName}» добавлен`, 'success');
+        if (typeof window.loadUserStatus === 'function') await window.loadUserStatus();
+        if (typeof window.loadOrders === 'function') await window.loadOrders();
+        return true;
+    } catch (err) { window.showToast('Ошибка добавления отзыва', 'error'); return false; }
+};
+
+window.deleteReview = async function (productId) {
+    const userId = window.getCurrentUserId();
+    if (!userId) return;
+    const confirmed = await window.showConfirmModal({
+        title: 'Удаление отзыва',
+        message: `Удалить отзыв на этот товар?`,
+        yesText: 'Да, удалить',
+        noText: 'Отмена'
+    });
+    if (!confirmed) return;
+    const resp = await fetch(`${window.API_URLS.REVIEWS}/${userId}/${productId}`, { method: 'DELETE' });
+    if (resp.ok) {
+        if (typeof window.loadUserStatus === 'function') await window.loadUserStatus();
+        if (typeof window.loadOrders === 'function') await window.loadOrders();
+        window.showToast('Отзыв удалён', 'success');
+    } else window.showToast('Ошибка удаления', 'error');
 };
 
 window.showReviewModal = function () {

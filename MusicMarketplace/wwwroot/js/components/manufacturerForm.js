@@ -17,7 +17,7 @@
             if (!tbody) return;
             tbody.innerHTML = '';
             if (items.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="centered-message">Нет данных</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" class="centered-message">Нет данных</tbody>';
                 document.getElementById('manufacturer-found-count').innerText = '0';
                 return;
             }
@@ -44,7 +44,7 @@
             });
         } catch (err) {
             const tbody = document.getElementById('manufacturers-tbody');
-            if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="centered-message">Ошибка загрузки</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="centered-message">Ошибка загрузки</tbody>';
             document.getElementById('manufacturer-found-count').innerText = '0';
         }
     }

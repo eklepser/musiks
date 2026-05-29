@@ -41,6 +41,7 @@ window.onUserChange = function (userId, reload = true, showNotification = true) 
     if (!userId) {
         localStorage.removeItem('currentUserId');
         window.currentUser = null;
+        if (typeof window.loadUserStatus === 'function') window.loadUserStatus();
         if (reload && window.location.pathname !== '/user.html') window.location.reload();
         else if (window.location.pathname === '/user.html' && typeof window.loadDashboard === 'function') window.loadDashboard();
         return;
@@ -51,6 +52,7 @@ window.onUserChange = function (userId, reload = true, showNotification = true) 
             window.currentUser = user;
             localStorage.setItem('currentUserId', userId);
             if (showNotification && typeof window.showToast === 'function') window.showToast(`Выбран пользователь: ${user.full_name}`, 'success');
+            if (typeof window.loadUserStatus === 'function') window.loadUserStatus();
             if (reload && window.location.pathname !== '/user.html') window.location.reload();
             else if (window.location.pathname === '/user.html' && typeof window.loadDashboard === 'function') window.loadDashboard();
         })
