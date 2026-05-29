@@ -1,4 +1,4 @@
-﻿CREATE OR REPLACE FUNCTION trg_update_product_stock_on_order()
+﻿CREATE OR REPLACE FUNCTION update_product_stock_on_order()
 RETURNS TRIGGER AS $$
 DECLARE
     current_stock INT;
@@ -24,9 +24,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg-OrderItem-insert-before ON "OrderItem";
+DROP TRIGGER IF EXISTS trg_OrderItem_insert_before ON "OrderItem";
 
-CREATE TRIGGER trg-OrderItem-insert-before
+CREATE TRIGGER trg_OrderItem_insert_before
     BEFORE INSERT ON "OrderItem"
     FOR EACH ROW
-    EXECUTE FUNCTION trg_update_product_stock_on_order();
+    EXECUTE FUNCTION update_product_stock_on_order();

@@ -1,5 +1,3 @@
-BEGIN;
-
 TRUNCATE TABLE "ArtistMerch" CASCADE;
 TRUNCATE TABLE "ArtistConcert" CASCADE;
 TRUNCATE TABLE "ProductGenre" CASCADE;
@@ -92,15 +90,21 @@ INSERT INTO "Artist" (artist_id, name, country, debut_year, language) VALUES
 ALTER SEQUENCE "Artist_artist_id_seq" RESTART WITH 21;
 
 INSERT INTO "Concert" (concert_id, title, venue, datetime) VALUES
-(1, 'Kanye West – Vultures Tour', 'Luzhniki Stadium, Moscow', '2025-07-25 20:00:00'),
-(2, 'Dua Lipa Future Nostalgia', 'VTB Arena, Moscow', '2025-07-20 20:00:00'),
-(3, 'Hans Zimmer Live', 'Kremlin Palace, Moscow', '2025-09-10 19:30:00'),
-(4, 'Metallica M72 World Tour', 'Spartak Stadium, Moscow', '2025-08-15 19:00:00'),
-(5, 'Kendrick Lamar – The Big Steppers', 'Megasport Arena, Moscow', '2025-06-30 20:30:00'),
+(1, 'Kanye West – Vultures Tour', 'Luzhniki Stadium, Moscow', '2024-07-25 20:00:00'),
+(2, 'Dua Lipa Future Nostalgia', 'VTB Arena, Moscow', '2024-07-20 20:00:00'),
+(3, 'Hans Zimmer Live', 'Kremlin Palace, Moscow', '2024-09-10 19:30:00'),
+(4, 'Metallica M72 World Tour', 'Spartak Stadium, Moscow', '2024-08-15 19:00:00'),
+(5, 'Kendrick Lamar – The Big Steppers', 'Megasport Arena, Moscow', '2024-06-30 20:30:00'),
 (6, 'Taylor Swift The Eras Tour', 'Luzhniki Stadium, Moscow', '2025-09-25 19:00:00'),
-(7, 'Billie Eilish Happier Than Ever', 'VTB Arena, Moscow', '2025-10-10 20:00:00');
+(7, 'Billie Eilish Happier Than Ever', 'VTB Arena, Moscow', '2025-10-10 20:00:00'),
+(8, 'Ed Sheeran Mathematics Tour', 'Olympic Stadium, Moscow', '2026-05-15 19:30:00'),
+(9, 'Eminem Revival Tour', 'Spartak Stadium, Moscow', '2026-06-20 20:00:00'),
+(10, 'Beyoncé Renaissance Tour', 'Luzhniki Stadium, Moscow', '2026-07-01 19:00:00'),
+(11, 'Drake It''s All a Blur', 'VTB Arena, Moscow', '2026-08-10 20:30:00'),
+(12, 'Adele Weekends with Adele', 'Kremlin Palace, Moscow', '2026-09-05 19:00:00'),
+(13, 'Coldplay Music of the Spheres', 'Luzhniki Stadium, Moscow', '2027-06-15 20:00:00');
 
-ALTER SEQUENCE "Concert_concert_id_seq" RESTART WITH 8;
+ALTER SEQUENCE "Concert_concert_id_seq" RESTART WITH 14;
 
 INSERT INTO "Product" (product_id, name, price, description, stock, manufacturer_id) VALUES
 (1, 'The College Dropout (CD)', 1999.00, 'Дебютный альбом Kanye West', 120, 5),
@@ -108,7 +112,7 @@ INSERT INTO "Product" (product_id, name, price, description, stock, manufacturer
 (3, 'Future Nostalgia (Винил)', 2999.00, 'Винил Dua Lipa', 50, 3),
 (4, 'The Dark Knight OST', 1299.00, 'Саундтрек Ханса Циммера', 200, 2),
 (5, 'DAMN. (CD)', 1599.00, 'Альбом Kendrick Lamar', 150, 1),
-(15, '1989 (Taylor''s Version) (CD)', 2499.00, 'Перезаписанный альбом Тейлор Свифт', 300, 1),
+(15, 'Альбом 1989 (Taylor''s Version) (CD)', 2499.00, 'Перезаписанный альбом Тейлор Свифт', 300, 1),
 (16, 'Happier Than Ever (CD)', 1899.00, 'Альбом Билли Айлиш', 120, 3),
 (17, '÷ (Divide) (CD)', 2199.00, 'Альбом Эда Ширана', 200, 1),
 (18, 'Kanye West – Танцевальный партер', 7500.00, 'Стоячий партер, отличный обзор сцены', 800, 6),
@@ -159,9 +163,15 @@ INSERT INTO "Ticket" (ticket_id, concert_id, product_id, price_category, quantit
 (9, 5, 26, 'Стоячий партер', 400),
 (10, 6, 27, 'Танцевальный партер', 600),
 (11, 6, 28, 'VIP-пакет', 30),
-(12, 7, 29, 'Партер', 350);
+(12, 7, 29, 'Партер', 350),
+(13, 8, 30, 'Партер', 500),
+(14, 9, 31, 'Танцпол', 400),
+(15, 10, 32, 'Партер', 600),
+(16, 11, 33, 'Стоячий партер', 300),
+(17, 12, 34, 'Партер', 250),
+(18, 13, 35, 'Танцевальный партер', 700);
 
-ALTER SEQUENCE "Ticket_ticket_id_seq" RESTART WITH 13;
+ALTER SEQUENCE "Ticket_ticket_id_seq" RESTART WITH 19;
 
 INSERT INTO "Merch" (merch_id, product_id, material, color) VALUES
 (1, 30, 'Хлопок', 'Черный'),
@@ -260,7 +270,8 @@ INSERT INTO "ProductGenre" (product_id, genre_id) VALUES
 (50, 2);
 
 INSERT INTO "ArtistConcert" (artist_id, concert_id) VALUES
-(1, 1), (2, 2), (3, 3), (4, 4), (6, 5), (7, 6), (8, 7);
+(1, 1), (2, 2), (3, 3), (4, 4), (6, 5), (7, 6), (8, 7),
+(9, 8), (10, 9), (11, 10), (12, 11), (13, 12), (14, 13);
 
 INSERT INTO "ArtistMerch" (artist_id, merch_id) VALUES
 (1, 1), (2, 2), (4, 3), (6, 4), (7, 5), (8, 6), (9, 7),
@@ -291,5 +302,3 @@ SELECT setval('"Merch_merch_id_seq"', (SELECT COALESCE(MAX(merch_id), 1) FROM "M
 SELECT setval('"Clothing_clothing_id_seq"', (SELECT COALESCE(MAX(clothing_id), 1) FROM "Clothing"));
 SELECT setval('"Accessory_accessory_id_seq"', (SELECT COALESCE(MAX(accessory_id), 1) FROM "Accessory"));
 SELECT setval('"Order_order_id_seq"', (SELECT COALESCE(MAX(order_id), 1) FROM "Order"));
-
-COMMIT;

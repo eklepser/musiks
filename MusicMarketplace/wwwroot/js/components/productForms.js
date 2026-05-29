@@ -218,7 +218,7 @@
     }
     function fillEditForm(item, type) {
         clearForm(type);
-        editId = item.product_id || item.id || item[`${type}_id`];
+        editId = item[`${type}_id`] || item.product_id || item.id;
         document.getElementById(`edit-${type}-id`).value = editId;
         document.getElementById(`edit-${type}-name`).value = item.name;
         document.getElementById(`edit-${type}-price`).value = item.price;
