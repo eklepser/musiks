@@ -1,11 +1,9 @@
-﻿-- 1. Создаём функцию триггера
-CREATE OR REPLACE FUNCTION trg_update_product_stock_on_order()
+﻿CREATE OR REPLACE FUNCTION trg_update_product_stock_on_order()
 RETURNS TRIGGER AS $$
 DECLARE
     current_stock INT;
     product_name TEXT;
 BEGIN
-    -- Получаем текущий остаток и название товара
     SELECT stock, name INTO current_stock, product_name 
     FROM "Product" 
     WHERE product_id = NEW.product_id;
@@ -15,11 +13,9 @@ BEGIN
     END IF;
 
     IF current_stock < NEW.quantity THEN
-        -- Формируем понятное сообщение с названием товара
         RAISE EXCEPTION 'Недостаточно товара % на складе. Доступно: %, заказано: %', product_name, current_stock, NEW.quantity;
     END IF;
 
-    -- Уменьшаем остаток
     UPDATE "Product"
     SET stock = stock - NEW.quantity
     WHERE product_id = NEW.product_id;
@@ -28,10 +24,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 2. Создаём триггер (сначала удаляем старый, если был)
-DROP TRIGGER IF EXISTS trg_order_item_stock_update ON "OrderItem";
+DROP TRIGGER IF EXISTS trg-OrderItem-insert-before ON "OrderItem";
 
-CREATE TRIGGER trg_order_item_stock_update
+CREATE TRIGGER trg-OrderItem-insert-before
     BEFORE INSERT ON "OrderItem"
     FOR EACH ROW
     EXECUTE FUNCTION trg_update_product_stock_on_order();

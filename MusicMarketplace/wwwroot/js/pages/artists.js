@@ -62,14 +62,3 @@
         initTabs();
     });
 })();
-        document.getElementById('artist-submit')?.addEventListener('click', () => window.ArtistConcertForms.saveArtist());
-        document.getElementById('artist-cancel')?.addEventListener('click', () => window.ArtistConcertForms.clearArtistForm());
-        document.getElementById('concert-submit')?.addEventListener('click', () => window.ArtistConcertForms.saveConcert());
-        document.getElementById('concert-cancel')?.addEventListener('click', () => window.ArtistConcertForms.clearConcertForm());
-        document.getElementById('open-artists-modal-btn')?.addEventListener('click', () => window.ArtistConcertForms.openArtistsModal());
-        document.getElementById('modal-add-artist')?.addEventListener('click', () => window.ArtistConcertForms.addArtistFromModal());
-        document.getElementById('modal-close')?.addEventListener('click', () => window.ArtistConcertForms.closeArtistsModal());
-
-        initTabs();
-    });
-})();

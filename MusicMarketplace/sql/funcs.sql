@@ -85,18 +85,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION delete_ticket(p_id INT) RETURNS BOOLEAN AS $$
-DECLARE v_product_id INT;
-BEGIN
-    SELECT product_id INTO v_product_id FROM "Ticket" WHERE ticket_id = p_id;
-    IF NOT FOUND THEN RETURN FALSE; END IF;
-    
-    DELETE FROM "Ticket" WHERE ticket_id = p_id;
-    DELETE FROM "Product" WHERE product_id = v_product_id;
-    RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql;
-
 CREATE OR REPLACE FUNCTION get_filtered_tickets(
     p_search_name VARCHAR, p_manufacturer_id INT, p_artist_id INT, p_in_stock BOOLEAN, 
     p_price_min NUMERIC, p_price_max NUMERIC, p_selected_genres VARCHAR
@@ -104,7 +92,8 @@ CREATE OR REPLACE FUNCTION get_filtered_tickets(
 RETURNS TABLE (
     ticket_id INT, product_id INT, name VARCHAR, price NUMERIC, description TEXT, stock INT, 
     manufacturer_id INT, type VARCHAR, typeName VARCHAR, concert_id INT, concert_title VARCHAR, 
-    price_category VARCHAR, artistNames TEXT, artistIds TEXT
+    price_category VARCHAR, artistNames TEXT, artistIds TEXT,
+    genre_names TEXT
 ) AS $$
 BEGIN
     RETURN QUERY
@@ -122,7 +111,13 @@ BEGIN
             SELECT json_agg(am.artist_id)::TEXT
             FROM "ArtistMerch" am
             WHERE am.merch_id = t.ticket_id
-        ), '[]') AS artistIds
+        ), '[]') AS artistIds,
+        COALESCE((
+            SELECT STRING_AGG(g.name, ', ')
+            FROM "ProductGenre" pg
+            JOIN "Genre" g ON pg.genre_id = g.genre_id
+            WHERE pg.product_id = p.product_id
+        ), '') AS genre_names
     FROM "Ticket" t
     JOIN "Product" p ON t.product_id = p.product_id
     JOIN "Concert" c ON t.concert_id = c.concert_id
@@ -410,19 +405,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION delete_accessory(p_id INT) RETURNS BOOLEAN AS $$
-DECLARE v_merch_id INT; v_product_id INT;
-BEGIN
-    SELECT merch_id INTO v_merch_id FROM "Accessory" acc WHERE acc.accessory_id = p_id;
-    IF NOT FOUND THEN RETURN FALSE; END IF;
-    SELECT product_id INTO v_product_id FROM "Merch" m WHERE m.merch_id = v_merch_id;
-    DELETE FROM "Accessory" WHERE accessory_id = p_id;
-    DELETE FROM "Merch" WHERE merch_id = v_merch_id;
-    DELETE FROM "Product" WHERE product_id = v_product_id;
-    RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql;
-
 CREATE OR REPLACE FUNCTION get_all_artist_concerts()
 RETURNS TABLE (artist_id INT, concert_id INT, artist_name VARCHAR, concert_title VARCHAR) AS $$
 BEGIN
@@ -514,14 +496,27 @@ CREATE OR REPLACE FUNCTION get_filtered_artists(p_search_name VARCHAR, p_search_
 RETURNS TABLE (artist_id INT, name VARCHAR, country VARCHAR, debut_year INT, language VARCHAR) AS $$
 DECLARE query_text TEXT;
 BEGIN
-    query_text := 'SELECT a.artist_id, a.name, a.country, a.debut_year, a.language FROM "Artist" a WHERE 1=1';
-    IF p_search_name IS NOT NULL THEN query_text := query_text || ' AND lower(a.name) LIKE lower(''%' || p_search_name || '%'')'; END IF;
-    IF p_search_country IS NOT NULL THEN query_text := query_text || ' AND a.country IS NOT NULL AND lower(a.country) = lower(''' || p_search_country || ''')'; END IF;
-    IF p_search_language = 'Instrumental' THEN query_text := query_text || ' AND a.language IS NULL';
-    ELSIF p_search_language IS NOT NULL THEN query_text := query_text || ' AND a.language IS NOT NULL AND lower(a.language) = lower(''' || p_search_language || ''')'; END IF;
-    IF p_sort_by = 'name_desc' THEN query_text := query_text || ' ORDER BY a.name DESC';
-    ELSE query_text := query_text || ' ORDER BY a.name ASC'; END IF;
-    RETURN QUERY EXECUTE query_text;
+    query_text := '
+        SELECT a.artist_id, a.name, a.country, a.debut_year, a.language
+        FROM "Artist" a
+        WHERE 1=1
+            AND ($1 IS NULL OR lower(a.name) LIKE lower($1))
+            AND ($2 IS NULL OR a.country IS NOT NULL AND lower(a.country) = lower($2))
+            AND ($3 IS NULL OR 
+                ($3 = ''Instrumental'' AND a.language IS NULL) OR 
+                ($3 != ''Instrumental'' AND a.language IS NOT NULL AND lower(a.language) = lower($3))
+            )
+    ';
+    IF p_sort_by = 'name_desc' THEN
+        query_text := query_text || ' ORDER BY a.name DESC';
+    ELSE
+        query_text := query_text || ' ORDER BY a.name ASC';
+    END IF;
+    
+    RETURN QUERY EXECUTE query_text USING
+        CASE WHEN p_search_name IS NOT NULL THEN '%' || p_search_name || '%' ELSE NULL END,
+        p_search_country,
+        p_search_language;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -576,13 +571,25 @@ CREATE OR REPLACE FUNCTION get_filtered_cart(p_user_id INT, p_search_name VARCHA
 RETURNS TABLE (product_id INT, name VARCHAR, price DECIMAL, quantity INT, added_date TIMESTAMP) AS $$
 DECLARE query_text TEXT;
 BEGIN
-    query_text := 'SELECT c.product_id, p.name, p.price, c.quantity, c.added_date FROM "Cart" c JOIN "Product" p ON c.product_id = p.product_id WHERE c.user_id = ' || p_user_id;
-    IF p_search_name IS NOT NULL THEN query_text := query_text || ' AND lower(p.name) LIKE lower(''%' || p_search_name || '%'')'; END IF;
-    IF p_sort_by = 'price_asc' THEN query_text := query_text || ' ORDER BY p.price ASC';
-    ELSIF p_sort_by = 'price_desc' THEN query_text := query_text || ' ORDER BY p.price DESC';
-    ELSIF p_sort_by = 'date_asc' THEN query_text := query_text || ' ORDER BY c.added_date ASC';
-    ELSE query_text := query_text || ' ORDER BY c.added_date DESC'; END IF;
-    RETURN QUERY EXECUTE query_text;
+    query_text := '
+        SELECT c.product_id, p.name, p.price, c.quantity, c.added_date
+        FROM "Cart" c
+        JOIN "Product" p ON c.product_id = p.product_id
+        WHERE c.user_id = $1
+            AND ($2 IS NULL OR lower(p.name) LIKE lower($2))
+    ';
+    IF p_sort_by = 'price_asc' THEN
+        query_text := query_text || ' ORDER BY p.price ASC';
+    ELSIF p_sort_by = 'price_desc' THEN
+        query_text := query_text || ' ORDER BY p.price DESC';
+    ELSIF p_sort_by = 'date_asc' THEN
+        query_text := query_text || ' ORDER BY c.added_date ASC';
+    ELSE
+        query_text := query_text || ' ORDER BY c.added_date DESC';
+    END IF;
+    
+    RETURN QUERY EXECUTE query_text USING p_user_id, 
+        CASE WHEN p_search_name IS NOT NULL THEN '%' || p_search_name || '%' ELSE NULL END;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -606,14 +613,165 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION delete_clothing(p_id INT) RETURNS BOOLEAN AS $$
-DECLARE v_merch_id INT; v_product_id INT;
+CREATE OR REPLACE FUNCTION get_filtered_clothings(
+    p_search_name VARCHAR,
+    p_manufacturer_id INT,
+    p_artist_id INT,
+    p_in_stock BOOLEAN,
+    p_price_min NUMERIC,
+    p_price_max NUMERIC,
+    p_selected_genres VARCHAR
+)
+RETURNS TABLE (
+    clothing_id INT,
+    product_id INT,
+    name VARCHAR,
+    price NUMERIC,
+    description TEXT,
+    stock INT,
+    manufacturer_id INT,
+    type VARCHAR,
+    typeName VARCHAR,
+    material VARCHAR,
+    color VARCHAR,
+    size VARCHAR,
+    gender VARCHAR,
+    artistNames TEXT,
+    artistIds TEXT,
+    genre_names TEXT
+) AS $$
 BEGIN
-    SELECT merch_id INTO v_merch_id FROM "Clothing" cl WHERE cl.clothing_id = p_id;
-    IF NOT FOUND THEN RETURN FALSE; END IF;
-    SELECT product_id INTO v_product_id FROM "Merch" m WHERE m.merch_id = v_merch_id;
-    DELETE FROM "Clothing" WHERE clothing_id = p_id; DELETE FROM "Merch" WHERE merch_id = v_merch_id; DELETE FROM "Product" WHERE product_id = v_product_id;
-    RETURN TRUE;
+    RETURN QUERY
+    SELECT 
+        c.clothing_id,
+        p.product_id,
+        p.name,
+        p.price,
+        p.description,
+        p.stock,
+        p.manufacturer_id,
+        'clothing'::VARCHAR AS type,
+        'Одежда'::VARCHAR AS typeName,
+        m.material,
+        m.color,
+        c.size,
+        c.gender,
+        COALESCE((
+            SELECT STRING_AGG(a.name, ', ')
+            FROM "ArtistMerch" am
+            JOIN "Artist" a ON am.artist_id = a.artist_id
+            WHERE am.merch_id = c.merch_id
+        ), '') AS artistNames,
+        COALESCE((
+            SELECT json_agg(am.artist_id)::TEXT
+            FROM "ArtistMerch" am
+            WHERE am.merch_id = c.merch_id
+        ), '[]') AS artistIds,
+        COALESCE((
+            SELECT STRING_AGG(g.name, ', ')
+            FROM "ProductGenre" pg
+            JOIN "Genre" g ON pg.genre_id = g.genre_id
+            WHERE pg.product_id = p.product_id
+        ), '') AS genre_names
+    FROM "Clothing" c
+    JOIN "Merch" m ON c.merch_id = m.merch_id
+    JOIN "Product" p ON m.product_id = p.product_id
+    WHERE 1=1
+        AND (p_search_name IS NULL OR p.name ILIKE '%' || p_search_name || '%')
+        AND (p_manufacturer_id IS NULL OR p.manufacturer_id = p_manufacturer_id)
+        AND (p_artist_id IS NULL OR EXISTS (
+            SELECT 1 FROM "ArtistMerch" am
+            WHERE am.merch_id = c.merch_id AND am.artist_id = p_artist_id
+        ))
+        AND (p_in_stock = false OR p.stock > 0)
+        AND (p_price_min IS NULL OR p.price >= p_price_min)
+        AND (p_price_max IS NULL OR p.price <= p_price_max)
+        AND (p_selected_genres IS NULL OR EXISTS (
+            SELECT 1 FROM "ProductGenre" pg
+            JOIN "Genre" g ON pg.genre_id = g.genre_id
+            WHERE pg.product_id = p.product_id AND g.name = ANY(string_to_array(p_selected_genres, ','))
+        ));
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_filtered_accessories(
+    p_search_name VARCHAR,
+    p_manufacturer_id INT,
+    p_artist_id INT,
+    p_in_stock BOOLEAN,
+    p_price_min NUMERIC,
+    p_price_max NUMERIC,
+    p_selected_genres VARCHAR
+)
+RETURNS TABLE (
+    accessory_id INT,
+    product_id INT,
+    name VARCHAR,
+    price NUMERIC,
+    description TEXT,
+    stock INT,
+    manufacturer_id INT,
+    type VARCHAR,
+    typeName VARCHAR,
+    material VARCHAR,
+    color VARCHAR,
+    accessory_type VARCHAR,
+    weight NUMERIC,
+    artistNames TEXT,
+    artistIds TEXT,
+    genre_names TEXT
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        a.accessory_id,
+        p.product_id,
+        p.name,
+        p.price,
+        p.description,
+        p.stock,
+        p.manufacturer_id,
+        'accessory'::VARCHAR AS type,
+        'Аксессуар'::VARCHAR AS typeName,
+        m.material,
+        m.color,
+        a.accessory_type,
+        a.weight,
+        COALESCE((
+            SELECT STRING_AGG(a2.name, ', ')
+            FROM "ArtistMerch" am
+            JOIN "Artist" a2 ON am.artist_id = a2.artist_id
+            WHERE am.merch_id = a.merch_id
+        ), '') AS artistNames,
+        COALESCE((
+            SELECT json_agg(am.artist_id)::TEXT
+            FROM "ArtistMerch" am
+            WHERE am.merch_id = a.merch_id
+        ), '[]') AS artistIds,
+        COALESCE((
+            SELECT STRING_AGG(g.name, ', ')
+            FROM "ProductGenre" pg
+            JOIN "Genre" g ON pg.genre_id = g.genre_id
+            WHERE pg.product_id = p.product_id
+        ), '') AS genre_names
+    FROM "Accessory" a
+    JOIN "Merch" m ON a.merch_id = m.merch_id
+    JOIN "Product" p ON m.product_id = p.product_id
+    WHERE 1=1
+        AND (p_search_name IS NULL OR p.name ILIKE '%' || p_search_name || '%')
+        AND (p_manufacturer_id IS NULL OR p.manufacturer_id = p_manufacturer_id)
+        AND (p_artist_id IS NULL OR EXISTS (
+            SELECT 1 FROM "ArtistMerch" am
+            WHERE am.merch_id = a.merch_id AND am.artist_id = p_artist_id
+        ))
+        AND (p_in_stock = false OR p.stock > 0)
+        AND (p_price_min IS NULL OR p.price >= p_price_min)
+        AND (p_price_max IS NULL OR p.price <= p_price_max)
+        AND (p_selected_genres IS NULL OR EXISTS (
+            SELECT 1 FROM "ProductGenre" pg
+            JOIN "Genre" g ON pg.genre_id = g.genre_id
+            WHERE pg.product_id = p.product_id AND g.name = ANY(string_to_array(p_selected_genres, ','))
+        ));
 END;
 $$ LANGUAGE plpgsql;
 
@@ -631,14 +789,31 @@ CREATE OR REPLACE FUNCTION get_filtered_concerts(p_search_title VARCHAR, p_searc
 RETURNS TABLE (concert_id INT, title VARCHAR, venue VARCHAR, datetime TIMESTAMP, artistNames TEXT, artistIds INT[]) AS $$
 DECLARE now_time TIMESTAMP := NOW(); query_text TEXT;
 BEGIN
-    query_text := 'SELECT c.concert_id, c.title, c.venue, c.datetime, COALESCE((SELECT STRING_AGG(a.name, '', '') FROM "ArtistConcert" ac JOIN "Artist" a ON ac.artist_id = a.artist_id WHERE ac.concert_id = c.concert_id), ''''), COALESCE((SELECT ARRAY_AGG(ac.artist_id) FROM "ArtistConcert" ac WHERE ac.concert_id = c.concert_id), ARRAY[]::INT[]) FROM "Concert" c WHERE 1=1';
-    IF p_search_title IS NOT NULL THEN query_text := query_text || ' AND lower(c.title) LIKE lower(''%' || p_search_title || '%'')'; END IF;
-    IF p_search_venue IS NOT NULL THEN query_text := query_text || ' AND lower(c.venue) LIKE lower(''%' || p_search_venue || '%'')'; END IF;
-    IF p_status = 'upcoming' THEN query_text := query_text || ' AND c.datetime >= ''' || now_time || '''';
-    ELSIF p_status = 'past' THEN query_text := query_text || ' AND c.datetime < ''' || now_time || ''''; END IF;
-    IF p_artist_id IS NOT NULL THEN query_text := query_text || ' AND EXISTS (SELECT 1 FROM "ArtistConcert" ac WHERE ac.concert_id = c.concert_id AND ac.artist_id = ' || p_artist_id || ')'; END IF;
-    IF p_sort_by = 'date_desc' THEN query_text := query_text || ' ORDER BY c.datetime DESC'; ELSE query_text := query_text || ' ORDER BY c.datetime ASC'; END IF;
-    RETURN QUERY EXECUTE query_text;
+    query_text := '
+        SELECT c.concert_id, c.title, c.venue, c.datetime,
+            COALESCE((SELECT STRING_AGG(a.name, '', '') FROM "ArtistConcert" ac JOIN "Artist" a ON ac.artist_id = a.artist_id WHERE ac.concert_id = c.concert_id), ''''),
+            COALESCE((SELECT ARRAY_AGG(ac.artist_id) FROM "ArtistConcert" ac WHERE ac.concert_id = c.concert_id), ARRAY[]::INT[])
+        FROM "Concert" c
+        WHERE 1=1
+            AND ($1 IS NULL OR lower(c.title) LIKE lower($1))
+            AND ($2 IS NULL OR lower(c.venue) LIKE lower($2))
+            AND ($3 IS NULL OR 
+                ($3 = ''upcoming'' AND c.datetime >= $4) OR 
+                ($3 = ''past'' AND c.datetime < $4))
+            AND ($5 IS NULL OR EXISTS (SELECT 1 FROM "ArtistConcert" ac WHERE ac.concert_id = c.concert_id AND ac.artist_id = $5))
+    ';
+    IF p_sort_by = 'date_desc' THEN
+        query_text := query_text || ' ORDER BY c.datetime DESC';
+    ELSE
+        query_text := query_text || ' ORDER BY c.datetime ASC';
+    END IF;
+    
+    RETURN QUERY EXECUTE query_text USING
+        CASE WHEN p_search_title IS NOT NULL THEN '%' || p_search_title || '%' ELSE NULL END,
+        CASE WHEN p_search_venue IS NOT NULL THEN '%' || p_search_venue || '%' ELSE NULL END,
+        p_status,
+        now_time,
+        p_artist_id;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -688,10 +863,19 @@ CREATE OR REPLACE FUNCTION get_filtered_genres(p_search_name VARCHAR, p_sort_by 
 RETURNS TABLE (genre_id INT, name VARCHAR, description TEXT) AS $$
 DECLARE query_text TEXT;
 BEGIN
-    query_text := 'SELECT g.genre_id, g.name, g.description FROM "Genre" g WHERE 1=1';
-    IF p_search_name IS NOT NULL THEN query_text := query_text || ' AND lower(g.name) LIKE lower(''%' || p_search_name || '%'')'; END IF;
-    IF p_sort_by = 'name_desc' THEN query_text := query_text || ' ORDER BY g.name DESC'; ELSE query_text := query_text || ' ORDER BY g.name ASC'; END IF;
-    RETURN QUERY EXECUTE query_text;
+    query_text := '
+        SELECT g.genre_id, g.name, g.description
+        FROM "Genre" g
+        WHERE ($1 IS NULL OR lower(g.name) LIKE lower($1))
+    ';
+    IF p_sort_by = 'name_desc' THEN
+        query_text := query_text || ' ORDER BY g.name DESC';
+    ELSE
+        query_text := query_text || ' ORDER BY g.name ASC';
+    END IF;
+    
+    RETURN QUERY EXECUTE query_text USING
+        CASE WHEN p_search_name IS NOT NULL THEN '%' || p_search_name || '%' ELSE NULL END;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -737,11 +921,22 @@ CREATE OR REPLACE FUNCTION get_filtered_manufacturers(p_search_name VARCHAR, p_s
 RETURNS TABLE (manufacturer_id INT, name VARCHAR, contact_info VARCHAR, country VARCHAR) AS $$
 DECLARE query_text TEXT;
 BEGIN
-    query_text := 'SELECT m.manufacturer_id, m.name, m.contact_info, m.country FROM "Manufacturer" m WHERE 1=1';
-    IF p_search_name IS NOT NULL THEN query_text := query_text || ' AND lower(m.name) LIKE lower(''%' || p_search_name || '%'')'; END IF;
-    IF p_search_country IS NOT NULL THEN query_text := query_text || ' AND m.country IS NOT NULL AND lower(m.country) LIKE lower(''%' || p_search_country || '%'')'; END IF;
-    IF p_sort_by = 'name_desc' THEN query_text := query_text || ' ORDER BY m.name DESC'; ELSE query_text := query_text || ' ORDER BY m.name ASC'; END IF;
-    RETURN QUERY EXECUTE query_text;
+    query_text := '
+        SELECT m.manufacturer_id, m.name, m.contact_info, m.country
+        FROM "Manufacturer" m
+        WHERE 1=1
+            AND ($1 IS NULL OR lower(m.name) LIKE lower($1))
+            AND ($2 IS NULL OR m.country IS NOT NULL AND lower(m.country) LIKE lower($2))
+    ';
+    IF p_sort_by = 'name_desc' THEN
+        query_text := query_text || ' ORDER BY m.name DESC';
+    ELSE
+        query_text := query_text || ' ORDER BY m.name ASC';
+    END IF;
+    
+    RETURN QUERY EXECUTE query_text USING
+        CASE WHEN p_search_name IS NOT NULL THEN '%' || p_search_name || '%' ELSE NULL END,
+        CASE WHEN p_search_country IS NOT NULL THEN '%' || p_search_country || '%' ELSE NULL END;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -900,14 +1095,27 @@ CREATE OR REPLACE FUNCTION get_filtered_reviews(p_user_id INT, p_search_name VAR
 RETURNS TABLE (product_id INT, product_name VARCHAR, rating INT, review_text TEXT, review_date TIMESTAMP) AS $$
 DECLARE query_text TEXT;
 BEGIN
-    query_text := 'SELECT r.product_id, p.name, r.rating, r.review_text, r.review_date FROM "Review" r JOIN "Product" p ON r.product_id = p.product_id WHERE r.user_id = ' || p_user_id;
-    IF p_search_name IS NOT NULL THEN query_text := query_text || ' AND lower(p.name) LIKE lower(''%' || p_search_name || '%'')'; END IF;
-    IF p_rating IS NOT NULL THEN query_text := query_text || ' AND r.rating = ' || p_rating; END IF;
-    IF p_sort_by = 'rating_asc' THEN query_text := query_text || ' ORDER BY r.rating ASC';
-    ELSIF p_sort_by = 'rating_desc' THEN query_text := query_text || ' ORDER BY r.rating DESC';
-    ELSIF p_sort_by = 'date_asc' THEN query_text := query_text || ' ORDER BY r.review_date ASC';
-    ELSE query_text := query_text || ' ORDER BY r.review_date DESC'; END IF;
-    RETURN QUERY EXECUTE query_text;
+    query_text := '
+        SELECT r.product_id, p.name, r.rating, r.review_text, r.review_date
+        FROM "Review" r
+        JOIN "Product" p ON r.product_id = p.product_id
+        WHERE r.user_id = $1
+            AND ($2 IS NULL OR lower(p.name) LIKE lower($2))
+            AND ($3 IS NULL OR r.rating = $3)
+    ';
+    IF p_sort_by = 'rating_asc' THEN
+        query_text := query_text || ' ORDER BY r.rating ASC';
+    ELSIF p_sort_by = 'rating_desc' THEN
+        query_text := query_text || ' ORDER BY r.rating DESC';
+    ELSIF p_sort_by = 'date_asc' THEN
+        query_text := query_text || ' ORDER BY r.review_date ASC';
+    ELSE
+        query_text := query_text || ' ORDER BY r.review_date DESC';
+    END IF;
+    
+    RETURN QUERY EXECUTE query_text USING p_user_id,
+        CASE WHEN p_search_name IS NOT NULL THEN '%' || p_search_name || '%' ELSE NULL END,
+        p_rating;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -986,13 +1194,25 @@ CREATE OR REPLACE FUNCTION get_filtered_wishlist(p_user_id INT, p_search_name VA
 RETURNS TABLE (product_id INT, name VARCHAR, price DECIMAL, added_date TIMESTAMP) AS $$
 DECLARE query_text TEXT;
 BEGIN
-    query_text := 'SELECT w.product_id, p.name, p.price, w.added_date FROM "Wishlist" w JOIN "Product" p ON w.product_id = p.product_id WHERE w.user_id = ' || p_user_id;
-    IF p_search_name IS NOT NULL THEN query_text := query_text || ' AND lower(p.name) LIKE lower(''%' || p_search_name || '%'')'; END IF;
-    IF p_sort_by = 'price_asc' THEN query_text := query_text || ' ORDER BY p.price ASC';
-    ELSIF p_sort_by = 'price_desc' THEN query_text := query_text || ' ORDER BY p.price DESC';
-    ELSIF p_sort_by = 'date_asc' THEN query_text := query_text || ' ORDER BY w.added_date ASC';
-    ELSE query_text := query_text || ' ORDER BY w.added_date DESC'; END IF;
-    RETURN QUERY EXECUTE query_text;
+    query_text := '
+        SELECT w.product_id, p.name, p.price, w.added_date
+        FROM "Wishlist" w
+        JOIN "Product" p ON w.product_id = p.product_id
+        WHERE w.user_id = $1
+            AND ($2 IS NULL OR lower(p.name) LIKE lower($2))
+    ';
+    IF p_sort_by = 'price_asc' THEN
+        query_text := query_text || ' ORDER BY p.price ASC';
+    ELSIF p_sort_by = 'price_desc' THEN
+        query_text := query_text || ' ORDER BY p.price DESC';
+    ELSIF p_sort_by = 'date_asc' THEN
+        query_text := query_text || ' ORDER BY w.added_date ASC';
+    ELSE
+        query_text := query_text || ' ORDER BY w.added_date DESC';
+    END IF;
+    
+    RETURN QUERY EXECUTE query_text USING p_user_id,
+        CASE WHEN p_search_name IS NOT NULL THEN '%' || p_search_name || '%' ELSE NULL END;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -1027,162 +1247,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION delete_product(p_id INT) RETURNS BOOLEAN AS $$
-BEGIN DELETE FROM "Product" p WHERE p.product_id = p_id; RETURN FOUND; END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION get_filtered_clothings(
-    p_search_name VARCHAR,
-    p_manufacturer_id INT,
-    p_artist_id INT,
-    p_in_stock BOOLEAN,
-    p_price_min NUMERIC,
-    p_price_max NUMERIC,
-    p_selected_genres VARCHAR
-)
-RETURNS TABLE (
-    clothing_id INT,
-    product_id INT,
-    name VARCHAR,
-    price NUMERIC,
-    description TEXT,
-    stock INT,
-    manufacturer_id INT,
-    type VARCHAR,
-    typeName VARCHAR,
-    material VARCHAR,
-    color VARCHAR,
-    size VARCHAR,
-    gender VARCHAR,
-    artistNames TEXT,
-    artistIds TEXT
-) AS $$
-BEGIN
-    RETURN QUERY
-    SELECT 
-        c.clothing_id,
-        p.product_id,
-        p.name,
-        p.price,
-        p.description,
-        p.stock,
-        p.manufacturer_id,
-        'clothing'::VARCHAR AS type,
-        'Одежда'::VARCHAR AS typeName,
-        m.material,
-        m.color,
-        c.size,
-        c.gender,
-        COALESCE((
-            SELECT STRING_AGG(a.name, ', ')
-            FROM "ArtistMerch" am
-            JOIN "Artist" a ON am.artist_id = a.artist_id
-            WHERE am.merch_id = c.merch_id
-        ), '') AS artistNames,
-        COALESCE((
-            SELECT json_agg(am.artist_id)::TEXT
-            FROM "ArtistMerch" am
-            WHERE am.merch_id = c.merch_id
-        ), '[]') AS artistIds
-    FROM "Clothing" c
-    JOIN "Merch" m ON c.merch_id = m.merch_id
-    JOIN "Product" p ON m.product_id = p.product_id
-    WHERE 1=1
-        AND (p_search_name IS NULL OR p.name ILIKE '%' || p_search_name || '%')
-        AND (p_manufacturer_id IS NULL OR p.manufacturer_id = p_manufacturer_id)
-        AND (p_artist_id IS NULL OR EXISTS (
-            SELECT 1 FROM "ArtistMerch" am
-            WHERE am.merch_id = c.merch_id AND am.artist_id = p_artist_id
-        ))
-        AND (p_in_stock = false OR p.stock > 0)
-        AND (p_price_min IS NULL OR p.price >= p_price_min)
-        AND (p_price_max IS NULL OR p.price <= p_price_max)
-        AND (p_selected_genres IS NULL OR EXISTS (
-            SELECT 1 FROM "ProductGenre" pg
-            JOIN "Genre" g ON pg.genre_id = g.genre_id
-            WHERE pg.product_id = p.product_id AND g.name = ANY(string_to_array(p_selected_genres, ','))
-        ));
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION get_filtered_accessories(
-    p_search_name VARCHAR,
-    p_manufacturer_id INT,
-    p_artist_id INT,
-    p_in_stock BOOLEAN,
-    p_price_min NUMERIC,
-    p_price_max NUMERIC,
-    p_selected_genres VARCHAR
-)
-RETURNS TABLE (
-    accessory_id INT,
-    product_id INT,
-    name VARCHAR,
-    price NUMERIC,
-    description TEXT,
-    stock INT,
-    manufacturer_id INT,
-    type VARCHAR,
-    typeName VARCHAR,
-    material VARCHAR,
-    color VARCHAR,
-    accessory_type VARCHAR,
-    weight NUMERIC,
-    artistNames TEXT,
-    artistIds TEXT
-) AS $$
-BEGIN
-    RETURN QUERY
-    SELECT 
-        a.accessory_id,
-        p.product_id,
-        p.name,
-        p.price,
-        p.description,
-        p.stock,
-        p.manufacturer_id,
-        'accessory'::VARCHAR AS type,
-        'Аксессуар'::VARCHAR AS typeName,
-        m.material,
-        m.color,
-        a.accessory_type,
-        a.weight,
-        COALESCE((
-            SELECT STRING_AGG(a2.name, ', ')
-            FROM "ArtistMerch" am
-            JOIN "Artist" a2 ON am.artist_id = a2.artist_id
-            WHERE am.merch_id = a.merch_id
-        ), '') AS artistNames,
-        COALESCE((
-            SELECT json_agg(am.artist_id)::TEXT
-            FROM "ArtistMerch" am
-            WHERE am.merch_id = a.merch_id
-        ), '[]') AS artistIds
-    FROM "Accessory" a
-    JOIN "Merch" m ON a.merch_id = m.merch_id
-    JOIN "Product" p ON m.product_id = p.product_id
-    WHERE 1=1
-        AND (p_search_name IS NULL OR p.name ILIKE '%' || p_search_name || '%')
-        AND (p_manufacturer_id IS NULL OR p.manufacturer_id = p_manufacturer_id)
-        AND (p_artist_id IS NULL OR EXISTS (
-            SELECT 1 FROM "ArtistMerch" am
-            WHERE am.merch_id = a.merch_id AND am.artist_id = p_artist_id
-        ))
-        AND (p_in_stock = false OR p.stock > 0)
-        AND (p_price_min IS NULL OR p.price >= p_price_min)
-        AND (p_price_max IS NULL OR p.price <= p_price_max)
-        AND (p_selected_genres IS NULL OR EXISTS (
-            SELECT 1 FROM "ProductGenre" pg
-            JOIN "Genre" g ON pg.genre_id = g.genre_id
-            WHERE pg.product_id = p.product_id AND g.name = ANY(string_to_array(p_selected_genres, ','))
-        ));
-END;
-$$ LANGUAGE plpgsql;
-
 CREATE OR REPLACE FUNCTION get_product_names() RETURNS TABLE (name VARCHAR) AS $$
 BEGIN RETURN QUERY SELECT p.name FROM "Product" p; END;
 $$ LANGUAGE plpgsql;
-
 
 CREATE OR REPLACE FUNCTION get_filtered_orders_with_items(
     p_user_id INT,
@@ -1197,27 +1264,26 @@ RETURNS TABLE (
 ) AS $$
 DECLARE order_record RECORD; items_json TEXT; items_array JSONB; query_text TEXT;
 BEGIN
-    query_text := 'SELECT o.order_id, o.user_id, u.full_name, u.login, o.order_date, o.status, o.total_amount FROM "Order" o JOIN "User" u ON o.user_id = u.user_id WHERE o.user_id = ' || p_user_id;
-    
-    IF p_status IS NOT NULL THEN 
-        query_text := query_text || ' AND o.status = ''' || p_status || ''''; 
-    END IF;
-    
-    IF p_date_from IS NOT NULL THEN 
-        query_text := query_text || ' AND o.order_date >= ''' || p_date_from || ''''; 
-    END IF;
-    
-    IF p_date_to IS NOT NULL THEN 
-        query_text := query_text || ' AND o.order_date < ''' || p_date_to || ''' + INTERVAL ''1 day'''; 
-    END IF;
-    
-    IF p_sort_by = 'date_asc' THEN query_text := query_text || ' ORDER BY o.order_date ASC';
-    ELSIF p_sort_by = 'total_desc' THEN query_text := query_text || ' ORDER BY o.total_amount DESC';
-    ELSIF p_sort_by = 'total_asc' THEN query_text := query_text || ' ORDER BY o.total_amount ASC';
-    ELSE query_text := query_text || ' ORDER BY o.order_date DESC'; 
+    query_text := '
+        SELECT o.order_id, o.user_id, u.full_name, u.login, o.order_date, o.status, o.total_amount
+        FROM "Order" o
+        JOIN "User" u ON o.user_id = u.user_id
+        WHERE o.user_id = $1
+            AND ($2 IS NULL OR o.status = $2)
+            AND ($3 IS NULL OR o.order_date >= $3)
+            AND ($4 IS NULL OR o.order_date < $4 + INTERVAL ''1 day'')
+    ';
+    IF p_sort_by = 'date_asc' THEN
+        query_text := query_text || ' ORDER BY o.order_date ASC';
+    ELSIF p_sort_by = 'total_desc' THEN
+        query_text := query_text || ' ORDER BY o.total_amount DESC';
+    ELSIF p_sort_by = 'total_asc' THEN
+        query_text := query_text || ' ORDER BY o.total_amount ASC';
+    ELSE
+        query_text := query_text || ' ORDER BY o.order_date DESC';
     END IF;
 
-    FOR order_record IN EXECUTE query_text LOOP
+    FOR order_record IN EXECUTE query_text USING p_user_id, p_status, p_date_from, p_date_to LOOP
         SELECT jsonb_agg(jsonb_build_object('product_id', oi.product_id, 'product_name', p.name, 'quantity', oi.quantity, 'unit_price', oi.unit_price, 'total_price', oi.quantity * oi.unit_price)) 
         INTO items_array 
         FROM "OrderItem" oi 
@@ -1232,26 +1298,31 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION get_filtered_users(p_search VARCHAR, p_sort_by VARCHAR)
 RETURNS TABLE (
-user_id INT, login VARCHAR, email VARCHAR, registration_date DATE, full_name VARCHAR
+    user_id INT, login VARCHAR, email VARCHAR, registration_date DATE, full_name VARCHAR
 ) AS $$
 DECLARE query_text TEXT;
 BEGIN
-query_text := 'SELECT u.user_id, u.login, u.email, u.registration_date, u.full_name FROM "User" u WHERE 1=1';
-IF p_search IS NOT NULL THEN
-query_text := query_text || ' AND (lower(u.login) LIKE lower(''%' || p_search || '%'') OR lower(u.full_name) LIKE lower(''%' || p_search || '%''))';
-END IF;
-IF p_sort_by = 'name_asc' THEN query_text := query_text || ' ORDER BY u.full_name ASC';
-ELSIF p_sort_by = 'name_desc' THEN query_text := query_text || ' ORDER BY u.full_name DESC';
-ELSIF p_sort_by = 'date_asc' THEN query_text := query_text || ' ORDER BY u.registration_date ASC';
-ELSIF p_sort_by = 'date_desc' THEN query_text := query_text || ' ORDER BY u.registration_date DESC';
-ELSE query_text := query_text || ' ORDER BY u.user_id DESC';
-END IF;
-RETURN QUERY EXECUTE query_text;
+    query_text := '
+        SELECT u.user_id, u.login, u.email, u.registration_date, u.full_name
+        FROM "User" u
+        WHERE ($1 IS NULL OR lower(u.login) LIKE lower($1) OR lower(u.full_name) LIKE lower($1))
+    ';
+    IF p_sort_by = 'name_asc' THEN
+        query_text := query_text || ' ORDER BY u.full_name ASC';
+    ELSIF p_sort_by = 'name_desc' THEN
+        query_text := query_text || ' ORDER BY u.full_name DESC';
+    ELSIF p_sort_by = 'date_asc' THEN
+        query_text := query_text || ' ORDER BY u.registration_date ASC';
+    ELSIF p_sort_by = 'date_desc' THEN
+        query_text := query_text || ' ORDER BY u.registration_date DESC';
+    ELSE
+        query_text := query_text || ' ORDER BY u.user_id DESC';
+    END IF;
+    
+    RETURN QUERY EXECUTE query_text USING
+        CASE WHEN p_search IS NOT NULL THEN '%' || p_search || '%' ELSE NULL END;
 END;
 $$ LANGUAGE plpgsql;
-
--- ===== Файл: C:\Projects\Studying\ProgTech\MusicMarketplace\MusicMarketplace\sql\funcs.sql =====
--- Изменённые функции удаления с проверкой наличия товара в заказах
 
 CREATE OR REPLACE FUNCTION delete_clothing(p_id INT) RETURNS BOOLEAN AS $$
 DECLARE v_merch_id INT; v_product_id INT;
@@ -1259,7 +1330,6 @@ BEGIN
     SELECT merch_id INTO v_merch_id FROM "Clothing" cl WHERE cl.clothing_id = p_id;
     IF NOT FOUND THEN RETURN FALSE; END IF;
     SELECT product_id INTO v_product_id FROM "Merch" m WHERE m.merch_id = v_merch_id;
-    -- Проверка, есть ли товар в заказах
     IF EXISTS (SELECT 1 FROM "OrderItem" oi WHERE oi.product_id = v_product_id) THEN
         RAISE EXCEPTION 'Невозможно удалить товар, который есть в заказах';
     END IF;
@@ -1309,4 +1379,3 @@ BEGIN
     RETURN FOUND;
 END;
 $$ LANGUAGE plpgsql;
-
