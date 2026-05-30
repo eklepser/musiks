@@ -29,6 +29,13 @@ namespace MusicMarketplace.Controllers
             return Ok(items);
         }
 
+        [HttpGet("byProduct/{productId}")]
+        public async Task<IActionResult> GetByProduct(int productId)
+        {
+            var items = await _reviewsService.GetByProductAsync(productId);
+            return Ok(items);
+        }
+
         [HttpPost]
         public async Task<IActionResult> PostReview(ReviewCreateDto dto)
         {

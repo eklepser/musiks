@@ -223,7 +223,8 @@
                     </tr>
                 </thead>
                 <tbody id="catalog-tbody">
-                    <tr><td colspan="9" class="centered-message">Загрузка...</td></tr>
+                    <tr><td colspan="9" class="centered-message">Загрузка...
+                </tbody>
                 </tbody>
             </table>
         </div>
@@ -406,7 +407,8 @@
                     </tr>
                 </thead>
                 <tbody id="manufacturers-tbody">
-                    <tr><td colspan="5" class="centered-message">Загрузка...</td></tr>
+                    <tr><td colspan="5" class="centered-message">Загрузка...
+                </tbody>
                 </tbody>
             </table>
         </div>
@@ -454,7 +456,8 @@
                     </tr>
                 </thead>
                 <tbody id="genres-tbody">
-                    <tr><td colspan="4" class="centered-message">Загрузка...</td></tr>
+                    <tr><td colspan="4" class="centered-message">Загрузка...
+                </tbody>
                 </tbody>
             </table>
         </div>
@@ -561,6 +564,15 @@
             </div>
         </div>
     </div>
+    <div id="product-reviews-modal" class="modal" style="display:none;">
+        <div class="modal-content" style="max-width: 600px;">
+            <h3 id="product-reviews-title">Отзывы о товаре</h3>
+            <div id="product-reviews-list" class="reviews-list" style="max-height: 400px; overflow-y: auto; margin: 15px 0;"></div>
+            <div class="form-group" style="justify-content:center;">
+                <button id="product-reviews-close" class="cancel-btn">Закрыть</button>
+            </div>
+        </div>
+    </div>
 
     <script src="js/config.js"></script>
     <script src="js/utils/toast.js"></script>
@@ -579,5 +591,14 @@
     <script src="js/components/userMenu.js"></script>
     <script src="js/pages/products.js"></script>
     <script src="js/main.js"></script>
+    <script>
+        document.getElementById('product-reviews-close')?.addEventListener('click', function () {
+            document.getElementById('product-reviews-modal').style.display = 'none';
+        });
+        window.addEventListener('click', function (e) {
+            const modal = document.getElementById('product-reviews-modal');
+            if (e.target === modal) modal.style.display = 'none';
+        });
+    </script>
 </body>
 </html>

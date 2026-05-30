@@ -33,7 +33,7 @@
             if (!tbody) return;
             tbody.innerHTML = '';
             if (items.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" class="centered-message">Нет данных</tbody>';
+                tbody.innerHTML = '<td><td colspan="9" class="centered-message">Нет данных</td></tr>';
                 return;
             }
             for (const item of items) {
@@ -92,7 +92,16 @@
                     window.currentProductForCart = { id: item.product_id, name: item.name };
                     window.showCartModal?.();
                 };
-                topRow.append(wishBtn, cartBtn);
+                const reviewsBtn = document.createElement('button');
+                reviewsBtn.textContent = '⭐';
+                reviewsBtn.className = 'reviews-btn';
+                reviewsBtn.title = 'Отзывы';
+                reviewsBtn.onclick = () => {
+                    if (typeof window.showProductReviewsModal === 'function') {
+                        window.showProductReviewsModal(item.product_id, item.name);
+                    }
+                };
+                topRow.append(wishBtn, cartBtn, reviewsBtn);
                 const editBtn = document.createElement('button');
                 editBtn.textContent = 'Редактировать';
                 editBtn.className = 'edit-btn';
@@ -115,7 +124,7 @@
         } catch (err) {
             console.error(err);
             const tbody = document.getElementById('catalog-tbody');
-            if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="centered-message">Ошибка загрузки</tbody>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="centered-message">Ошибка загрузки</td></tr>';
         }
     }
 

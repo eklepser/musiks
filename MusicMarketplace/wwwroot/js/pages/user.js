@@ -61,17 +61,6 @@
             }
         });
         document.getElementById('review-cancel-btn')?.addEventListener('click', () => window.hideReviewModal());
-        document.getElementById('remove-cart-confirm-btn')?.addEventListener('click', () => {
-            if (window.currentProductForRemove) {
-                let quantity = parseInt(document.getElementById('remove-cart-quantity').value);
-                if (isNaN(quantity) || quantity < 1 || quantity > window.currentProductForRemove.currentQuantity) {
-                    window.showToast('Некорректное количество', 'error');
-                    return;
-                }
-                quantity = Math.floor(quantity);
-                window.removeFromCartWithQuantity(window.currentProductForRemove.id, quantity);
-            }
-        });
         document.getElementById('remove-cart-cancel-btn')?.addEventListener('click', () => window.hideRemoveFromCartModal());
         document.getElementById('checkout-confirm-btn')?.addEventListener('click', () => window.confirmCheckout());
         document.getElementById('checkout-cancel-btn')?.addEventListener('click', () => window.hideCheckoutModal());

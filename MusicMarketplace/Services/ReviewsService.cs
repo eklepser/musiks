@@ -16,6 +16,12 @@ namespace MusicMarketplace.Services
             return await _context.Database.SqlQueryRaw<ReviewDto>(sql, userId).ToListAsync();
         }
 
+        public async Task<List<ReviewWithUserDto>> GetByProductAsync(int productId)
+        {
+            var sql = "SELECT * FROM get_reviews_by_product({0})";
+            return await _context.Database.SqlQueryRaw<ReviewWithUserDto>(sql, productId).ToListAsync();
+        }
+
         public async Task<List<ReviewFilterResult>> GetUserReviewsFilteredAsync(int userId, string? searchName, int? rating, string? sortBy)
         {
             var sql = "SELECT * FROM get_filtered_reviews({0}, {1}, {2}, {3})";

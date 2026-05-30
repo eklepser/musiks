@@ -172,3 +172,59 @@ window.deleteReview = async function (productId) {
         window.showToast('Отзыв удалён', 'success');
     } else window.showToast('Ошибка удаления', 'error');
 };
+
+// НОВАЯ ФУНКЦИЯ ДЛЯ ПРОСМОТРА ОТЗЫВОВ (ДОБАВЛЕНА)
+window.showProductReviewsModal = async function (productId, productName) {
+    const modal = document.getElementById('product-reviews-modal');
+    if (!modal) return;
+    document.getElementById('product-reviews-title').innerText = `Отзывы о товаре: ${productName}`;
+    const container = document.getElementById('product-reviews-list');
+    container.innerHTML = '<div class="loading">Загрузка отзывов...</div>';
+    modal.style.display = 'block';
+    try {
+        const resp = await fetch(`${window.API_URLS.REVIEWS}/byProduct/${productId}`);
+        if (resp.ok) {
+            const reviews = await resp.json();
+            if (reviews.length === 0) {
+                container.innerHTML = '<div class="placeholder-text">Нет отзывов на этот товар</div>';
+            } else {
+                container.innerHTML = '';
+                reviews.forEach(review => {
+                    const reviewDiv = document.createElement('div');
+                    reviewDiv.className = 'review-item';
+                    const ratingStars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+                    const date = new Date(review.review_date).toLocaleString();
+                    reviewDiv.innerHTML = `
+                        <div class="review-header">
+                            <strong>${escapeHtml(review.user_name)}</strong>
+                            <span class="review-rating">${ratingStars}</span>
+                            <span class="review-date">${date}</span>
+                        </div>
+                        <div class="review-text">${escapeHtml(review.review_text || '')}</div>
+                    `;
+                    container.appendChild(reviewDiv);
+                });
+            }
+        } else {
+            container.innerHTML = '<div class="error">Ошибка загрузки отзывов</div>';
+        }
+    } catch (err) {
+        console.error(err);
+        container.innerHTML = '<div class="error">Ошибка сети</div>';
+    }
+};
+
+window.closeProductReviewsModal = function () {
+    const modal = document.getElementById('product-reviews-modal');
+    if (modal) modal.style.display = 'none';
+};
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function (m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}

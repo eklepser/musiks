@@ -1379,3 +1379,29 @@ BEGIN
     RETURN FOUND;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_reviews_by_product(p_product_id INT)
+RETURNS TABLE (
+    product_id INT,
+    product_name VARCHAR,
+    rating INT,
+    review_text TEXT,
+    review_date TIMESTAMP,
+    user_name VARCHAR
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        r.product_id,
+        p.name,
+        r.rating,
+        r.review_text,
+        r.review_date,
+        u.full_name
+    FROM "Review" r
+    JOIN "Product" p ON r.product_id = p.product_id
+    JOIN "User" u ON r.user_id = u.user_id
+    WHERE r.product_id = p_product_id
+    ORDER BY r.review_date DESC;
+END;
+$$ LANGUAGE plpgsql;
