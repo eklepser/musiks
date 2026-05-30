@@ -26,8 +26,7 @@
             const resp = await fetch(url);
             if (!resp.ok) throw new Error('HTTP ' + resp.status);
             let items = await resp.json();
-            const typeOrder = { clothing: 1, accessory: 2, ticket: 3 };
-            items.sort((a, b) => (typeOrder[a.type] || 99) - (typeOrder[b.type] || 99));
+
             const countSpan = document.getElementById('found-count');
             if (countSpan) countSpan.innerText = items.length;
             const tbody = document.getElementById('catalog-tbody');
@@ -83,7 +82,7 @@
                 const wishBtn = document.createElement('button');
                 wishBtn.textContent = '❤️';
                 wishBtn.className = 'wishlist-btn' + (inWishlist ? ' active' : '');
-                wishBtn.title = inWishlist ? 'Удалить из вишлиста' : 'В вишлист';
+                wishBtn.title = inWishlist ? 'Удалить из избранного' : 'В избранное';
                 wishBtn.onclick = () => inWishlist ? window.removeFromWishlist?.(item.product_id) : window.addToWishlist?.(item.product_id, item.name);
                 const cartBtn = document.createElement('button');
                 cartBtn.textContent = '🛒';
@@ -115,7 +114,8 @@
             }
         } catch (err) {
             console.error(err);
-            document.getElementById('catalog-tbody').innerHTML = '<tr><td colspan="9" class="centered-message">Ошибка загрузки</tbody>';
+            const tbody = document.getElementById('catalog-tbody');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="centered-message">Ошибка загрузки</tbody>';
         }
     }
 
@@ -125,10 +125,22 @@
     }
 
     function hideEditPanel() {
-        document.getElementById('edit-panel').style.display = 'none';
-        document.getElementById('edit-ticket-form').style.display = 'none';
-        document.getElementById('edit-clothing-form').style.display = 'none';
-        document.getElementById('edit-accessory-form').style.display = 'none';
+        const editPanel = document.getElementById('edit-panel');
+        if (editPanel) editPanel.style.display = 'none';
+        const editForms = ['edit-ticket-form', 'edit-clothing-form', 'edit-accessory-form'];
+        editForms.forEach(formId => {
+            const form = document.getElementById(formId);
+            if (form) {
+                form.style.display = 'none';
+                const inputs = form.querySelectorAll('input, select, textarea');
+                inputs.forEach(input => {
+                    if (input.type !== 'button' && input.type !== 'submit') {
+                        input.value = '';
+                        if (typeof window.clearFieldValidity === 'function') window.clearFieldValidity(input);
+                    }
+                });
+            }
+        });
         if (typeof window.resetGlobalProductState === 'function') window.resetGlobalProductState();
     }
 

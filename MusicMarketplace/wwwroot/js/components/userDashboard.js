@@ -136,7 +136,7 @@ window.renderWishlist = function () {
     if (!tbody) return;
     tbody.innerHTML = '';
     if (!window.wishlistData || window.wishlistData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Вишлист пуст</tbody>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Список избранного пуст</td></tr>';
         return;
     }
     window.wishlistData.forEach(item => {
@@ -167,7 +167,7 @@ window.renderCart = function () {
     if (!tbody) return;
     tbody.innerHTML = '';
     if (!window.cartData || window.cartData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Корзина пуста</tbody>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Корзина пуста</td></tr>';
         return;
     }
     window.cartData.forEach(item => {
@@ -194,7 +194,7 @@ window.renderReviews = function () {
     if (!tbody) return;
     tbody.innerHTML = '';
     if (!window.reviewsData || window.reviewsData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Отзывов нет</tbody>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Отзывов нет</td></tr>';
         return;
     }
     window.reviewsData.forEach(r => {
@@ -220,7 +220,7 @@ window.renderOrders = function () {
     if (!tbody) return;
     tbody.innerHTML = '';
     if (!window.ordersData || window.ordersData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Нет заказов</tbody>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Нет заказов</td></tr>';
         window.renderPurchasedItems([]);
         return;
     }
@@ -279,7 +279,7 @@ window.renderPurchasedItems = function (orders) {
     if (!tbody) return;
     tbody.innerHTML = '';
     if (items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Нет товаров в завершённых заказах</tbody>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Нет товаров в завершённых заказах</td></tr>';
         return;
     }
     items.forEach(item => {
@@ -323,7 +323,7 @@ window.showOrderDetails = async function (orderId) {
     const tbody = document.getElementById('modal-order-items-tbody');
     tbody.innerHTML = '';
     if (items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Нет товаров</tbody>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Нет товаров</td></tr>';
     } else {
         items.forEach(item => {
             const row = tbody.insertRow();
@@ -444,15 +444,15 @@ window.checkout = function () {
 
 window.clearAllTables = function () {
     const wishTbody = document.getElementById('wishlist-tbody');
-    if (wishTbody) wishTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</tbody>';
+    if (wishTbody) wishTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</td></tr>';
     const cartTbody = document.getElementById('cart-tbody');
-    if (cartTbody) cartTbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Выберите пользователя</tbody>';
+    if (cartTbody) cartTbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Выберите пользователя</td></tr>';
     const revTbody = document.getElementById('reviews-tbody');
-    if (revTbody) revTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</tbody>';
+    if (revTbody) revTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</td></tr>';
     const ordTbody = document.getElementById('orders-tbody');
-    if (ordTbody) ordTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</tbody>';
+    if (ordTbody) ordTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</td></tr>';
     const purTbody = document.getElementById('purchased-items-tbody');
-    if (purTbody) purTbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Выберите пользователя</tbody>';
+    if (purTbody) purTbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Выберите пользователя</td></tr>';
 };
 
 window.showActiveTab = function () {

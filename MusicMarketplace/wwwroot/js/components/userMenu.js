@@ -37,13 +37,28 @@ window.loadUsers = function () {
         .catch(err => console.error(err));
 };
 
-window.onUserChange = function (userId, reload = true, showNotification = true) {
+window.refreshCurrentPageData = function () {
+    const path = window.location.pathname;
+    if (path.includes('/products')) {
+        if (typeof window.loadUserStatus === 'function') window.loadUserStatus();
+        if (typeof window.Catalog?.render === 'function') window.Catalog.render();
+    } else if (path.includes('/artists')) {
+        if (typeof window.loadUserStatus === 'function') window.loadUserStatus();
+    } else if (path.includes('/user')) {
+        if (typeof window.loadDashboard === 'function') window.loadDashboard();
+    } else if (path.includes('/users')) {
+        if (typeof window.loadUserStatus === 'function') window.loadUserStatus();
+    } else {
+        if (typeof window.loadUserStatus === 'function') window.loadUserStatus();
+    }
+};
+
+window.onUserChange = function (userId, reload = false, showNotification = true) {
     if (!userId) {
         localStorage.removeItem('currentUserId');
         window.currentUser = null;
         if (typeof window.loadUserStatus === 'function') window.loadUserStatus();
-        if (reload && window.location.pathname !== '/user.html') window.location.reload();
-        else if (window.location.pathname === '/user.html' && typeof window.loadDashboard === 'function') window.loadDashboard();
+        window.refreshCurrentPageData();
         return;
     }
     fetch(`${window.API_URLS.USERS}/${userId}`)
@@ -51,10 +66,11 @@ window.onUserChange = function (userId, reload = true, showNotification = true) 
         .then(user => {
             window.currentUser = user;
             localStorage.setItem('currentUserId', userId);
-            if (showNotification && typeof window.showToast === 'function') window.showToast(`Выбран пользователь: ${user.full_name}`, 'success');
+            if (showNotification && typeof window.showToast === 'function') {
+                window.showToast(`Выбран пользователь: ${user.full_name}`, 'success');
+            }
             if (typeof window.loadUserStatus === 'function') window.loadUserStatus();
-            if (reload && window.location.pathname !== '/user.html') window.location.reload();
-            else if (window.location.pathname === '/user.html' && typeof window.loadDashboard === 'function') window.loadDashboard();
+            window.refreshCurrentPageData();
         })
         .catch(err => console.error(err));
 };
@@ -67,7 +83,7 @@ window.initUserMenu = function () {
     const select = document.getElementById('user-select');
     if (select) {
         select.removeEventListener('change', select._changeHandler);
-        select._changeHandler = (e) => window.onUserChange(parseInt(e.target.value), true, true);
+        select._changeHandler = (e) => window.onUserChange(parseInt(e.target.value), false, true);
         select.addEventListener('change', select._changeHandler);
     }
     const manageBtn = document.getElementById('manage-users-btn');

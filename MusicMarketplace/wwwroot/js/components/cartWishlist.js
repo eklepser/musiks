@@ -14,22 +14,23 @@ window.addToWishlist = async function (productId, productName) {
         });
         if (resp.status === 409) {
             const error = await resp.json();
-            window.showToast(error.message || 'Товар уже в вишлисте', 'warning');
+            window.showToast(error.message || 'Товар уже в избранном', 'warning');
             return false;
         }
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        window.showToast(`Товар «${productName}» добавлен в вишлист`, 'success');
+        window.showToast(`Товар «${productName}» добавлен в избранное`, 'success');
         if (typeof window.loadUserStatus === 'function') await window.loadUserStatus();
+        if (typeof window.loadWishlist === 'function') await window.loadWishlist();
         return true;
-    } catch (err) { window.showToast('Ошибка добавления в вишлист', 'error'); return false; }
+    } catch (err) { window.showToast('Ошибка добавления в избранное', 'error'); return false; }
 };
 
 window.removeFromWishlist = async function (productId) {
     const userId = window.getCurrentUserId();
     if (!userId) return;
     const confirmed = await window.showConfirmModal({
-        title: 'Удаление из вишлиста',
-        message: `Удалить товар из вишлиста?`,
+        title: 'Удаление из избранного',
+        message: `Удалить товар из избранного?`,
         yesText: 'Да, удалить',
         noText: 'Отмена'
     });
@@ -37,7 +38,8 @@ window.removeFromWishlist = async function (productId) {
     const resp = await fetch(`${window.API_URLS.WISHLISTS}/${userId}/${productId}`, { method: 'DELETE' });
     if (resp.ok) {
         if (typeof window.loadUserStatus === 'function') await window.loadUserStatus();
-        window.showToast('Товар удалён из вишлиста', 'success');
+        if (typeof window.loadWishlist === 'function') await window.loadWishlist();
+        window.showToast('Товар удалён из избранного', 'success');
     } else window.showToast('Ошибка удаления', 'error');
 };
 
@@ -147,6 +149,7 @@ window.addReview = async function (productId, productName, rating, reviewText) {
         window.showToast(`Отзыв на товар «${productName}» добавлен`, 'success');
         if (typeof window.loadUserStatus === 'function') await window.loadUserStatus();
         if (typeof window.loadOrders === 'function') await window.loadOrders();
+        if (typeof window.loadReviews === 'function') await window.loadReviews();
         return true;
     } catch (err) { window.showToast('Ошибка добавления отзыва', 'error'); return false; }
 };
@@ -165,6 +168,7 @@ window.deleteReview = async function (productId) {
     if (resp.ok) {
         if (typeof window.loadUserStatus === 'function') await window.loadUserStatus();
         if (typeof window.loadOrders === 'function') await window.loadOrders();
+        if (typeof window.loadReviews === 'function') await window.loadReviews();
         window.showToast('Отзыв удалён', 'success');
     } else window.showToast('Ошибка удаления', 'error');
 };

@@ -419,12 +419,12 @@
             stock: (v) => window.validateStock(v, false),
             manufacturer: (v) => v ? null : 'Выберите производителя',
             concert: (v) => v ? null : 'Выберите концерт',
-            material: (v) => v && v.trim() ? window.validateOptionalString(v, 'Материал', 50) : null,
-            color: (v) => v && v.trim() ? window.validateOptionalString(v, 'Цвет', 30) : null,
-            type: (v) => v && v.trim() ? window.validateOptionalString(v, 'Тип аксессуара', 50) : null,
+            material: (v) => v && v.trim() ? (window.validateNoLeadingDigit(v, 'Материал') || window.validateOptionalString(v, 'Материал', 50, 2)) : null,
+            color: (v) => v && v.trim() ? window.validateAlphabeticWithSpaces(v, 'Цвет', 3, 30, false) : null,
+            type: (v) => v && v.trim() ? window.validateAlphabeticWithSpaces(v, 'Тип аксессуара', 3, 50, false) : null,
             weight: (v) => v && v.trim() ? window.validatePositiveNumber(v, 'Вес', false) : null,
-            description: (v) => v && v.trim() ? window.validateOptionalString(v, 'Описание', 1000) : null,
-            priceCategory: (v) => v && v.trim() ? window.validateOptionalString(v, 'Тип места', 50) : null
+            description: (v) => v && v.trim() ? (window.validateNoLeadingDigit(v, 'Описание') || window.validateOptionalString(v, 'Описание', 1000, 10)) : null,
+            priceCategory: (v) => v && v.trim() ? window.validateAlphabeticWithSpaces(v, 'Тип места', 3, 30, false) : null
         };
         const forms = ['ticket', 'clothing', 'accessory'];
         forms.forEach(type => {
@@ -495,6 +495,18 @@
             btn.addEventListener('click', async (e) => {
                 e.preventDefault();
                 const tabName = btn.dataset.tab;
+
+                if (tabName !== 'catalog') 
+                    const cancelButtons = ['edit-ticket-cancel', 'edit-clothing-cancel', 'edit-accessory-cancel'];
+                    for (let id of cancelButtons) {
+                        const btn = document.getElementById(id);
+                        if (btn && btn.offsetParent !== null) { 
+                            btn.click();
+                            break;
+                        }
+                    }
+                if (typeof window.hideEditPanel === 'function') window.hideEditPanel();
+
                 tabBtns.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -582,6 +594,9 @@
         window.fillEditTicketForm = (item) => {
             loadProductGenresForEdit(item.product_id, 'ticket');
             window.ProductForms.fillEditForm(item, 'ticket');
+            if (item.concert_id) {
+                window.loadConcertsSelect('edit-ticket-concert-id', item.concert_id);
+            }
         };
         window.fillEditClothingForm = (item) => {
             loadProductGenresForEdit(item.product_id, 'clothing');
@@ -619,8 +634,21 @@
         initLiveValidation();
         document.getElementById('manufacturer-submit')?.addEventListener('click', () => window.ManufacturerForm.save());
         document.getElementById('manufacturer-cancel')?.addEventListener('click', () => window.ManufacturerForm.clearForm());
+        document.getElementById('manufacturer-apply-filters')?.addEventListener('click', () => window.ManufacturerForm.loadTable());
+        document.getElementById('manufacturer-clear-filters')?.addEventListener('click', () => {
+            document.getElementById('manufacturer-search-name').value = '';
+            document.getElementById('manufacturer-search-country').value = '';
+            document.getElementById('manufacturer-sort').value = 'name_asc';
+            window.ManufacturerForm.loadTable();
+        });
         document.getElementById('genre-submit')?.addEventListener('click', () => window.GenreForm.save());
         document.getElementById('genre-cancel')?.addEventListener('click', () => window.GenreForm.clearForm());
+        document.getElementById('genre-apply-filters')?.addEventListener('click', () => window.GenreForm.loadTable());
+        document.getElementById('genre-clear-filters')?.addEventListener('click', () => {
+            document.getElementById('genre-search-name').value = '';
+            document.getElementById('genre-sort').value = 'name_asc';
+            window.GenreForm.loadTable();
+        });
         document.getElementById('ticket-submit')?.addEventListener('click', window.saveTicket);
         document.getElementById('ticket-cancel')?.addEventListener('click', window.clearTicketForm);
         document.getElementById('clothing-submit')?.addEventListener('click', window.saveClothing);
@@ -667,5 +695,8 @@
         });
         document.getElementById('modal-merch-close')?.addEventListener('click', window.closeArtistsMerchModal);
         initTabs();
+        if (typeof window.loadUserStatus === 'function') {
+            window.loadUserStatus();
+        }
     });
 })();

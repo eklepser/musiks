@@ -360,20 +360,32 @@ window.loadManufacturersForSelect = async function (selectId) {
     }
 };
 
-window.loadConcertsSelect = async function (selectId) {
+window.loadConcertsSelect = async function (selectId, includeConcertId = null) {
     const select = document.getElementById(selectId);
     if (!select) return;
     try {
         const resp = await fetch(window.API_URLS.CONCERTS);
         if (resp.ok) {
-            const concerts = await resp.json();
+            let concerts = await resp.json();
+            const now = new Date();
+            now.setHours(0, 0, 0, 0);
+            let futureConcerts = concerts.filter(c => new Date(c.datetime) >= now);
+            if (includeConcertId) {
+                const currentConcert = concerts.find(c => c.concert_id === includeConcertId);
+                if (currentConcert && !futureConcerts.some(c => c.concert_id === includeConcertId)) {
+                    futureConcerts.push(currentConcert);
+                }
+            }
             select.innerHTML = '<option value="">Выберите концерт</option>';
-            concerts.forEach(c => {
+            futureConcerts.forEach(c => {
                 const opt = document.createElement('option');
                 opt.value = c.concert_id;
-                opt.textContent = `${c.title} (ID ${c.concert_id})`;
+                opt.textContent = `${c.title} (ID ${c.concert_id}) - ${new Date(c.datetime).toLocaleString()}`;
                 select.appendChild(opt);
             });
+            if (includeConcertId) {
+                select.value = includeConcertId;
+            }
         }
     } catch (err) {
         console.error('Ошибка загрузки концертов', err);
@@ -515,4 +527,15 @@ window.parseErrorMessage = async function (resp) {
         return 'Произошла ошибка';
     }
 };
-            
+
+window.validateConcertDatetime = function (datetimeLocal, checkFuture = false) {
+    if (!datetimeLocal) return 'Дата и время обязательны';
+    const date = new Date(datetimeLocal);
+    if (isNaN(date.getTime())) return 'Некорректная дата и время';
+    if (checkFuture) {
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        if (date < now) return 'Дата концерта не может быть раньше сегодняшнего дня';
+    }
+    return null;
+};

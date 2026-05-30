@@ -1,25 +1,27 @@
-﻿window.API_URLS = {
-    TICKETS: 'https://localhost:7062/api/Tickets',
-    CLOTHINGS: 'https://localhost:7062/api/Clothings',
-    ACCESSORIES: 'https://localhost:7062/api/Accessories',
-    PRODUCTS: 'https://localhost:7062/api/Products',
-    PRODUCT_GENRES: 'https://localhost:7062/api/ProductGenres',
-    CONCERTS: 'https://localhost:7062/api/Concerts',
-    MANUFACTURERS: 'https://localhost:7062/api/Manufacturers',
-    GENRES: 'https://localhost:7062/api/Genres',
-    ARTISTS: 'https://localhost:7062/api/Artists',
-    ARTIST_MERCH: 'https://localhost:7062/api/ArtistMerches',
-    ARTIST_CONCERTS: 'https://localhost:7062/api/ArtistConcerts',
-    PRODUCTS_FILTER: 'https://localhost:7062/api/Products/filter',
-    USERS: 'https://localhost:7062/api/Users',
-    WISHLISTS: 'https://localhost:7062/api/Wishlists',
-    CARTS: 'https://localhost:7062/api/Carts',
-    REVIEWS: 'https://localhost:7062/api/Reviews',
-    ORDERS: 'https://localhost:7062/api/Orders',
-    ARTISTS_FILTER: 'https://localhost:7062/api/Artists/filter',
-    CONCERTS_FILTER: 'https://localhost:7062/api/Concerts/filter',
-    CONCERTS_ARTISTS: 'https://localhost:7062/api/Concerts/filter/artists',
-    PRODUCT_NAMES: 'https://localhost:7062/api/Products/filter/names'
+﻿const API_BASE_URL = 'https://localhost:7062';
+
+window.API_URLS = {
+    TICKETS: `${API_BASE_URL}/api/Tickets`,
+    CLOTHINGS: `${API_BASE_URL}/api/Clothings`,
+    ACCESSORIES: `${API_BASE_URL}/api/Accessories`,
+    PRODUCTS: `${API_BASE_URL}/api/Products`,
+    PRODUCT_GENRES: `${API_BASE_URL}/api/ProductGenres`,
+    CONCERTS: `${API_BASE_URL}/api/Concerts`,
+    MANUFACTURERS: `${API_BASE_URL}/api/Manufacturers`,
+    GENRES: `${API_BASE_URL}/api/Genres`,
+    ARTISTS: `${API_BASE_URL}/api/Artists`,
+    ARTIST_MERCH: `${API_BASE_URL}/api/ArtistMerches`,
+    ARTIST_CONCERTS: `${API_BASE_URL}/api/ArtistConcerts`,
+    PRODUCTS_FILTER: `${API_BASE_URL}/api/Products/filter`,
+    USERS: `${API_BASE_URL}/api/Users`,
+    WISHLISTS: `${API_BASE_URL}/api/Wishlists`,
+    CARTS: `${API_BASE_URL}/api/Carts`,
+    REVIEWS: `${API_BASE_URL}/api/Reviews`,
+    ORDERS: `${API_BASE_URL}/api/Orders`,
+    ARTISTS_FILTER: `${API_BASE_URL}/api/Artists/filter`,
+    CONCERTS_FILTER: `${API_BASE_URL}/api/Concerts/filter`,
+    CONCERTS_ARTISTS: `${API_BASE_URL}/api/Concerts/filter/artists`,
+    PRODUCT_NAMES: `${API_BASE_URL}/api/Products/filter/names`
 };
 
 window.APP_CONSTANTS = {

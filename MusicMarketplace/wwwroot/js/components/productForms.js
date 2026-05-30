@@ -192,7 +192,7 @@
                 clearForm(type);
             }
             if (typeof window.Catalog?.render === 'function') await window.Catalog.render();
-            window.showToast(`Запись «${data.name}» (ID ${newId}) ${isEdit ? 'обновлена' : 'добавлена'}`, 'success');
+            window.showToast(`Запись «${data.name}» ${isEdit ? 'обновлена' : 'добавлена'}`, 'success');
         } catch (err) {
             console.error(err);
             window.showToast('Ошибка сохранения', 'error');

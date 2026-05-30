@@ -211,7 +211,7 @@
             }
         } catch (err) {
             const tbody = document.getElementById('concerts-tbody');
-            if (tbody) tbody.innerHTML = '<td><td colspan="6" class="centered-message">Ошибка загрузки</tbody>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Ошибка загрузки</tbody>';
         }
     }
 
@@ -251,12 +251,19 @@
         const fields = [
             { id: 'concert-title', required: true, validator: (v) => window.validateRequiredString(v, 'Название', 2, 150, true) },
             { id: 'concert-venue', required: true, validator: (v) => window.validateRequiredString(v, 'Место', 2, 100, true) },
-            { id: 'concert-datetime', required: true, validator: (v) => v ? window.validateConcertDatetime(v) : 'Дата и время обязательны' }
+            { id: 'concert-datetime', required: true, validator: (v) => window.validateConcertDatetime(v, true) }
         ];
         fields.forEach(f => {
             const el = document.getElementById(f.id);
             if (el && typeof window.attachLiveValidation === 'function') window.attachLiveValidation(el, f.validator, f.required);
         });
+        const datetimeInput = document.getElementById('concert-datetime');
+        if (datetimeInput) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const minDate = today.toISOString().slice(0, 16);
+            datetimeInput.setAttribute('min', minDate);
+        }
     }
 
     function fillArtistForm(artist) {
@@ -441,7 +448,7 @@
                 if (typeof window.setFieldValidity === 'function') window.setFieldValidity(document.getElementById('concert-venue'), !error, error);
             }
             if (document.getElementById('concert-datetime') && document.getElementById('concert-datetime').value && typeof window.validateConcertDatetime === 'function') {
-                const error = window.validateConcertDatetime(document.getElementById('concert-datetime').value);
+                const error = window.validateConcertDatetime(document.getElementById('concert-datetime').value, true);
                 if (typeof window.setFieldValidity === 'function') window.setFieldValidity(document.getElementById('concert-datetime'), !error, error);
             }
         }, 10);
@@ -471,7 +478,7 @@
         if (err) return err;
         err = window.validateRequiredString(venue, 'Место', 2, 100, true);
         if (err) return err;
-        err = window.validateConcertDatetime(datetime);
+        err = window.validateConcertDatetime(datetime, true);
         if (err) return err;
         return null;
     }
