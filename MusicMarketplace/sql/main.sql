@@ -1,6 +1,4 @@
-﻿
-
-CREATE TABLE IF NOT EXISTS "User" (
+﻿CREATE TABLE IF NOT EXISTS "User" (
     user_id SERIAL PRIMARY KEY,
     login VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(100) NOT NULL UNIQUE,
@@ -374,11 +372,15 @@ BEGIN
 
     IF p_artist_ids_json IS NOT NULL AND p_artist_ids_json != '' AND p_artist_ids_json != '[]' THEN
         v_artist_ids := ARRAY(SELECT json_array_elements_text(p_artist_ids_json::json)::INT);
-        FOREACH artist_id IN ARRAY v_artist_ids LOOP INSERT INTO "ArtistMerch" (artist_id, merch_id) VALUES (artist_id, v_merch_id); END LOOP;
+        FOREACH artist_id IN ARRAY v_artist_ids LOOP
+            INSERT INTO "ArtistMerch" (artist_id, merch_id) VALUES (artist_id, v_merch_id);
+        END LOOP;
     END IF;
     IF p_genre_ids_json IS NOT NULL AND p_genre_ids_json != '' AND p_genre_ids_json != '[]' THEN
         v_genre_ids := ARRAY(SELECT json_array_elements_text(p_genre_ids_json::json)::INT);
-        FOREACH genre_id IN ARRAY v_genre_ids LOOP INSERT INTO "ProductGenre" (product_id, genre_id) VALUES (v_product_id, genre_id); END LOOP;
+        FOREACH genre_id IN ARRAY v_genre_ids LOOP
+            INSERT INTO "ProductGenre" (product_id, genre_id) VALUES (v_product_id, genre_id);
+        END LOOP;
     END IF;
 
     RETURN QUERY SELECT * FROM get_clothing_by_id(v_clothing_id);
@@ -405,11 +407,15 @@ BEGIN
 
     IF p_artist_ids_json IS NOT NULL AND p_artist_ids_json != '' AND p_artist_ids_json != '[]' THEN
         v_artist_ids := ARRAY(SELECT json_array_elements_text(p_artist_ids_json::json)::INT);
-        FOREACH artist_id IN ARRAY v_artist_ids LOOP INSERT INTO "ArtistMerch" (artist_id, merch_id) VALUES (artist_id, v_merch_id); END LOOP;
+        FOREACH artist_id IN ARRAY v_artist_ids LOOP
+            INSERT INTO "ArtistMerch" (artist_id, merch_id) VALUES (artist_id, v_merch_id);
+        END LOOP;
     END IF;
     IF p_genre_ids_json IS NOT NULL AND p_genre_ids_json != '' AND p_genre_ids_json != '[]' THEN
         v_genre_ids := ARRAY(SELECT json_array_elements_text(p_genre_ids_json::json)::INT);
-        FOREACH genre_id IN ARRAY v_genre_ids LOOP INSERT INTO "ProductGenre" (product_id, genre_id) VALUES (v_product_id, genre_id); END LOOP;
+        FOREACH genre_id IN ARRAY v_genre_ids LOOP
+            INSERT INTO "ProductGenre" (product_id, genre_id) VALUES (v_product_id, genre_id);
+        END LOOP;
     END IF;
 
     RETURN TRUE;
@@ -442,11 +448,15 @@ BEGIN
 
     IF p_artist_ids_json IS NOT NULL AND p_artist_ids_json != '' AND p_artist_ids_json != '[]' THEN
         v_artist_ids := ARRAY(SELECT json_array_elements_text(p_artist_ids_json::json)::INT);
-        FOREACH artist_id IN ARRAY v_artist_ids LOOP INSERT INTO "ArtistMerch" (artist_id, merch_id) VALUES (artist_id, v_merch_id); END LOOP;
+        FOREACH artist_id IN ARRAY v_artist_ids LOOP
+            INSERT INTO "ArtistMerch" (artist_id, merch_id) VALUES (artist_id, v_merch_id);
+        END LOOP;
     END IF;
     IF p_genre_ids_json IS NOT NULL AND p_genre_ids_json != '' AND p_genre_ids_json != '[]' THEN
         v_genre_ids := ARRAY(SELECT json_array_elements_text(p_genre_ids_json::json)::INT);
-        FOREACH genre_id IN ARRAY v_genre_ids LOOP INSERT INTO "ProductGenre" (product_id, genre_id) VALUES (v_product_id, genre_id); END LOOP;
+        FOREACH genre_id IN ARRAY v_genre_ids LOOP
+            INSERT INTO "ProductGenre" (product_id, genre_id) VALUES (v_product_id, genre_id);
+        END LOOP;
     END IF;
 
     RETURN QUERY SELECT * FROM get_accessory_by_id(v_accessory_id);
@@ -473,11 +483,15 @@ BEGIN
 
     IF p_artist_ids_json IS NOT NULL AND p_artist_ids_json != '' AND p_artist_ids_json != '[]' THEN
         v_artist_ids := ARRAY(SELECT json_array_elements_text(p_artist_ids_json::json)::INT);
-        FOREACH artist_id IN ARRAY v_artist_ids LOOP INSERT INTO "ArtistMerch" (artist_id, merch_id) VALUES (artist_id, v_merch_id); END LOOP;
+        FOREACH artist_id IN ARRAY v_artist_ids LOOP
+            INSERT INTO "ArtistMerch" (artist_id, merch_id) VALUES (artist_id, v_merch_id);
+        END LOOP;
     END IF;
     IF p_genre_ids_json IS NOT NULL AND p_genre_ids_json != '' AND p_genre_ids_json != '[]' THEN
         v_genre_ids := ARRAY(SELECT json_array_elements_text(p_genre_ids_json::json)::INT);
-        FOREACH genre_id IN ARRAY v_genre_ids LOOP INSERT INTO "ProductGenre" (product_id, genre_id) VALUES (v_product_id, genre_id); END LOOP;
+        FOREACH genre_id IN ARRAY v_genre_ids LOOP
+            INSERT INTO "ProductGenre" (product_id, genre_id) VALUES (v_product_id, genre_id);
+        END LOOP;
     END IF;
 
     RETURN TRUE;
@@ -1588,8 +1602,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_OrderItem_insert_before ON "OrderItem";
-
 CREATE TRIGGER trg_OrderItem_insert_before
     BEFORE INSERT ON "OrderItem"
     FOR EACH ROW
@@ -1611,6 +1623,8 @@ INSERT INTO "Genre" (genre_id, name, description) VALUES
 (13, 'Soul', 'Душевная музыка, богатые вокальные гармонии'),
 (14, 'Reggae', 'Ямайские ритмы, расслабленный грув');
 
+SELECT setval('"Genre_genre_id_seq"', (SELECT COALESCE(MAX(genre_id), 1) FROM "Genre"));
+
 INSERT INTO "Manufacturer" (manufacturer_id, name, contact_info, country) VALUES
 (1, 'Universal Music', 'contact@universal.com', 'USA'),
 (2, 'Sony Music', 'info@sonymusic.com', 'Japan'),
@@ -1623,11 +1637,15 @@ INSERT INTO "Manufacturer" (manufacturer_id, name, contact_info, country) VALUES
 (9, 'Melnitsa Booking', 'booking@melnitsa.ru', 'Russia'),
 (10, 'NCA', 'booking@nca.ru', 'Russia');
 
+SELECT setval('"Manufacturer_manufacturer_id_seq"', (SELECT COALESCE(MAX(manufacturer_id), 1) FROM "Manufacturer"));
+
 INSERT INTO "User" (user_id, login, email, registration_date, full_name, password_hash) VALUES
 (1, 'ivanov', 'ivanov@mail.ru', '2024-01-15', 'Иван Иванов', 'hash1'),
 (2, 'petrova', 'petrova@mail.ru', '2024-02-20', 'Петрова Анна', 'hash2'),
 (3, 'smith', 'smith@example.com', '2024-03-10', 'John Smith', 'hash3'),
 (4, 'dj_rus', 'ruslan@dj.ru', '2024-04-05', 'Руслан Морозов', 'hash4');
+
+SELECT setval('"User_user_id_seq"', (SELECT COALESCE(MAX(user_id), 1) FROM "User"));
 
 INSERT INTO "Artist" (artist_id, name, country, debut_year, language) VALUES
 (1, 'Kanye West', 'USA', 2004, 'English'),
@@ -1654,6 +1672,8 @@ INSERT INTO "Artist" (artist_id, name, country, debut_year, language) VALUES
 (22, 'Linkin Park', 'USA', 1996, 'English'),
 (23, 'The Beatles', 'UK', 1960, 'English');
 
+SELECT setval('"Artist_artist_id_seq"', (SELECT COALESCE(MAX(artist_id), 1) FROM "Artist"));
+
 INSERT INTO "Concert" (concert_id, title, venue, datetime) VALUES
 (1, 'Kanye West – Vultures Tour', 'Luzhniki Stadium, Moscow', '2024-07-25 20:00:00'),
 (2, 'Dua Lipa Future Nostalgia', 'VTB Arena, Moscow', '2024-07-20 20:00:00'),
@@ -1672,6 +1692,8 @@ INSERT INTO "Concert" (concert_id, title, venue, datetime) VALUES
 (15, 'David Bowie – A Tribute', 'Kremlin Palace, Moscow', '2026-09-10 19:30:00'),
 (16, 'The Rolling Stones – Sixty Tour', 'Spartak Stadium, Moscow', '2026-10-05 19:00:00'),
 (17, 'Pink Floyd – Dark Side Reunion', 'Luzhniki Stadium, Moscow', '2027-05-20 20:00:00');
+
+SELECT setval('"Concert_concert_id_seq"', (SELECT COALESCE(MAX(concert_id), 1) FROM "Concert"));
 
 INSERT INTO "Product" (product_id, name, price, description, stock, manufacturer_id) VALUES
 (1, 'Deftones – Стоячий партер', 6500.00, 'Стоячий партер перед сценой', 500, 6),
@@ -1710,6 +1732,8 @@ INSERT INTO "Product" (product_id, name, price, description, stock, manufacturer
 (34, 'Браслет The Rolling Stones', 1700.00, 'Серебряный браслет с логотипом', 250, 4),
 (35, 'Кепка Pink Floyd', 3200.00, 'Черная кепка с призмой', 180, 4);
 
+SELECT setval('"Product_product_id_seq"', (SELECT COALESCE(MAX(product_id), 1) FROM "Product"));
+
 INSERT INTO "Ticket" (ticket_id, concert_id, product_id, price_category, quantity) VALUES
 (1, 14, 1, 'Стоячий партер', 500),
 (2, 14, 2, 'Трибуны', 800),
@@ -1720,6 +1744,8 @@ INSERT INTO "Ticket" (ticket_id, concert_id, product_id, price_category, quantit
 (7, 17, 7, 'Танцевальный партер', 700),
 (8, 17, 8, 'Амфитеатр', 500),
 (9, 13, 9, 'Партер', 600);
+
+SELECT setval('"Ticket_ticket_id_seq"', (SELECT COALESCE(MAX(ticket_id), 1) FROM "Ticket"));
 
 INSERT INTO "Merch" (merch_id, product_id, material, color) VALUES
 (1, 10, 'Хлопок', 'Черный'),
@@ -1749,6 +1775,8 @@ INSERT INTO "Merch" (merch_id, product_id, material, color) VALUES
 (25, 34, 'Металл', 'Серебряный'),
 (26, 35, 'Полиэстер', 'Черный');
 
+SELECT setval('"Merch_merch_id_seq"', (SELECT COALESCE(MAX(merch_id), 1) FROM "Merch"));
+
 INSERT INTO "Clothing" (clothing_id, merch_id, size, gender) VALUES
 (1, 1, 'L', 'male'),
 (2, 2, 'M', 'female'),
@@ -1768,6 +1796,8 @@ INSERT INTO "Clothing" (clothing_id, merch_id, size, gender) VALUES
 (16, 16, 'L', 'unisex'),
 (17, 17, 'M', 'female');
 
+SELECT setval('"Clothing_clothing_id_seq"', (SELECT COALESCE(MAX(clothing_id), 1) FROM "Clothing"));
+
 INSERT INTO "Accessory" (accessory_id, merch_id, accessory_type, weight) VALUES
 (1, 18, 'Браслет', 30.0),
 (2, 19, 'Панама', 80.0),
@@ -1778,6 +1808,8 @@ INSERT INTO "Accessory" (accessory_id, merch_id, accessory_type, weight) VALUES
 (7, 24, 'Сумка', 180.0),
 (8, 25, 'Браслет', 25.0),
 (9, 26, 'Кепка', 130.0);
+
+SELECT setval('"Accessory_accessory_id_seq"', (SELECT COALESCE(MAX(accessory_id), 1) FROM "Accessory"));
 
 INSERT INTO "ProductGenre" (product_id, genre_id) VALUES
 (1, 10), (2, 10),

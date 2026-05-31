@@ -1,4 +1,4 @@
-﻿const API_BASE_URL = 'https://localhost:7062';
+﻿const API_BASE_URL = 'http://localhost:7062';
 
 window.API_URLS = {
     TICKETS: `${API_BASE_URL}/api/Tickets`,

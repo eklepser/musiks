@@ -26,11 +26,7 @@ public partial class MusicMarketplaceContext : DbContext
 
     public virtual DbSet<ArtistConcert> ArtistConcerts { get; set; }
     public virtual DbSet<ArtistMerch> ArtistMerches { get; set; }
-    public virtual DbSet<ProductGenre> ProductGenres { get; set; }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=musify;Username=postgres;Password=psql");
-
+    public virtual DbSet<ProductGenre> ProductGenres { get; set; } 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Clothing>(entity =>
