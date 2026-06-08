@@ -26,7 +26,8 @@ public partial class MusicMarketplaceContext : DbContext
 
     public virtual DbSet<ArtistConcert> ArtistConcerts { get; set; }
     public virtual DbSet<ArtistMerch> ArtistMerches { get; set; }
-    public virtual DbSet<ProductGenre> ProductGenres { get; set; } 
+    public virtual DbSet<ProductGenre> ProductGenres { get; set; }
+    public virtual DbSet<ChangeLog> ChangeLogs { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Clothing>(entity =>
@@ -200,6 +201,18 @@ public partial class MusicMarketplaceContext : DbContext
             entity.HasKey(e => new { e.product_id, e.genre_id });
             entity.HasOne<Product>().WithMany().HasForeignKey(d => d.product_id).HasConstraintName("ProductGenre_product_id_fkey");
             entity.HasOne<Genre>().WithMany().HasForeignKey(d => d.genre_id).HasConstraintName("ProductGenre_genre_id_fkey");
+        });
+
+        modelBuilder.Entity<ChangeLog>(entity =>
+        {
+            entity.ToTable("ChangeLog");
+            entity.HasKey(e => e.log_id);
+            entity.Property(e => e.log_id).UseIdentityColumn();
+            entity.Property(e => e.table_name).HasMaxLength(100);
+            entity.Property(e => e.operation_type).HasMaxLength(20);
+            entity.Property(e => e.old_data).HasColumnType("jsonb");
+            entity.Property(e => e.new_data).HasColumnType("jsonb");
+            entity.Property(e => e.changed_at).HasDefaultValueSql("CURRENT_TIMESTAMP");
         });
 
         OnModelCreatingPartial(modelBuilder);

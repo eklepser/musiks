@@ -21,7 +21,8 @@ window.API_URLS = {
     ARTISTS_FILTER: `${API_BASE_URL}/api/Artists/filter`,
     CONCERTS_FILTER: `${API_BASE_URL}/api/Concerts/filter`,
     CONCERTS_ARTISTS: `${API_BASE_URL}/api/Concerts/filter/artists`,
-    PRODUCT_NAMES: `${API_BASE_URL}/api/Products/filter/names`
+    PRODUCT_NAMES: `${API_BASE_URL}/api/Products/filter/names`,
+    LOGS: `${API_BASE_URL}/api/Logs`
 };
 
 window.APP_CONSTANTS = {

@@ -1,6 +1,4 @@
-﻿BEGIN;
-
-CREATE TABLE IF NOT EXISTS "User" (
+﻿CREATE TABLE IF NOT EXISTS "User" (
     user_id SERIAL PRIMARY KEY,
     login VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(100) NOT NULL UNIQUE,
@@ -154,4 +152,12 @@ CREATE TABLE IF NOT EXISTS "Review" (
     FOREIGN KEY (product_id) REFERENCES "Product"(product_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-COMMIT;
+CREATE TABLE IF NOT EXISTS "ChangeLog" (
+    log_id SERIAL PRIMARY KEY,
+    table_name VARCHAR(100) NOT NULL,
+    record_id INT,
+    operation_type VARCHAR(20) NOT NULL CHECK (operation_type IN ('INSERT', 'UPDATE', 'DELETE')),
+    old_data JSONB,
+    new_data JSONB,
+    changed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
