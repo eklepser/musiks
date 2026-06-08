@@ -12,12 +12,14 @@ namespace MusicMarketplace.Controllers
     {
         private readonly CartsService _cartsService;
         public CartsController(CartsService cartsService) => _cartsService = cartsService;
+
         [HttpGet("byUser/{userId}")]
         public async Task<IActionResult> GetByUser(int userId)
         {
             var items = await _cartsService.GetByUserAsync(userId);
             return Ok(items);
         }
+
         [HttpPost]
         public async Task<IActionResult> PostCart(CartCreateDto dto)
         {
@@ -30,7 +32,16 @@ namespace MusicMarketplace.Controllers
             {
                 return Conflict(new { message = ex.Message });
             }
+            catch (PostgresException pgEx) when (pgEx.SqlState == "P0001")
+            {
+                return BadRequest(new { message = pgEx.MessageText });
+            }
+            catch (PostgresException pgEx) when (pgEx.SqlState == "22003")
+            {
+                return BadRequest(new { message = "Слишком большое количество товара" });
+            }
         }
+
         [HttpDelete("{userId}/{productId}")]
         public async Task<IActionResult> DeleteCartItem(int userId, int productId, [FromQuery] int quantity = 0)
         {
@@ -44,6 +55,7 @@ namespace MusicMarketplace.Controllers
                 return NotFound(new { message = ex.Message });
             }
         }
+
         [HttpPost("checkout/{userId}")]
         public async Task<IActionResult> Checkout(int userId)
         {
@@ -56,6 +68,10 @@ namespace MusicMarketplace.Controllers
             {
                 return BadRequest(new { message = pgEx.MessageText });
             }
+            catch (PostgresException pgEx) when (pgEx.SqlState == "22003")
+            {
+                return BadRequest(new { message = "Сумма заказа слишком большая. Уменьшите количество товаров." });
+            }
             catch (InvalidOperationException ex)
             {
                 return BadRequest(new { message = ex.Message });
@@ -65,6 +81,7 @@ namespace MusicMarketplace.Controllers
                 return BadRequest(new { message = "Ошибка оформления заказа: " + ex.Message });
             }
         }
+
         [HttpGet("byUser/{userId}/filter")]
         public async Task<IActionResult> GetCartFiltered(int userId,
         [FromQuery] string? searchName = null,

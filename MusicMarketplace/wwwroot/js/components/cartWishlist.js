@@ -46,27 +46,46 @@ window.removeFromWishlist = async function (productId) {
 window.addToCart = async function (productId, productName, quantity = 1) {
     const userId = window.getCurrentUserId();
     if (!userId) { window.showToast('Сначала выберите пользователя', 'error'); return false; }
+
+    if (quantity < 1) {
+        window.showToast('Количество должно быть не менее 1', 'error');
+        return false;
+    }
+    if (quantity > 10000) {
+        window.showToast('Нельзя добавить более 10000 единиц товара за раз', 'error');
+        return false;
+    }
+
     try {
         const resp = await fetch(window.API_URLS.CARTS, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ user_id: userId, product_id: productId, quantity: quantity })
         });
-        if (resp.status === 409) {
-            const error = await resp.json();
-            window.showToast(error.message || 'Товар уже в корзине', 'warning');
+
+        if (!resp.ok) {
+            let errorMsg = 'Ошибка добавления в корзину';
+            try {
+                const error = await resp.json();
+                if (error.message) errorMsg = error.message;
+            } catch (e) { }
+            window.showToast(errorMsg, 'error');
             return false;
         }
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+
         let newQuantity = quantity;
         try {
             const result = await resp.json();
             if (result && result.quantity) newQuantity = result.quantity;
         } catch (e) { }
+
         window.showToast(`Товар «${productName}» добавлен в корзину${newQuantity > 1 ? ` (теперь ${newQuantity} шт.)` : ''}`, 'success');
         if (typeof window.loadCart === 'function') await window.loadCart();
         return true;
-    } catch (err) { window.showToast('Ошибка добавления в корзину', 'error'); return false; }
+    } catch (err) {
+        window.showToast('Ошибка сети', 'error');
+        return false;
+    }
 };
 
 window.showRemoveFromCartModal = function (productId, productName, currentQuantity) {
