@@ -1,97 +1,148 @@
+CREATE OR REPLACE FUNCTION get_ticket_by_id(p_id INT)
+RETURNS TABLE (
+    ticket_id INT, product_id INT, name VARCHAR, price DECIMAL, description TEXT,
+    stock INT, manufacturer_id INT, concert_id INT, price_category VARCHAR
+) AS $$
+BEGIN
+    RETURN QUERY SELECT v.ticket_id, v.product_id, v.name, v.price, v.description, v.stock,
+           v.manufacturer_id, v.concert_id, v.price_category
+    FROM view_ticket_full v WHERE v.ticket_id = p_id;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_clothing_by_id(p_id INT)
+RETURNS TABLE (
+    clothing_id INT, product_id INT, name VARCHAR, price DECIMAL, description TEXT, stock INT,
+    manufacturer_id INT, material VARCHAR, color VARCHAR, size VARCHAR, gender VARCHAR,
+    "artistIds" INT[], "artistNames" TEXT
+) AS $$
+BEGIN
+    RETURN QUERY SELECT v.clothing_id, v.product_id, v.name, v.price, v.description, v.stock,
+           v.manufacturer_id, v.material, v.color, v.size, v.gender,
+           v.artist_ids, v.artist_names
+    FROM view_clothing_full v WHERE v.clothing_id = p_id;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_accessory_by_id(p_id INT)
+RETURNS TABLE (
+    accessory_id INT, product_id INT, name VARCHAR, price DECIMAL, description TEXT, stock INT,
+    manufacturer_id INT, material VARCHAR, color VARCHAR, accessory_type VARCHAR, weight DECIMAL,
+    "artistIds" INT[], "artistNames" TEXT
+) AS $$
+BEGIN
+    RETURN QUERY SELECT v.accessory_id, v.product_id, v.name, v.price, v.description, v.stock,
+           v.manufacturer_id, v.material, v.color, v.accessory_type, v.weight,
+           v.artist_ids, v.artist_names
+    FROM view_accessory_full v WHERE v.accessory_id = p_id;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_all_tickets()
+RETURNS TABLE (
+    ticket_id INT, product_id INT, name VARCHAR, price DECIMAL, description TEXT,
+    stock INT, manufacturer_id INT, concert_id INT, price_category VARCHAR
+) AS $$
+BEGIN
+    RETURN QUERY SELECT v.ticket_id, v.product_id, v.name, v.price, v.description, v.stock,
+           v.manufacturer_id, v.concert_id, v.price_category
+    FROM view_ticket_full v;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_all_clothings()
+RETURNS TABLE (
+    clothing_id INT, product_id INT, name VARCHAR, price DECIMAL, description TEXT, stock INT,
+    manufacturer_id INT, material VARCHAR, color VARCHAR, size VARCHAR, gender VARCHAR,
+    "artistIds" INT[], "artistNames" TEXT
+) AS $$
+BEGIN
+    RETURN QUERY SELECT v.clothing_id, v.product_id, v.name, v.price, v.description, v.stock,
+           v.manufacturer_id, v.material, v.color, v.size, v.gender,
+           v.artist_ids, v.artist_names
+    FROM view_clothing_full v;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_all_accessories()
+RETURNS TABLE (
+    accessory_id INT, product_id INT, name VARCHAR, price DECIMAL, description TEXT, stock INT,
+    manufacturer_id INT, material VARCHAR, color VARCHAR, accessory_type VARCHAR, weight DECIMAL,
+    "artistIds" INT[], "artistNames" TEXT
+) AS $$
+BEGIN
+    RETURN QUERY SELECT v.accessory_id, v.product_id, v.name, v.price, v.description, v.stock,
+           v.manufacturer_id, v.material, v.color, v.accessory_type, v.weight,
+           v.artist_ids, v.artist_names
+    FROM view_accessory_full v;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION create_ticket(
-    p_name VARCHAR, p_price DECIMAL, p_description TEXT, p_stock INT, 
+    p_name VARCHAR, p_price DECIMAL, p_description TEXT, p_stock INT,
     p_manufacturer_id INT, p_concert_id INT, p_price_category VARCHAR, p_genre_ids_json TEXT
 )
 RETURNS TABLE (
-    ticket_id INT, product_id INT, name VARCHAR, price DECIMAL, 
+    ticket_id INT, product_id INT, name VARCHAR, price DECIMAL,
     description TEXT, stock INT, manufacturer_id INT, concert_id INT, price_category VARCHAR
 ) AS $$
 DECLARE v_product_id INT; v_ticket_id INT; v_genre_ids INT[]; genre_id INT;
 BEGIN
-    INSERT INTO "Product" (name, price, description, stock, manufacturer_id) 
-    VALUES (trim(p_name), p_price, trim(p_description), p_stock, p_manufacturer_id) 
+    INSERT INTO "Product" (name, price, description, stock, manufacturer_id)
+    VALUES (trim(p_name), p_price, trim(p_description), p_stock, p_manufacturer_id)
     RETURNING "Product".product_id INTO v_product_id;
-    
-    INSERT INTO "Ticket" (concert_id, product_id, price_category) 
-    VALUES (p_concert_id, v_product_id, trim(p_price_category)) 
+
+    INSERT INTO "Ticket" (concert_id, product_id, price_category)
+    VALUES (p_concert_id, v_product_id, trim(p_price_category))
     RETURNING "Ticket".ticket_id INTO v_ticket_id;
-    
+
     IF p_genre_ids_json IS NOT NULL AND p_genre_ids_json != '' AND p_genre_ids_json != '[]' THEN
         v_genre_ids := ARRAY(SELECT json_array_elements_text(p_genre_ids_json::json)::INT);
-        FOREACH genre_id IN ARRAY v_genre_ids LOOP 
-            INSERT INTO "ProductGenre" (product_id, genre_id) VALUES (v_product_id, genre_id); 
+        FOREACH genre_id IN ARRAY v_genre_ids LOOP
+            INSERT INTO "ProductGenre" (product_id, genre_id) VALUES (v_product_id, genre_id);
         END LOOP;
     END IF;
-    
+
     RETURN QUERY SELECT * FROM get_ticket_by_id(v_ticket_id);
 END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION update_ticket(
-    p_id INT, p_name VARCHAR, p_price DECIMAL, p_description TEXT, p_stock INT, 
+    p_id INT, p_name VARCHAR, p_price DECIMAL, p_description TEXT, p_stock INT,
     p_manufacturer_id INT, p_concert_id INT, p_price_category VARCHAR, p_genre_ids_json TEXT
 ) RETURNS BOOLEAN AS $$
 DECLARE v_product_id INT; v_genre_ids INT[]; genre_id INT;
 BEGIN
     SELECT product_id INTO v_product_id FROM "Ticket" t WHERE t.ticket_id = p_id;
     IF NOT FOUND THEN RETURN FALSE; END IF;
-    
-    UPDATE "Product" SET 
-        name = trim(p_name), price = p_price, description = trim(p_description), 
-        stock = p_stock, manufacturer_id = p_manufacturer_id 
+
+    UPDATE "Product" SET
+        name = trim(p_name), price = p_price, description = trim(p_description),
+        stock = p_stock, manufacturer_id = p_manufacturer_id
     WHERE product_id = v_product_id;
-    
-    UPDATE "Ticket" SET concert_id = p_concert_id, price_category = trim(p_price_category) 
+
+    UPDATE "Ticket" SET concert_id = p_concert_id, price_category = trim(p_price_category)
     WHERE ticket_id = p_id;
-    
+
     DELETE FROM "ProductGenre" WHERE product_id = v_product_id;
     IF p_genre_ids_json IS NOT NULL AND p_genre_ids_json != '' AND p_genre_ids_json != '[]' THEN
         v_genre_ids := ARRAY(SELECT json_array_elements_text(p_genre_ids_json::json)::INT);
-        FOREACH genre_id IN ARRAY v_genre_ids LOOP 
-            INSERT INTO "ProductGenre" (product_id, genre_id) VALUES (v_product_id, genre_id); 
+        FOREACH genre_id IN ARRAY v_genre_ids LOOP
+            INSERT INTO "ProductGenre" (product_id, genre_id) VALUES (v_product_id, genre_id);
         END LOOP;
     END IF;
-    
+
     RETURN TRUE;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION get_all_tickets() 
-RETURNS TABLE (
-    ticket_id INT, product_id INT, name VARCHAR, price DECIMAL, description TEXT, 
-    stock INT, manufacturer_id INT, concert_id INT, price_category VARCHAR
-) AS $$
-BEGIN 
-    RETURN QUERY 
-    SELECT t.ticket_id, p.product_id, p.name, p.price, p.description, p.stock, 
-           p.manufacturer_id, t.concert_id, t.price_category 
-    FROM "Ticket" t 
-    JOIN "Product" p ON t.product_id = p.product_id;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION get_ticket_by_id(p_id INT) 
-RETURNS TABLE (
-    ticket_id INT, product_id INT, name VARCHAR, price DECIMAL, description TEXT, 
-    stock INT, manufacturer_id INT, concert_id INT, price_category VARCHAR
-) AS $$
-BEGIN 
-    RETURN QUERY 
-    SELECT t.ticket_id, p.product_id, p.name, p.price, p.description, p.stock, 
-           p.manufacturer_id, t.concert_id, t.price_category 
-    FROM "Ticket" t 
-    JOIN "Product" p ON t.product_id = p.product_id 
-    WHERE t.ticket_id = p_id;
-END;
-$$ LANGUAGE plpgsql;
-
 CREATE OR REPLACE FUNCTION get_filtered_tickets(
-    p_search_name VARCHAR, p_manufacturer_id INT, p_artist_id INT, p_in_stock BOOLEAN, 
+    p_search_name VARCHAR, p_manufacturer_id INT, p_artist_id INT, p_in_stock BOOLEAN,
     p_price_min NUMERIC, p_price_max NUMERIC, p_selected_genres VARCHAR
 )
 RETURNS TABLE (
-    ticket_id INT, product_id INT, name VARCHAR, price NUMERIC, description TEXT, stock INT, 
-    manufacturer_id INT, type VARCHAR, typeName VARCHAR, concert_id INT, concert_title VARCHAR, 
+    ticket_id INT, product_id INT, name VARCHAR, price NUMERIC, description TEXT, stock INT,
+    manufacturer_id INT, type VARCHAR, typeName VARCHAR, concert_id INT, concert_title VARCHAR,
     price_category VARCHAR, artistNames TEXT, artistIds TEXT,
     genre_names TEXT
 ) AS $$
@@ -152,18 +203,18 @@ BEGIN
     IF EXISTS (SELECT 1 FROM "Concert" c WHERE c.title = trim(p_title) AND c.venue = trim(p_venue) AND c.datetime = p_datetime) THEN
         RAISE EXCEPTION 'Такой концерт уже существует';
     END IF;
-    
+
     INSERT INTO "Concert" (title, venue, datetime)
     VALUES (trim(p_title), trim(p_venue), p_datetime)
     RETURNING "Concert".concert_id INTO v_concert_id;
-    
+
     IF p_artist_ids_json IS NOT NULL AND p_artist_ids_json != '' AND p_artist_ids_json != '[]' THEN
         v_artist_ids := ARRAY(SELECT json_array_elements_text(p_artist_ids_json::json)::INT);
         FOREACH artist_id IN ARRAY v_artist_ids LOOP
             INSERT INTO "ArtistConcert" (artist_id, concert_id) VALUES (artist_id, v_concert_id);
         END LOOP;
     END IF;
-    
+
     RETURN QUERY SELECT * FROM get_concert_by_id(v_concert_id);
 END;
 $$ LANGUAGE plpgsql;
@@ -177,45 +228,45 @@ BEGIN
     IF EXISTS (SELECT 1 FROM "Concert" c WHERE c.title = trim(p_title) AND c.venue = trim(p_venue) AND c.datetime = p_datetime AND c.concert_id != p_id) THEN
         RAISE EXCEPTION 'Такой концерт уже существует';
     END IF;
-    
+
     UPDATE "Concert" SET title = trim(p_title), venue = trim(p_venue), datetime = p_datetime WHERE concert_id = p_id;
     DELETE FROM "ArtistConcert" WHERE concert_id = p_id;
-    
+
     IF p_artist_ids_json IS NOT NULL AND p_artist_ids_json != '' AND p_artist_ids_json != '[]' THEN
         v_artist_ids := ARRAY(SELECT json_array_elements_text(p_artist_ids_json::json)::INT);
         FOREACH artist_id IN ARRAY v_artist_ids LOOP
             INSERT INTO "ArtistConcert" (artist_id, concert_id) VALUES (artist_id, p_id);
         END LOOP;
     END IF;
-    
+
     RETURN TRUE;
 END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION create_clothing(
-    p_name VARCHAR, p_price DECIMAL, p_description TEXT, p_stock INT, p_manufacturer_id INT, 
-    p_material VARCHAR, p_color VARCHAR, p_size VARCHAR, p_gender VARCHAR, 
+    p_name VARCHAR, p_price DECIMAL, p_description TEXT, p_stock INT, p_manufacturer_id INT,
+    p_material VARCHAR, p_color VARCHAR, p_size VARCHAR, p_gender VARCHAR,
     p_artist_ids_json TEXT, p_genre_ids_json TEXT
 )
 RETURNS TABLE (
-    clothing_id INT, product_id INT, name VARCHAR, price DECIMAL, description TEXT, stock INT, 
-    manufacturer_id INT, material VARCHAR, color VARCHAR, size VARCHAR, gender VARCHAR, 
+    clothing_id INT, product_id INT, name VARCHAR, price DECIMAL, description TEXT, stock INT,
+    manufacturer_id INT, material VARCHAR, color VARCHAR, size VARCHAR, gender VARCHAR,
     "artistIds" INT[], "artistNames" TEXT
 ) AS $$
 DECLARE v_product_id INT; v_merch_id INT; v_clothing_id INT; v_artist_ids INT[]; artist_id INT; v_genre_ids INT[]; genre_id INT;
 BEGIN
-    INSERT INTO "Product" (name, price, description, stock, manufacturer_id) 
-    VALUES (trim(p_name), p_price, trim(p_description), p_stock, p_manufacturer_id) 
+    INSERT INTO "Product" (name, price, description, stock, manufacturer_id)
+    VALUES (trim(p_name), p_price, trim(p_description), p_stock, p_manufacturer_id)
     RETURNING "Product".product_id INTO v_product_id;
-    
-    INSERT INTO "Merch" (product_id, material, color) 
-    VALUES (v_product_id, trim(p_material), trim(p_color)) 
+
+    INSERT INTO "Merch" (product_id, material, color)
+    VALUES (v_product_id, trim(p_material), trim(p_color))
     RETURNING "Merch".merch_id INTO v_merch_id;
-    
-    INSERT INTO "Clothing" (merch_id, size, gender) 
-    VALUES (v_merch_id, trim(p_size), trim(p_gender)) 
+
+    INSERT INTO "Clothing" (merch_id, size, gender)
+    VALUES (v_merch_id, trim(p_size), trim(p_gender))
     RETURNING "Clothing".clothing_id INTO v_clothing_id;
-    
+
     IF p_artist_ids_json IS NOT NULL AND p_artist_ids_json != '' AND p_artist_ids_json != '[]' THEN
         v_artist_ids := ARRAY(SELECT json_array_elements_text(p_artist_ids_json::json)::INT);
         FOREACH artist_id IN ARRAY v_artist_ids LOOP INSERT INTO "ArtistMerch" (artist_id, merch_id) VALUES (artist_id, v_merch_id); END LOOP;
@@ -224,14 +275,14 @@ BEGIN
         v_genre_ids := ARRAY(SELECT json_array_elements_text(p_genre_ids_json::json)::INT);
         FOREACH genre_id IN ARRAY v_genre_ids LOOP INSERT INTO "ProductGenre" (product_id, genre_id) VALUES (v_product_id, genre_id); END LOOP;
     END IF;
-    
+
     RETURN QUERY SELECT * FROM get_clothing_by_id(v_clothing_id);
 END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION update_clothing(
-    p_id INT, p_name VARCHAR, p_price DECIMAL, p_description TEXT, p_stock INT, p_manufacturer_id INT, 
-    p_material VARCHAR, p_color VARCHAR, p_size VARCHAR, p_gender VARCHAR, 
+    p_id INT, p_name VARCHAR, p_price DECIMAL, p_description TEXT, p_stock INT, p_manufacturer_id INT,
+    p_material VARCHAR, p_color VARCHAR, p_size VARCHAR, p_gender VARCHAR,
     p_artist_ids_json TEXT, p_genre_ids_json TEXT
 ) RETURNS BOOLEAN AS $$
 DECLARE v_merch_id INT; v_product_id INT; v_artist_ids INT[]; artist_id INT; v_genre_ids INT[]; genre_id INT;
@@ -239,14 +290,14 @@ BEGIN
     SELECT merch_id INTO v_merch_id FROM "Clothing" WHERE clothing_id = p_id;
     IF NOT FOUND THEN RETURN FALSE; END IF;
     SELECT product_id INTO v_product_id FROM "Merch" WHERE merch_id = v_merch_id;
-    
+
     UPDATE "Product" SET name = trim(p_name), price = p_price, description = trim(p_description), stock = p_stock, manufacturer_id = p_manufacturer_id WHERE product_id = v_product_id;
     UPDATE "Merch" SET material = trim(p_material), color = trim(p_color) WHERE merch_id = v_merch_id;
     UPDATE "Clothing" SET size = trim(p_size), gender = trim(p_gender) WHERE clothing_id = p_id;
-    
+
     DELETE FROM "ArtistMerch" WHERE merch_id = v_merch_id;
     DELETE FROM "ProductGenre" WHERE product_id = v_product_id;
-    
+
     IF p_artist_ids_json IS NOT NULL AND p_artist_ids_json != '' AND p_artist_ids_json != '[]' THEN
         v_artist_ids := ARRAY(SELECT json_array_elements_text(p_artist_ids_json::json)::INT);
         FOREACH artist_id IN ARRAY v_artist_ids LOOP INSERT INTO "ArtistMerch" (artist_id, merch_id) VALUES (artist_id, v_merch_id); END LOOP;
@@ -255,35 +306,95 @@ BEGIN
         v_genre_ids := ARRAY(SELECT json_array_elements_text(p_genre_ids_json::json)::INT);
         FOREACH genre_id IN ARRAY v_genre_ids LOOP INSERT INTO "ProductGenre" (product_id, genre_id) VALUES (v_product_id, genre_id); END LOOP;
     END IF;
-    
+
     RETURN TRUE;
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION get_filtered_clothings(
+    p_search_name VARCHAR,
+    p_manufacturer_id INT,
+    p_artist_id INT,
+    p_in_stock BOOLEAN,
+    p_price_min NUMERIC,
+    p_price_max NUMERIC,
+    p_selected_genres VARCHAR
+)
+RETURNS TABLE (
+    clothing_id INT,
+    product_id INT,
+    name VARCHAR,
+    price NUMERIC,
+    description TEXT,
+    stock INT,
+    manufacturer_id INT,
+    type VARCHAR,
+    typeName VARCHAR,
+    material VARCHAR,
+    color VARCHAR,
+    size VARCHAR,
+    gender VARCHAR,
+    artistNames TEXT,
+    artistIds TEXT,
+    genre_names TEXT
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        c.clothing_id,
+        p.product_id,
+        p.name,
+        p.price,
+        p.description,
+        p.stock,
+        p.manufacturer_id,
+        'clothing'::VARCHAR AS type,
+        'Одежда'::VARCHAR AS typeName,
+        m.material,
+        m.color,
+        c.size,
+        c.gender,
+        COALESCE((SELECT STRING_AGG(a.name, ', ') FROM "ArtistMerch" am JOIN "Artist" a ON am.artist_id = a.artist_id WHERE am.merch_id = c.merch_id), '') AS artistNames,
+        COALESCE((SELECT json_agg(am.artist_id)::TEXT FROM "ArtistMerch" am WHERE am.merch_id = c.merch_id), '[]') AS artistIds,
+        COALESCE((SELECT STRING_AGG(g.name, ', ') FROM "ProductGenre" pg JOIN "Genre" g ON pg.genre_id = g.genre_id WHERE pg.product_id = p.product_id), '') AS genre_names
+    FROM "Clothing" c
+    JOIN "Merch" m ON c.merch_id = m.merch_id
+    JOIN "Product" p ON m.product_id = p.product_id
+    WHERE 1=1
+        AND (p_search_name IS NULL OR p.name ILIKE '%' || p_search_name || '%')
+        AND (p_manufacturer_id IS NULL OR p.manufacturer_id = p_manufacturer_id)
+        AND (p_artist_id IS NULL OR EXISTS (SELECT 1 FROM "ArtistMerch" am WHERE am.merch_id = c.merch_id AND am.artist_id = p_artist_id))
+        AND (p_in_stock = false OR p.stock > 0)
+        AND (p_price_min IS NULL OR p.price >= p_price_min)
+        AND (p_price_max IS NULL OR p.price <= p_price_max)
+        AND (p_selected_genres IS NULL OR EXISTS (SELECT 1 FROM "ProductGenre" pg JOIN "Genre" g ON pg.genre_id = g.genre_id WHERE pg.product_id = p.product_id AND g.name = ANY(string_to_array(p_selected_genres, ','))));
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION create_accessory(
-    p_name VARCHAR, p_price DECIMAL, p_description TEXT, p_stock INT, p_manufacturer_id INT, 
-    p_material VARCHAR, p_color VARCHAR, p_accessory_type VARCHAR, p_weight DECIMAL, 
+    p_name VARCHAR, p_price DECIMAL, p_description TEXT, p_stock INT, p_manufacturer_id INT,
+    p_material VARCHAR, p_color VARCHAR, p_accessory_type VARCHAR, p_weight DECIMAL,
     p_artist_ids_json TEXT, p_genre_ids_json TEXT
 )
 RETURNS TABLE (
-    accessory_id INT, product_id INT, name VARCHAR, price DECIMAL, description TEXT, stock INT, 
-    manufacturer_id INT, material VARCHAR, color VARCHAR, accessory_type VARCHAR, weight DECIMAL, 
+    accessory_id INT, product_id INT, name VARCHAR, price DECIMAL, description TEXT, stock INT,
+    manufacturer_id INT, material VARCHAR, color VARCHAR, accessory_type VARCHAR, weight DECIMAL,
     "artistIds" INT[], "artistNames" TEXT
 ) AS $$
 DECLARE v_product_id INT; v_merch_id INT; v_accessory_id INT; v_artist_ids INT[]; artist_id INT; v_genre_ids INT[]; genre_id INT;
 BEGIN
-    INSERT INTO "Product" (name, price, description, stock, manufacturer_id) 
-    VALUES (trim(p_name), p_price, trim(p_description), p_stock, p_manufacturer_id) 
+    INSERT INTO "Product" (name, price, description, stock, manufacturer_id)
+    VALUES (trim(p_name), p_price, trim(p_description), p_stock, p_manufacturer_id)
     RETURNING "Product".product_id INTO v_product_id;
-    
-    INSERT INTO "Merch" (product_id, material, color) 
-    VALUES (v_product_id, trim(p_material), trim(p_color)) 
+
+    INSERT INTO "Merch" (product_id, material, color)
+    VALUES (v_product_id, trim(p_material), trim(p_color))
     RETURNING "Merch".merch_id INTO v_merch_id;
-    
-    INSERT INTO "Accessory" (merch_id, accessory_type, weight) 
-    VALUES (v_merch_id, trim(p_accessory_type), p_weight) 
+
+    INSERT INTO "Accessory" (merch_id, accessory_type, weight)
+    VALUES (v_merch_id, trim(p_accessory_type), p_weight)
     RETURNING "Accessory".accessory_id INTO v_accessory_id;
-    
+
     IF p_artist_ids_json IS NOT NULL AND p_artist_ids_json != '' AND p_artist_ids_json != '[]' THEN
         v_artist_ids := ARRAY(SELECT json_array_elements_text(p_artist_ids_json::json)::INT);
         FOREACH artist_id IN ARRAY v_artist_ids LOOP INSERT INTO "ArtistMerch" (artist_id, merch_id) VALUES (artist_id, v_merch_id); END LOOP;
@@ -292,14 +403,14 @@ BEGIN
         v_genre_ids := ARRAY(SELECT json_array_elements_text(p_genre_ids_json::json)::INT);
         FOREACH genre_id IN ARRAY v_genre_ids LOOP INSERT INTO "ProductGenre" (product_id, genre_id) VALUES (v_product_id, genre_id); END LOOP;
     END IF;
-    
+
     RETURN QUERY SELECT * FROM get_accessory_by_id(v_accessory_id);
 END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION update_accessory(
-    p_id INT, p_name VARCHAR, p_price DECIMAL, p_description TEXT, p_stock INT, p_manufacturer_id INT, 
-    p_material VARCHAR, p_color VARCHAR, p_accessory_type VARCHAR, p_weight DECIMAL, 
+    p_id INT, p_name VARCHAR, p_price DECIMAL, p_description TEXT, p_stock INT, p_manufacturer_id INT,
+    p_material VARCHAR, p_color VARCHAR, p_accessory_type VARCHAR, p_weight DECIMAL,
     p_artist_ids_json TEXT, p_genre_ids_json TEXT
 ) RETURNS BOOLEAN AS $$
 DECLARE v_merch_id INT; v_product_id INT; v_artist_ids INT[]; artist_id INT; v_genre_ids INT[]; genre_id INT;
@@ -307,14 +418,14 @@ BEGIN
     SELECT merch_id INTO v_merch_id FROM "Accessory" acc WHERE acc.accessory_id = p_id;
     IF NOT FOUND THEN RETURN FALSE; END IF;
     SELECT product_id INTO v_product_id FROM "Merch" m WHERE m.merch_id = v_merch_id;
-    
+
     UPDATE "Product" SET name = trim(p_name), price = p_price, description = trim(p_description), stock = p_stock, manufacturer_id = p_manufacturer_id WHERE product_id = v_product_id;
     UPDATE "Merch" SET material = trim(p_material), color = trim(p_color) WHERE merch_id = v_merch_id;
     UPDATE "Accessory" SET accessory_type = trim(p_accessory_type), weight = p_weight WHERE accessory_id = p_id;
-    
+
     DELETE FROM "ArtistMerch" WHERE merch_id = v_merch_id;
     DELETE FROM "ProductGenre" WHERE product_id = v_product_id;
-    
+
     IF p_artist_ids_json IS NOT NULL AND p_artist_ids_json != '' AND p_artist_ids_json != '[]' THEN
         v_artist_ids := ARRAY(SELECT json_array_elements_text(p_artist_ids_json::json)::INT);
         FOREACH artist_id IN ARRAY v_artist_ids LOOP INSERT INTO "ArtistMerch" (artist_id, merch_id) VALUES (artist_id, v_merch_id); END LOOP;
@@ -323,26 +434,37 @@ BEGIN
         v_genre_ids := ARRAY(SELECT json_array_elements_text(p_genre_ids_json::json)::INT);
         FOREACH genre_id IN ARRAY v_genre_ids LOOP INSERT INTO "ProductGenre" (product_id, genre_id) VALUES (v_product_id, genre_id); END LOOP;
     END IF;
-    
+
     RETURN TRUE;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION get_all_accessories()
+CREATE OR REPLACE FUNCTION get_filtered_accessories(
+    p_search_name VARCHAR,
+    p_manufacturer_id INT,
+    p_artist_id INT,
+    p_in_stock BOOLEAN,
+    p_price_min NUMERIC,
+    p_price_max NUMERIC,
+    p_selected_genres VARCHAR
+)
 RETURNS TABLE (
     accessory_id INT,
     product_id INT,
     name VARCHAR,
-    price DECIMAL,
+    price NUMERIC,
     description TEXT,
     stock INT,
     manufacturer_id INT,
+    type VARCHAR,
+    typeName VARCHAR,
     material VARCHAR,
     color VARCHAR,
     accessory_type VARCHAR,
-    weight DECIMAL,
-    "artistIds" INT[],
-    "artistNames" TEXT
+    weight NUMERIC,
+    artistNames TEXT,
+    artistIds TEXT,
+    genre_names TEXT
 ) AS $$
 BEGIN
     RETURN QUERY
@@ -354,54 +476,26 @@ BEGIN
         p.description,
         p.stock,
         p.manufacturer_id,
+        'accessory'::VARCHAR AS type,
+        'Аксессуар'::VARCHAR AS typeName,
         m.material,
         m.color,
         a.accessory_type,
         a.weight,
-        COALESCE((SELECT ARRAY_AGG(am.artist_id) FROM "ArtistMerch" am WHERE am.merch_id = a.merch_id), ARRAY[]::INT[]) AS "artistIds",
-        COALESCE((SELECT STRING_AGG(art.name, ', ') FROM "ArtistMerch" am JOIN "Artist" art ON am.artist_id = art.artist_id WHERE am.merch_id = a.merch_id), '') AS "artistNames"
-    FROM "Accessory" a
-    JOIN "Merch" m ON a.merch_id = m.merch_id
-    JOIN "Product" p ON m.product_id = p.product_id;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION get_accessory_by_id(p_id INT)
-RETURNS TABLE (
-    accessory_id INT,
-    product_id INT,
-    name VARCHAR,
-    price DECIMAL,
-    description TEXT,
-    stock INT,
-    manufacturer_id INT,
-    material VARCHAR,
-    color VARCHAR,
-    accessory_type VARCHAR,
-    weight DECIMAL,
-    "artistIds" INT[],
-    "artistNames" TEXT
-) AS $$
-BEGIN
-    RETURN QUERY
-    SELECT
-        a.accessory_id,
-        p.product_id,
-        p.name,
-        p.price,
-        p.description,
-        p.stock,
-        p.manufacturer_id,
-        m.material,
-        m.color,
-        a.accessory_type,
-        a.weight,
-        COALESCE((SELECT ARRAY_AGG(am.artist_id) FROM "ArtistMerch" am WHERE am.merch_id = a.merch_id), ARRAY[]::INT[]) AS "artistIds",
-        COALESCE((SELECT STRING_AGG(art.name, ', ') FROM "ArtistMerch" am JOIN "Artist" art ON am.artist_id = art.artist_id WHERE am.merch_id = a.merch_id), '') AS "artistNames"
+        COALESCE((SELECT STRING_AGG(a2.name, ', ') FROM "ArtistMerch" am JOIN "Artist" a2 ON am.artist_id = a2.artist_id WHERE am.merch_id = a.merch_id), '') AS artistNames,
+        COALESCE((SELECT json_agg(am.artist_id)::TEXT FROM "ArtistMerch" am WHERE am.merch_id = a.merch_id), '[]') AS artistIds,
+        COALESCE((SELECT STRING_AGG(g.name, ', ') FROM "ProductGenre" pg JOIN "Genre" g ON pg.genre_id = g.genre_id WHERE pg.product_id = p.product_id), '') AS genre_names
     FROM "Accessory" a
     JOIN "Merch" m ON a.merch_id = m.merch_id
     JOIN "Product" p ON m.product_id = p.product_id
-    WHERE a.accessory_id = p_id;
+    WHERE 1=1
+        AND (p_search_name IS NULL OR p.name ILIKE '%' || p_search_name || '%')
+        AND (p_manufacturer_id IS NULL OR p.manufacturer_id = p_manufacturer_id)
+        AND (p_artist_id IS NULL OR EXISTS (SELECT 1 FROM "ArtistMerch" am WHERE am.merch_id = a.merch_id AND am.artist_id = p_artist_id))
+        AND (p_in_stock = false OR p.stock > 0)
+        AND (p_price_min IS NULL OR p.price >= p_price_min)
+        AND (p_price_max IS NULL OR p.price <= p_price_max)
+        AND (p_selected_genres IS NULL OR EXISTS (SELECT 1 FROM "ProductGenre" pg JOIN "Genre" g ON pg.genre_id = g.genre_id WHERE pg.product_id = p.product_id AND g.name = ANY(string_to_array(p_selected_genres, ','))));
 END;
 $$ LANGUAGE plpgsql;
 
@@ -502,8 +596,8 @@ BEGIN
         WHERE 1=1
             AND ($1 IS NULL OR lower(a.name) LIKE lower($1))
             AND ($2 IS NULL OR a.country IS NOT NULL AND lower(a.country) = lower($2))
-            AND ($3 IS NULL OR 
-                ($3 = ''Instrumental'' AND a.language IS NULL) OR 
+            AND ($3 IS NULL OR
+                ($3 = ''Instrumental'' AND a.language IS NULL) OR
                 ($3 != ''Instrumental'' AND a.language IS NOT NULL AND lower(a.language) = lower($3))
             )
     ';
@@ -512,7 +606,7 @@ BEGIN
     ELSE
         query_text := query_text || ' ORDER BY a.name ASC';
     END IF;
-    
+
     RETURN QUERY EXECUTE query_text USING
         CASE WHEN p_search_name IS NOT NULL THEN '%' || p_search_name || '%' ELSE NULL END,
         p_search_country,
@@ -587,191 +681,9 @@ BEGIN
     ELSE
         query_text := query_text || ' ORDER BY c.added_date DESC';
     END IF;
-    
-    RETURN QUERY EXECUTE query_text USING p_user_id, 
+
+    RETURN QUERY EXECUTE query_text USING p_user_id,
         CASE WHEN p_search_name IS NOT NULL THEN '%' || p_search_name || '%' ELSE NULL END;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION get_all_clothings()
-RETURNS TABLE (clothing_id INT, product_id INT, name VARCHAR, price DECIMAL, description TEXT, stock INT, manufacturer_id INT, material VARCHAR, color VARCHAR, size VARCHAR, gender VARCHAR, artistIds INT[], artistNames TEXT) AS $$
-BEGIN
-    RETURN QUERY SELECT c.clothing_id, p.product_id, p.name, p.price, p.description, p.stock, p.manufacturer_id, m.material, m.color, c.size, c.gender,
-        COALESCE((SELECT ARRAY_AGG(am.artist_id) FROM "ArtistMerch" am WHERE am.merch_id = c.merch_id), ARRAY[]::INT[]),
-        COALESCE((SELECT STRING_AGG(art.name, ', ') FROM "ArtistMerch" am JOIN "Artist" art ON am.artist_id = art.artist_id WHERE am.merch_id = c.merch_id), '')
-    FROM "Clothing" c JOIN "Merch" m ON c.merch_id = m.merch_id JOIN "Product" p ON m.product_id = p.product_id;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION get_clothing_by_id(p_id INT)
-RETURNS TABLE (clothing_id INT, product_id INT, name VARCHAR, price DECIMAL, description TEXT, stock INT, manufacturer_id INT, material VARCHAR, color VARCHAR, size VARCHAR, gender VARCHAR, artistIds INT[], artistNames TEXT) AS $$
-BEGIN
-    RETURN QUERY SELECT c.clothing_id, p.product_id, p.name, p.price, p.description, p.stock, p.manufacturer_id, m.material, m.color, c.size, c.gender,
-        COALESCE((SELECT ARRAY_AGG(am.artist_id) FROM "ArtistMerch" am WHERE am.merch_id = c.merch_id), ARRAY[]::INT[]),
-        COALESCE((SELECT STRING_AGG(art.name, ', ') FROM "ArtistMerch" am JOIN "Artist" art ON am.artist_id = art.artist_id WHERE am.merch_id = c.merch_id), '')
-    FROM "Clothing" c JOIN "Merch" m ON c.merch_id = m.merch_id JOIN "Product" p ON m.product_id = p.product_id WHERE c.clothing_id = p_id;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION get_filtered_clothings(
-    p_search_name VARCHAR,
-    p_manufacturer_id INT,
-    p_artist_id INT,
-    p_in_stock BOOLEAN,
-    p_price_min NUMERIC,
-    p_price_max NUMERIC,
-    p_selected_genres VARCHAR
-)
-RETURNS TABLE (
-    clothing_id INT,
-    product_id INT,
-    name VARCHAR,
-    price NUMERIC,
-    description TEXT,
-    stock INT,
-    manufacturer_id INT,
-    type VARCHAR,
-    typeName VARCHAR,
-    material VARCHAR,
-    color VARCHAR,
-    size VARCHAR,
-    gender VARCHAR,
-    artistNames TEXT,
-    artistIds TEXT,
-    genre_names TEXT
-) AS $$
-BEGIN
-    RETURN QUERY
-    SELECT 
-        c.clothing_id,
-        p.product_id,
-        p.name,
-        p.price,
-        p.description,
-        p.stock,
-        p.manufacturer_id,
-        'clothing'::VARCHAR AS type,
-        'Одежда'::VARCHAR AS typeName,
-        m.material,
-        m.color,
-        c.size,
-        c.gender,
-        COALESCE((
-            SELECT STRING_AGG(a.name, ', ')
-            FROM "ArtistMerch" am
-            JOIN "Artist" a ON am.artist_id = a.artist_id
-            WHERE am.merch_id = c.merch_id
-        ), '') AS artistNames,
-        COALESCE((
-            SELECT json_agg(am.artist_id)::TEXT
-            FROM "ArtistMerch" am
-            WHERE am.merch_id = c.merch_id
-        ), '[]') AS artistIds,
-        COALESCE((
-            SELECT STRING_AGG(g.name, ', ')
-            FROM "ProductGenre" pg
-            JOIN "Genre" g ON pg.genre_id = g.genre_id
-            WHERE pg.product_id = p.product_id
-        ), '') AS genre_names
-    FROM "Clothing" c
-    JOIN "Merch" m ON c.merch_id = m.merch_id
-    JOIN "Product" p ON m.product_id = p.product_id
-    WHERE 1=1
-        AND (p_search_name IS NULL OR p.name ILIKE '%' || p_search_name || '%')
-        AND (p_manufacturer_id IS NULL OR p.manufacturer_id = p_manufacturer_id)
-        AND (p_artist_id IS NULL OR EXISTS (
-            SELECT 1 FROM "ArtistMerch" am
-            WHERE am.merch_id = c.merch_id AND am.artist_id = p_artist_id
-        ))
-        AND (p_in_stock = false OR p.stock > 0)
-        AND (p_price_min IS NULL OR p.price >= p_price_min)
-        AND (p_price_max IS NULL OR p.price <= p_price_max)
-        AND (p_selected_genres IS NULL OR EXISTS (
-            SELECT 1 FROM "ProductGenre" pg
-            JOIN "Genre" g ON pg.genre_id = g.genre_id
-            WHERE pg.product_id = p.product_id AND g.name = ANY(string_to_array(p_selected_genres, ','))
-        ));
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION get_filtered_accessories(
-    p_search_name VARCHAR,
-    p_manufacturer_id INT,
-    p_artist_id INT,
-    p_in_stock BOOLEAN,
-    p_price_min NUMERIC,
-    p_price_max NUMERIC,
-    p_selected_genres VARCHAR
-)
-RETURNS TABLE (
-    accessory_id INT,
-    product_id INT,
-    name VARCHAR,
-    price NUMERIC,
-    description TEXT,
-    stock INT,
-    manufacturer_id INT,
-    type VARCHAR,
-    typeName VARCHAR,
-    material VARCHAR,
-    color VARCHAR,
-    accessory_type VARCHAR,
-    weight NUMERIC,
-    artistNames TEXT,
-    artistIds TEXT,
-    genre_names TEXT
-) AS $$
-BEGIN
-    RETURN QUERY
-    SELECT 
-        a.accessory_id,
-        p.product_id,
-        p.name,
-        p.price,
-        p.description,
-        p.stock,
-        p.manufacturer_id,
-        'accessory'::VARCHAR AS type,
-        'Аксессуар'::VARCHAR AS typeName,
-        m.material,
-        m.color,
-        a.accessory_type,
-        a.weight,
-        COALESCE((
-            SELECT STRING_AGG(a2.name, ', ')
-            FROM "ArtistMerch" am
-            JOIN "Artist" a2 ON am.artist_id = a2.artist_id
-            WHERE am.merch_id = a.merch_id
-        ), '') AS artistNames,
-        COALESCE((
-            SELECT json_agg(am.artist_id)::TEXT
-            FROM "ArtistMerch" am
-            WHERE am.merch_id = a.merch_id
-        ), '[]') AS artistIds,
-        COALESCE((
-            SELECT STRING_AGG(g.name, ', ')
-            FROM "ProductGenre" pg
-            JOIN "Genre" g ON pg.genre_id = g.genre_id
-            WHERE pg.product_id = p.product_id
-        ), '') AS genre_names
-    FROM "Accessory" a
-    JOIN "Merch" m ON a.merch_id = m.merch_id
-    JOIN "Product" p ON m.product_id = p.product_id
-    WHERE 1=1
-        AND (p_search_name IS NULL OR p.name ILIKE '%' || p_search_name || '%')
-        AND (p_manufacturer_id IS NULL OR p.manufacturer_id = p_manufacturer_id)
-        AND (p_artist_id IS NULL OR EXISTS (
-            SELECT 1 FROM "ArtistMerch" am
-            WHERE am.merch_id = a.merch_id AND am.artist_id = p_artist_id
-        ))
-        AND (p_in_stock = false OR p.stock > 0)
-        AND (p_price_min IS NULL OR p.price >= p_price_min)
-        AND (p_price_max IS NULL OR p.price <= p_price_max)
-        AND (p_selected_genres IS NULL OR EXISTS (
-            SELECT 1 FROM "ProductGenre" pg
-            JOIN "Genre" g ON pg.genre_id = g.genre_id
-            WHERE pg.product_id = p.product_id AND g.name = ANY(string_to_array(p_selected_genres, ','))
-        ));
 END;
 $$ LANGUAGE plpgsql;
 
@@ -797,8 +709,8 @@ BEGIN
         WHERE 1=1
             AND ($1 IS NULL OR lower(c.title) LIKE lower($1))
             AND ($2 IS NULL OR lower(c.venue) LIKE lower($2))
-            AND ($3 IS NULL OR 
-                ($3 = ''upcoming'' AND c.datetime >= $4) OR 
+            AND ($3 IS NULL OR
+                ($3 = ''upcoming'' AND c.datetime >= $4) OR
                 ($3 = ''past'' AND c.datetime < $4))
             AND ($5 IS NULL OR EXISTS (SELECT 1 FROM "ArtistConcert" ac WHERE ac.concert_id = c.concert_id AND ac.artist_id = $5))
     ';
@@ -807,7 +719,7 @@ BEGIN
     ELSE
         query_text := query_text || ' ORDER BY c.datetime ASC';
     END IF;
-    
+
     RETURN QUERY EXECUTE query_text USING
         CASE WHEN p_search_title IS NOT NULL THEN '%' || p_search_title || '%' ELSE NULL END,
         CASE WHEN p_search_venue IS NOT NULL THEN '%' || p_search_venue || '%' ELSE NULL END,
@@ -873,7 +785,7 @@ BEGIN
     ELSE
         query_text := query_text || ' ORDER BY g.name ASC';
     END IF;
-    
+
     RETURN QUERY EXECUTE query_text USING
         CASE WHEN p_search_name IS NOT NULL THEN '%' || p_search_name || '%' ELSE NULL END;
 END;
@@ -933,7 +845,7 @@ BEGIN
     ELSE
         query_text := query_text || ' ORDER BY m.name ASC';
     END IF;
-    
+
     RETURN QUERY EXECUTE query_text USING
         CASE WHEN p_search_name IS NOT NULL THEN '%' || p_search_name || '%' ELSE NULL END,
         CASE WHEN p_search_country IS NOT NULL THEN '%' || p_search_country || '%' ELSE NULL END;
@@ -1112,7 +1024,7 @@ BEGIN
     ELSE
         query_text := query_text || ' ORDER BY r.review_date DESC';
     END IF;
-    
+
     RETURN QUERY EXECUTE query_text USING p_user_id,
         CASE WHEN p_search_name IS NOT NULL THEN '%' || p_search_name || '%' ELSE NULL END,
         p_rating;
@@ -1210,7 +1122,7 @@ BEGIN
     ELSE
         query_text := query_text || ' ORDER BY w.added_date DESC';
     END IF;
-    
+
     RETURN QUERY EXECUTE query_text USING p_user_id,
         CASE WHEN p_search_name IS NOT NULL THEN '%' || p_search_name || '%' ELSE NULL END;
 END;
@@ -1284,12 +1196,12 @@ BEGIN
     END IF;
 
     FOR order_record IN EXECUTE query_text USING p_user_id, p_status, p_date_from, p_date_to LOOP
-        SELECT jsonb_agg(jsonb_build_object('product_id', oi.product_id, 'product_name', p.name, 'quantity', oi.quantity, 'unit_price', oi.unit_price, 'total_price', oi.quantity * oi.unit_price)) 
-        INTO items_array 
-        FROM "OrderItem" oi 
-        JOIN "Product" p ON oi.product_id = p.product_id 
+        SELECT jsonb_agg(jsonb_build_object('product_id', oi.product_id, 'product_name', p.name, 'quantity', oi.quantity, 'unit_price', oi.unit_price, 'total_price', oi.quantity * oi.unit_price))
+        INTO items_array
+        FROM "OrderItem" oi
+        JOIN "Product" p ON oi.product_id = p.product_id
         WHERE oi.order_id = order_record.order_id;
-        
+
         items_json := COALESCE(items_array::TEXT, '[]');
         RETURN QUERY SELECT order_record.order_id, order_record.user_id, order_record.full_name, order_record.login, order_record.order_date, order_record.status, order_record.total_amount, items_json;
     END LOOP;
@@ -1318,7 +1230,7 @@ BEGIN
     ELSE
         query_text := query_text || ' ORDER BY u.user_id DESC';
     END IF;
-    
+
     RETURN QUERY EXECUTE query_text USING
         CASE WHEN p_search IS NOT NULL THEN '%' || p_search || '%' ELSE NULL END;
 END;
@@ -1391,7 +1303,7 @@ RETURNS TABLE (
 ) AS $$
 BEGIN
     RETURN QUERY
-    SELECT 
+    SELECT
         r.product_id,
         p.name,
         r.rating,

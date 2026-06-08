@@ -1,7 +1,7 @@
 ﻿CREATE TABLE IF NOT EXISTS "User" (
     user_id SERIAL PRIMARY KEY,
-    login VARCHAR(50) NOT NULL UNIQUE,
-    email VARCHAR(100) NOT NULL UNIQUE,
+    login VARCHAR(50) NOT NULL UNIQUE CHECK (login ~ '^[a-zA-Z0-9_-]+$'),
+    email VARCHAR(100) NOT NULL UNIQUE CHECK (email ~ '^[^\s@]+@([^\s@]+\.)+[^\s@]+$'),
     registration_date DATE NOT NULL DEFAULT CURRENT_DATE,
     full_name VARCHAR(100) NOT NULL,
     password_hash VARCHAR(255) NOT NULL
@@ -10,7 +10,11 @@
 CREATE TABLE IF NOT EXISTS "Manufacturer" (
     manufacturer_id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
-    contact_info VARCHAR(200),
+    contact_info VARCHAR(200) NOT NULL CHECK (
+        contact_info ~ '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' OR
+        contact_info ~ '^[\d\s\-+()]{7,}$' OR
+        contact_info ~ '^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$'
+    ),
     country VARCHAR(50)
 );
 
@@ -23,9 +27,9 @@ CREATE TABLE IF NOT EXISTS "Genre" (
 CREATE TABLE IF NOT EXISTS "Product" (
     product_id SERIAL PRIMARY KEY,
     name VARCHAR(200) NOT NULL,
-    price DECIMAL(10,2) NOT NULL CHECK (price >= 0),
+    price DECIMAL(10,2) NOT NULL CHECK (price >= 0 AND price <= 1000000),
     description TEXT,
-    stock INT NOT NULL DEFAULT 0 CHECK (stock >= 0),
+    stock INT NOT NULL DEFAULT 0 CHECK (stock >= 0 AND stock <= 1000000),
     manufacturer_id INT NOT NULL,
     FOREIGN KEY (manufacturer_id) REFERENCES "Manufacturer"(manufacturer_id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
@@ -50,7 +54,7 @@ CREATE TABLE IF NOT EXISTS "Concert" (
     concert_id SERIAL PRIMARY KEY,
     title VARCHAR(150) NOT NULL,
     venue VARCHAR(100) NOT NULL,
-    datetime TIMESTAMP NOT NULL
+    datetime TIMESTAMP NOT NULL CHECK (datetime >= CURRENT_DATE)
 );
 
 CREATE TABLE IF NOT EXISTS "Ticket" (
@@ -58,7 +62,7 @@ CREATE TABLE IF NOT EXISTS "Ticket" (
     concert_id INT NOT NULL,
     product_id INT NOT NULL UNIQUE,
     price_category VARCHAR(50),
-    quantity INT NOT NULL DEFAULT 1 CHECK (quantity > 0),
+    quantity INT NOT NULL DEFAULT 1 CHECK (quantity > 0 AND quantity <= 10000),
     FOREIGN KEY (concert_id) REFERENCES "Concert"(concert_id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (product_id) REFERENCES "Product"(product_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -83,7 +87,7 @@ CREATE TABLE IF NOT EXISTS "Artist" (
     artist_id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
     country VARCHAR(50),
-    debut_year INT CHECK (debut_year > 1900),
+    debut_year INT CHECK (debut_year > 1900 AND debut_year <= date_part('year', CURRENT_DATE)),
     language VARCHAR(50)
 );
 
@@ -107,16 +111,16 @@ CREATE TABLE IF NOT EXISTS "Order" (
     order_id SERIAL PRIMARY KEY,
     user_id INT NOT NULL,
     order_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    status VARCHAR(20) NOT NULL DEFAULT 'pending',
-    total_amount DECIMAL(10,2) NOT NULL CHECK (total_amount >= 0),
+    status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'cancelled')),
+    total_amount DECIMAL(10,2) NOT NULL CHECK (total_amount >= 0 AND total_amount <= 99999999.99),
     FOREIGN KEY (user_id) REFERENCES "User"(user_id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS "OrderItem" (
     order_id INT NOT NULL,
     product_id INT NOT NULL,
-    quantity INT NOT NULL CHECK (quantity > 0),
-    unit_price DECIMAL(10,2) NOT NULL CHECK (unit_price >= 0),
+    quantity INT NOT NULL CHECK (quantity > 0 AND quantity <= 10000),
+    unit_price DECIMAL(10,2) NOT NULL CHECK (unit_price >= 0 AND unit_price <= 1000000),
     PRIMARY KEY (order_id, product_id),
     FOREIGN KEY (order_id) REFERENCES "Order"(order_id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (product_id) REFERENCES "Product"(product_id) ON DELETE RESTRICT ON UPDATE CASCADE
@@ -125,7 +129,7 @@ CREATE TABLE IF NOT EXISTS "OrderItem" (
 CREATE TABLE IF NOT EXISTS "Cart" (
     user_id INT NOT NULL,
     product_id INT NOT NULL,
-    quantity INT NOT NULL CHECK (quantity > 0),
+    quantity INT NOT NULL CHECK (quantity > 0 AND quantity <= 10000),
     added_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, product_id),
     FOREIGN KEY (user_id) REFERENCES "User"(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
