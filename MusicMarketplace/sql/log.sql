@@ -22,7 +22,9 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION log_user_update()
 RETURNS TRIGGER AS $$
 BEGIN
-    PERFORM write_log('User', NEW.user_id, 'UPDATE', to_jsonb(OLD), to_jsonb(NEW));
+    IF to_jsonb(OLD) IS DISTINCT FROM to_jsonb(NEW) THEN
+        PERFORM write_log('User', NEW.user_id, 'UPDATE', to_jsonb(OLD), to_jsonb(NEW));
+    END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -53,7 +55,9 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION log_product_update()
 RETURNS TRIGGER AS $$
 BEGIN
-    PERFORM write_log('Product', NEW.product_id, 'UPDATE', to_jsonb(OLD), to_jsonb(NEW));
+    IF to_jsonb(OLD) IS DISTINCT FROM to_jsonb(NEW) THEN
+        PERFORM write_log('Product', NEW.product_id, 'UPDATE', to_jsonb(OLD), to_jsonb(NEW));
+    END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -84,7 +88,9 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION log_merch_update()
 RETURNS TRIGGER AS $$
 BEGIN
-    PERFORM write_log('Merch', NEW.merch_id, 'UPDATE', to_jsonb(OLD), to_jsonb(NEW));
+    IF to_jsonb(OLD) IS DISTINCT FROM to_jsonb(NEW) THEN
+        PERFORM write_log('Merch', NEW.merch_id, 'UPDATE', to_jsonb(OLD), to_jsonb(NEW));
+    END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -115,7 +121,9 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION log_ticket_update()
 RETURNS TRIGGER AS $$
 BEGIN
-    PERFORM write_log('Ticket', NEW.ticket_id, 'UPDATE', to_jsonb(OLD), to_jsonb(NEW));
+    IF to_jsonb(OLD) IS DISTINCT FROM to_jsonb(NEW) THEN
+        PERFORM write_log('Ticket', NEW.ticket_id, 'UPDATE', to_jsonb(OLD), to_jsonb(NEW));
+    END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -146,7 +154,9 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION log_clothing_update()
 RETURNS TRIGGER AS $$
 BEGIN
-    PERFORM write_log('Clothing', NEW.clothing_id, 'UPDATE', to_jsonb(OLD), to_jsonb(NEW));
+    IF to_jsonb(OLD) IS DISTINCT FROM to_jsonb(NEW) THEN
+        PERFORM write_log('Clothing', NEW.clothing_id, 'UPDATE', to_jsonb(OLD), to_jsonb(NEW));
+    END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -177,7 +187,9 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION log_accessory_update()
 RETURNS TRIGGER AS $$
 BEGIN
-    PERFORM write_log('Accessory', NEW.accessory_id, 'UPDATE', to_jsonb(OLD), to_jsonb(NEW));
+    IF to_jsonb(OLD) IS DISTINCT FROM to_jsonb(NEW) THEN
+        PERFORM write_log('Accessory', NEW.accessory_id, 'UPDATE', to_jsonb(OLD), to_jsonb(NEW));
+    END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -208,7 +220,9 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION log_concert_update()
 RETURNS TRIGGER AS $$
 BEGIN
-    PERFORM write_log('Concert', NEW.concert_id, 'UPDATE', to_jsonb(OLD), to_jsonb(NEW));
+    IF to_jsonb(OLD) IS DISTINCT FROM to_jsonb(NEW) THEN
+        PERFORM write_log('Concert', NEW.concert_id, 'UPDATE', to_jsonb(OLD), to_jsonb(NEW));
+    END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -239,7 +253,9 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION log_genre_update()
 RETURNS TRIGGER AS $$
 BEGIN
-    PERFORM write_log('Genre', NEW.genre_id, 'UPDATE', to_jsonb(OLD), to_jsonb(NEW));
+    IF to_jsonb(OLD) IS DISTINCT FROM to_jsonb(NEW) THEN
+        PERFORM write_log('Genre', NEW.genre_id, 'UPDATE', to_jsonb(OLD), to_jsonb(NEW));
+    END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -270,7 +286,9 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION log_artist_update()
 RETURNS TRIGGER AS $$
 BEGIN
-    PERFORM write_log('Artist', NEW.artist_id, 'UPDATE', to_jsonb(OLD), to_jsonb(NEW));
+    IF to_jsonb(OLD) IS DISTINCT FROM to_jsonb(NEW) THEN
+        PERFORM write_log('Artist', NEW.artist_id, 'UPDATE', to_jsonb(OLD), to_jsonb(NEW));
+    END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -301,7 +319,9 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION log_manufacturer_update()
 RETURNS TRIGGER AS $$
 BEGIN
-    PERFORM write_log('Manufacturer', NEW.manufacturer_id, 'UPDATE', to_jsonb(OLD), to_jsonb(NEW));
+    IF to_jsonb(OLD) IS DISTINCT FROM to_jsonb(NEW) THEN
+        PERFORM write_log('Manufacturer', NEW.manufacturer_id, 'UPDATE', to_jsonb(OLD), to_jsonb(NEW));
+    END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -332,7 +352,9 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION log_order_update()
 RETURNS TRIGGER AS $$
 BEGIN
-    PERFORM write_log('Order', NEW.order_id, 'UPDATE', to_jsonb(OLD), to_jsonb(NEW));
+    IF to_jsonb(OLD) IS DISTINCT FROM to_jsonb(NEW) THEN
+        PERFORM write_log('Order', NEW.order_id, 'UPDATE', to_jsonb(OLD), to_jsonb(NEW));
+    END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;

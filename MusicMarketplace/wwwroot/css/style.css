@@ -859,3 +859,14 @@ input[type=number] {
 .modal-content button {
     margin: 5px;
 }
+
+.modal-content {
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+#logs-table th:last-child,
+#logs-table td:last-child {
+    width: 80px;
+}
+

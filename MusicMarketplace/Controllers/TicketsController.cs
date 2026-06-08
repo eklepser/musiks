@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MusicMarketplace.DTOs;
 using MusicMarketplace.Services;
+using Npgsql;
 
 namespace MusicMarketplace.Controllers
 {
@@ -81,6 +82,14 @@ namespace MusicMarketplace.Controllers
             catch (InvalidOperationException ex)
             {
                 return Conflict(new { message = ex.Message });
+            }
+            catch (PostgresException pgEx) when (pgEx.SqlState == "P0001")
+            {
+                return Conflict(new { message = pgEx.MessageText });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Внутренняя ошибка сервера" });
             }
         }
     }

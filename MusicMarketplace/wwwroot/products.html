@@ -8,18 +8,19 @@
 </head>
 <body>
     <div class="nav-menu">
-        <ul>
-            <li><a href="/products">Товары</a></li>
-            <li><a href="/artists">Исполнители</a></li>
-            <li><a href="/user">Мой профиль</a></li>
-            <li style="margin-left: auto; display: flex; align-items: center; gap: 15px;">
-                <select id="user-select">
-                    <option value="">-- Выберите пользователя --</option>
-                </select>
-                <button id="manage-users-btn" title="Управление пользователями" class="manage-users-btn">⚙️👤</button>
-            </li>
-        </ul>
-    </div>
+    <ul>
+        <li><a href="/products">Товары</a></li>
+        <li><a href="/artists">Исполнители</a></li>
+        <li><a href="/user">Мой профиль</a></li>
+        <li style="margin-left: auto; display: flex; align-items: center; gap: 15px;">
+            <a href="/logs" title="Журнал изменений" class="logs-link">📋</a>
+            <select id="user-select">
+                <option value="">-- Выберите пользователя --</option>
+            </select>
+            <button id="manage-users-btn" title="Управление пользователями" class="manage-users-btn">⚙️👤</button>
+        </li>
+    </ul>
+</div>
     <div class="container">
         <h1>Управление товарами</h1>
         <div class="tab-buttons">

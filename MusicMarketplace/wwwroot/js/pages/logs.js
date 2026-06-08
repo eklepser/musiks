@@ -1,4 +1,6 @@
-﻿(function () {
+﻿// Полный обновлённый js/pages/logs.js
+
+(function () {
     let logsData = [];
 
     function formatJsonPreview(jsonStr, maxLength = 100) {
