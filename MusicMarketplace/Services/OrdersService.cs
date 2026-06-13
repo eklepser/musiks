@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MusicMarketplace.DTOs;
 using MusicMarketplace.Models;
-using MusicMarketplace.Services;
+using System.Text.Json;
 
 namespace MusicMarketplace.Services
 {
@@ -31,13 +31,14 @@ namespace MusicMarketplace.Services
         public async Task<List<OrderWithItemsDto>> GetOrdersWithItemsAsync(int userId)
         {
             var sql = "SELECT * FROM get_orders_with_items({0})";
-            return await _context.Database.SqlQueryRaw<OrderWithItemsDto>(sql, userId).ToListAsync();
+            var sqlOrders = await _context.Database.SqlQueryRaw<OrderWithItemsSqlDto>(sql, userId).ToListAsync();
+            return await EnrichOrdersWithDiscountAsync(sqlOrders);
         }
 
         public async Task<List<OrderWithItemsDto>> GetFilteredOrdersWithItemsAsync(int userId, string? status, DateTime? dateFrom, DateTime? dateTo, string? sortBy)
         {
             var sql = "SELECT * FROM get_filtered_orders_with_items({0}, {1}, {2}, {3}, {4})";
-            return await _context.Database.SqlQueryRaw<OrderWithItemsDto>(
+            var sqlOrders = await _context.Database.SqlQueryRaw<OrderWithItemsSqlDto>(
                 sql,
                 userId,
                 status ?? (object)DBNull.Value,
@@ -45,6 +46,58 @@ namespace MusicMarketplace.Services
                 dateTo.HasValue ? dateTo.Value.Date : DBNull.Value,
                 sortBy ?? (object)DBNull.Value
             ).ToListAsync();
+
+            return await EnrichOrdersWithDiscountAsync(sqlOrders);
+        }
+
+        private async Task<List<OrderWithItemsDto>> EnrichOrdersWithDiscountAsync(List<OrderWithItemsSqlDto> sqlOrders)
+        {
+            if (!sqlOrders.Any()) return new List<OrderWithItemsDto>();
+
+            var ticketProductIdsList = await _context.Tickets.Select(t => t.product_id).ToListAsync();
+            var ticketProductIdsSet = new HashSet<int>(ticketProductIdsList);
+            var result = new List<OrderWithItemsDto>();
+
+            foreach (var sqlOrder in sqlOrders)
+            {
+                var dto = new OrderWithItemsDto
+                {
+                    order_id = sqlOrder.order_id,
+                    user_id = sqlOrder.user_id,
+                    user_name = sqlOrder.user_name,
+                    user_login = sqlOrder.user_login,
+                    order_date = sqlOrder.order_date,
+                    status = sqlOrder.status,
+                    total_amount = sqlOrder.total_amount,
+                    items_json = sqlOrder.items_json,
+                    original_total = 0,
+                    discount_percent = 0,
+                    discount_amount = 0
+                };
+
+                if (!string.IsNullOrEmpty(sqlOrder.items_json))
+                {
+                    var items = JsonSerializer.Deserialize<List<OrderItemDetailDto>>(sqlOrder.items_json);
+                    if (items != null && items.Any())
+                    {
+                        decimal originalTotal = 0;
+                        int totalTicketQuantity = 0;
+                        foreach (var item in items)
+                        {
+                            originalTotal += item.unit_price * item.quantity;
+                            if (ticketProductIdsSet.Contains(item.product_id))
+                                totalTicketQuantity += item.quantity;
+                        }
+                        dto.original_total = originalTotal;
+                        dto.discount_percent = (totalTicketQuantity >= 2) ? 10 : 0;
+                        dto.discount_amount = originalTotal * dto.discount_percent / 100m;
+                    }
+                }
+
+                result.Add(dto);
+            }
+
+            return result;
         }
 
         public async Task<Order> CreateAsync(OrderDto dto)

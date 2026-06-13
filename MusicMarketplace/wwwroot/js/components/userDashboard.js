@@ -2,6 +2,7 @@
 window.cartData = [];
 window.reviewsData = [];
 window.ordersData = [];
+window.cartSummary = null; // храним сводку корзины
 
 window.getCurrentUser = async function () {
     const userId = localStorage.getItem('currentUserId');
@@ -73,9 +74,115 @@ window.loadCart = async function () {
         const resp = await fetch(url);
         if (resp.ok) {
             window.cartData = await resp.json();
+            // Запрашиваем сводку корзины (итоги со скидкой) с сервера
+            const summaryResp = await fetch(`${window.API_URLS.CARTS}/byUser/${user.user_id}/summary`);
+            if (summaryResp.ok) {
+                window.cartSummary = await summaryResp.json();
+            } else {
+                window.cartSummary = null;
+            }
             window.renderCart();
         }
     } catch (e) { console.error(e); }
+};
+
+window.renderCart = function () {
+    const tbody = document.getElementById('cart-tbody');
+    const summaryDiv = document.getElementById('cart-summary');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (!window.cartData || window.cartData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="centered-message">Корзина пуста</tbody>';
+        if (summaryDiv) summaryDiv.style.display = 'none';
+        return;
+    }
+    if (summaryDiv) summaryDiv.style.display = 'block';
+
+    window.cartData.forEach(item => {
+        const row = tbody.insertRow();
+        row.insertCell(0).textContent = item.product_id;
+        row.insertCell(1).textContent = item.name;
+        row.insertCell(2).textContent = item.price;
+        row.insertCell(3).textContent = item.quantity;
+        row.insertCell(4).textContent = new Date(item.added_date).toLocaleString();
+        const actions = row.insertCell(5);
+        const btnRow = document.createElement('div');
+        btnRow.className = 'action-buttons-row';
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'Удалить';
+        delBtn.className = 'delete-btn';
+        delBtn.onclick = () => window.showRemoveFromCartModal(item.product_id, item.name, item.quantity);
+        btnRow.appendChild(delBtn);
+        actions.appendChild(btnRow);
+    });
+
+    // Отображаем данные, полученные от сервера (без клиентских расчётов)
+    if (window.cartSummary) {
+        summaryDiv.innerHTML = `
+            <div class="cart-summary-line">Исходная сумма: <strong>${window.cartSummary.original_total.toFixed(2)}</strong> руб.</div>
+            <div class="cart-summary-line">Скидка (${window.cartSummary.discount_percent}%): <strong>- ${window.cartSummary.discount_amount.toFixed(2)}</strong> руб.</div>
+            <div class="cart-summary-line total">Итого: <strong>${window.cartSummary.final_total.toFixed(2)}</strong> руб.</div>
+        `;
+    } else {
+        summaryDiv.innerHTML = `<div class="cart-summary-line">Не удалось загрузить информацию о скидке</div>`;
+    }
+};
+
+window.renderWishlist = function () {
+    const tbody = document.getElementById('wishlist-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (!window.wishlistData || window.wishlistData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="centered-message">Список избранного пуст</tbody>';
+        return;
+    }
+    window.wishlistData.forEach(item => {
+        const row = tbody.insertRow();
+        row.insertCell(0).textContent = item.product_id;
+        row.insertCell(1).textContent = item.name;
+        row.insertCell(2).textContent = item.price;
+        row.insertCell(3).textContent = new Date(item.added_date).toLocaleString();
+        const actions = row.insertCell(4);
+        const btnRow = document.createElement('div');
+        btnRow.className = 'action-buttons-row';
+        const cartBtn = document.createElement('button');
+        cartBtn.textContent = '🛒';
+        cartBtn.classList.add('cart-btn');
+        cartBtn.title = 'В корзину';
+        cartBtn.onclick = () => window.addToCart(item.product_id, item.name, 1);
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'Удалить';
+        delBtn.className = 'delete-btn';
+        delBtn.onclick = () => window.removeFromWishlist(item.product_id);
+        btnRow.append(cartBtn, delBtn);
+        actions.appendChild(btnRow);
+    });
+};
+
+window.renderReviews = function () {
+    const tbody = document.getElementById('reviews-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (!window.reviewsData || window.reviewsData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="centered-message">Отзывов нет</tbody>';
+        return;
+    }
+    window.reviewsData.forEach(r => {
+        const row = tbody.insertRow();
+        row.insertCell(0).textContent = r.product_name;
+        row.insertCell(1).textContent = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+        row.insertCell(2).textContent = r.review_text || '';
+        row.insertCell(3).textContent = new Date(r.review_date).toLocaleString();
+        const actions = row.insertCell(4);
+        const btnRow = document.createElement('div');
+        btnRow.className = 'action-buttons-row';
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'Удалить';
+        delBtn.className = 'delete-btn';
+        delBtn.onclick = () => window.deleteReview(r.product_id);
+        btnRow.appendChild(delBtn);
+        actions.appendChild(btnRow);
+    });
 };
 
 window.loadReviews = async function () {
@@ -131,90 +238,6 @@ window.loadOrders = async function () {
         window.ordersData = [];
         window.renderOrders();
     }
-};
-
-window.renderWishlist = function () {
-    const tbody = document.getElementById('wishlist-tbody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-    if (!window.wishlistData || window.wishlistData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Список избранного пуст</tbody>';
-        return;
-    }
-    window.wishlistData.forEach(item => {
-        const row = tbody.insertRow();
-        row.insertCell(0).textContent = item.product_id;
-        row.insertCell(1).textContent = item.name;
-        row.insertCell(2).textContent = item.price;
-        row.insertCell(3).textContent = new Date(item.added_date).toLocaleString();
-        const actions = row.insertCell(4);
-        const btnRow = document.createElement('div');
-        btnRow.className = 'action-buttons-row';
-        const cartBtn = document.createElement('button');
-        cartBtn.textContent = '🛒';
-        cartBtn.classList.add('cart-btn');
-        cartBtn.title = 'В корзину';
-        cartBtn.onclick = () => window.addToCart(item.product_id, item.name, 1);
-        const delBtn = document.createElement('button');
-        delBtn.textContent = 'Удалить';
-        delBtn.className = 'delete-btn';
-        delBtn.onclick = () => window.removeFromWishlist(item.product_id);
-        btnRow.append(cartBtn, delBtn);
-        actions.appendChild(btnRow);
-    });
-};
-
-window.renderCart = function () {
-    const tbody = document.getElementById('cart-tbody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-    if (!window.cartData || window.cartData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Корзина пуста</tbody>';
-        return;
-    }
-    window.cartData.forEach(item => {
-        const row = tbody.insertRow();
-        row.insertCell(0).textContent = item.product_id;
-        row.insertCell(1).textContent = item.name;
-        row.insertCell(2).textContent = item.price;
-        row.insertCell(3).textContent = item.quantity;
-        row.insertCell(4).textContent = new Date(item.added_date).toLocaleString();
-        const actions = row.insertCell(5);
-        const btnRow = document.createElement('div');
-        btnRow.className = 'action-buttons-row';
-        const delBtn = document.createElement('button');
-        delBtn.textContent = 'Удалить';
-        delBtn.className = 'delete-btn';
-        delBtn.onclick = () => window.showRemoveFromCartModal(item.product_id, item.name, item.quantity);
-        btnRow.appendChild(delBtn);
-        actions.appendChild(btnRow);
-    });
-};
-
-window.renderReviews = function () {
-    const tbody = document.getElementById('reviews-tbody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-    if (!window.reviewsData || window.reviewsData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Отзывов нет</tbody>';
-        return;
-    }
-    window.reviewsData.forEach(r => {
-        const row = tbody.insertRow();
-        row.insertCell(0).textContent = r.product_name;
-        row.insertCell(1).textContent = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
-        row.insertCell(2).textContent = r.review_text || '';
-        row.insertCell(3).textContent = new Date(r.review_date).toLocaleString();
-        const actions = row.insertCell(4);
-        const btnRow = document.createElement('div');
-        btnRow.className = 'action-buttons-row';
-        const delBtn = document.createElement('button');
-        delBtn.textContent = 'Удалить';
-        delBtn.className = 'delete-btn';
-        delBtn.onclick = () => window.deleteReview(r.product_id);
-        btnRow.appendChild(delBtn);
-        actions.appendChild(btnRow);
-    });
 };
 
 window.renderOrders = function () {
@@ -388,7 +411,6 @@ window.showCheckoutModal = function () {
     if (!modal) return;
     const userInfoDiv = document.getElementById('checkout-user-info');
     const itemsTbody = document.getElementById('checkout-items-tbody');
-    const totalSpan = document.getElementById('checkout-total');
     window.getCurrentUser().then(user => {
         if (user) {
             userInfoDiv.innerHTML = `<strong>Пользователь:</strong> ${user.full_name} (${user.login})<br><strong>Email:</strong> ${user.email}`;
@@ -397,7 +419,6 @@ window.showCheckoutModal = function () {
         }
     });
     itemsTbody.innerHTML = '';
-    let total = 0;
     window.cartData.forEach(item => {
         const row = itemsTbody.insertRow();
         row.insertCell(0).textContent = item.name;
@@ -405,9 +426,18 @@ window.showCheckoutModal = function () {
         row.insertCell(2).textContent = item.price.toFixed(2);
         const sum = item.price * item.quantity;
         row.insertCell(3).textContent = sum.toFixed(2);
-        total += sum;
     });
-    totalSpan.textContent = total.toFixed(2);
+    if (window.cartSummary) {
+        document.getElementById('checkout-original-total').textContent = window.cartSummary.original_total.toFixed(2);
+        document.getElementById('checkout-discount-percent').textContent = window.cartSummary.discount_percent;
+        document.getElementById('checkout-discount-amount').textContent = window.cartSummary.discount_amount.toFixed(2);
+        document.getElementById('checkout-final-total').textContent = window.cartSummary.final_total.toFixed(2);
+    } else {
+        document.getElementById('checkout-original-total').textContent = '0.00';
+        document.getElementById('checkout-discount-percent').textContent = '0';
+        document.getElementById('checkout-discount-amount').textContent = '0.00';
+        document.getElementById('checkout-final-total').textContent = '0.00';
+    }
     modal.style.display = 'block';
 };
 
@@ -433,7 +463,7 @@ window.confirmCheckout = async function () {
         }
         const result = await resp.json();
         window.hideCheckoutModal();
-        window.showToast(`Заказ №${result.orderId} оформлен на сумму ${result.totalAmount}`, 'success');
+        window.showToast(`Заказ №${result.order_id} на сумму ${result.final_total.toFixed(2)} руб. оформлен.`, 'success');
         await window.loadCart();
         await window.loadOrders();
         document.querySelector('.tab-btn[data-tab="orders"]').click();
@@ -448,13 +478,15 @@ window.clearAllTables = function () {
     const wishTbody = document.getElementById('wishlist-tbody');
     if (wishTbody) wishTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</tbody>';
     const cartTbody = document.getElementById('cart-tbody');
-    if (cartTbody) cartTbody.innerHTML = '<td><td colspan="6" style="text-align: center;">Выберите пользователя</tbody>';
+    if (cartTbody) cartTbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Выберите пользователя</tbody>';
     const revTbody = document.getElementById('reviews-tbody');
     if (revTbody) revTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</tbody>';
     const ordTbody = document.getElementById('orders-tbody');
     if (ordTbody) ordTbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Выберите пользователя</tbody>';
     const purTbody = document.getElementById('purchased-items-tbody');
     if (purTbody) purTbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Выберите пользователя</tbody>';
+    const summaryDiv = document.getElementById('cart-summary');
+    if (summaryDiv) summaryDiv.style.display = 'none';
 };
 
 window.showActiveTab = function () {

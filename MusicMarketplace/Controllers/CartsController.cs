@@ -61,8 +61,8 @@ namespace MusicMarketplace.Controllers
         {
             try
             {
-                var (orderId, totalAmount) = await _cartsService.CheckoutAsync(userId);
-                return Ok(new { orderId, totalAmount });
+                var result = await _cartsService.CheckoutAsync(userId);
+                return Ok(result);
             }
             catch (PostgresException pgEx) when (pgEx.SqlState == "P0001")
             {
@@ -89,6 +89,13 @@ namespace MusicMarketplace.Controllers
         {
             var items = await _cartsService.GetCartFilteredAsync(userId, searchName, sortBy);
             return Ok(items);
+        }
+
+        [HttpGet("byUser/{userId}/summary")]
+        public async Task<IActionResult> GetCartSummary(int userId)
+        {
+            var summary = await _cartsService.GetCartSummaryAsync(userId);
+            return Ok(summary);
         }
     }
 }

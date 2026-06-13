@@ -13,7 +13,6 @@
             <li><a href="/artists">Исполнители</a></li>
             <li><a href="/user">Мой профиль</a></li>
             <li style="margin-left: auto; display: flex; align-items: center; gap: 15px;">
-                <a href="/logs" title="Журнал изменений" class="logs-link">📋</a>
                 <select id="user-select">
                     <option value="">-- Выберите пользователя --</option>
                 </select>
@@ -98,6 +97,8 @@
                     <tr><td colspan="6" class="centered-message">Загрузка...</td></tr>
                 </tbody>
             </table>
+
+            <div id="cart-summary" style="margin-top: 20px; text-align: right; font-size: 1.1em;"></div>
         </div>
 
         <div id="orders-tab" class="tab-content">
@@ -191,7 +192,8 @@
                 </thead>
                 <tbody id="reviews-tbody">
                     <tr><td colspan="5" class="centered-message">Загрузка...</td></tr>
-                </tbody></table>
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -292,7 +294,11 @@
                 </thead>
                 <tbody id="checkout-items-tbody"></tbody>
             </table>
-            <div><strong>Итого: <span id="checkout-total">0.00</span></strong></div>
+            <div style="margin-top: 10px; text-align: right;">
+                <strong>Исходная сумма:</strong> <span id="checkout-original-total">0.00</span> руб.<br>
+                <strong>Скидка (<span id="checkout-discount-percent">0</span>%):</strong> - <span id="checkout-discount-amount">0.00</span> руб.<br>
+                <strong>Итого к оплате:</strong> <span id="checkout-final-total">0.00</span> руб.
+            </div>
             <div class="form-group" style="justify-content:center;gap:15px;margin-top:20px;">
                 <button id="checkout-confirm-btn" class="checkout-btn">Подтвердить заказ</button>
                 <button id="checkout-cancel-btn" class="cancel-btn">Отмена</button>
